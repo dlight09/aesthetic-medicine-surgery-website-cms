@@ -1,0 +1,43 @@
+{
+  "models": {
+    "code": "openai/codex",
+    "general": "openai/gpt-5.2"
+  },
+  "routing": {
+    "defaults": {
+      "taskType": "general",
+      "risk": "normal"
+    },
+    "rules": [
+      {
+        "when": { "risk": "compliance" },
+        "use": "general",
+        "reason": "Compliance-sensitive text stays on GPT-5.2"
+      },
+      {
+        "when": { "taskType": "code" },
+        "use": "code",
+        "reason": "Implementation and refactors prefer Codex"
+      },
+      {
+        "when": { "taskType": "copy" },
+        "use": "general",
+        "reason": "Copywriting and tone prefer GPT-5.2"
+      },
+      {
+        "when": { "taskType": "seo" },
+        "use": "general",
+        "reason": "SEO strategy/content prefer GPT-5.2"
+      },
+      {
+        "when": { "taskType": "design" },
+        "use": "general",
+        "reason": "Design critique/direction prefer GPT-5.2"
+      }
+    ],
+    "fallback": {
+      "onError": "general",
+      "reason": "If Codex is unavailable, fall back to GPT-5.2"
+    }
+  }
+}
