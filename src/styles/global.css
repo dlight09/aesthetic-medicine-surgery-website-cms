@@ -68,6 +68,68 @@ body.menu-scroll-lock {
   overflow: hidden;
 }
 
+@layer components {
+  /* Base */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap select-none;
+    @apply font-semibold;
+    @apply transition;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper;
+    @apply active:translate-y-px;
+  }
+
+  /* Shapes + sizes */
+  .btn-pill {
+    @apply rounded-full;
+  }
+
+  .btn-rect {
+    @apply rounded-xl;
+  }
+
+  .btn-sm {
+    @apply px-4 py-2 text-sm;
+  }
+
+  .btn-md {
+    @apply px-5 py-2.5 text-sm;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-sm;
+  }
+
+  .btn-block {
+    @apply w-full;
+  }
+
+  /* Variants */
+  .btn-primary {
+    @apply bg-ink text-paper shadow-soft;
+    @apply hover:shadow-lift hover:bg-ink/95;
+    @apply active:shadow-soft active:bg-ink/90;
+  }
+
+  .btn-secondary {
+    @apply border border-ink/15 bg-paper text-ink/85;
+    @apply hover:border-ink/25 hover:bg-mist;
+    @apply active:bg-mist/70;
+  }
+
+  .btn-accent {
+    @apply bg-copper text-paper shadow-soft;
+    @apply hover:shadow-lift hover:bg-copper/90;
+    @apply active:shadow-soft active:bg-copper/80;
+  }
+
+  /* Link with visible focus */
+  .link {
+    @apply font-semibold text-ink/70 transition rounded-md;
+    @apply hover:text-ink;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper;
+  }
+}
+
 dialog[data-menu-dialog] {
   position: fixed;
   inset: 0;

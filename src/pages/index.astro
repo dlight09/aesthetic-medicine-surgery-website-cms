@@ -11,28 +11,20 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
       <div class="grid items-center gap-10 sm:grid-cols-12">
         <div class="sm:col-span-6">
           <div class="max-w-2xl">
-            <p class="text-sm font-semibold text-ink/70">Chirurgie plastique - esthetique - reconstructrice</p>
+            <p class="text-sm font-semibold text-ink/70">
+              Chirurgie plastique, esthetique et reconstructrice — chirurgie de la main
+            </p>
             <h1 class="mt-3 font-display text-4xl tracking-tight sm:text-5xl">
-              Une approche precise, naturelle et personnalisee.
+              Une approche precise, naturelle et personnalisee a {site.contact.city}.
             </h1>
             <p class="mt-5 text-lg text-ink/75">
-              Informations sur les interventions de medecine esthetique et de chirurgie (visage, silhouette,
-              seins, reparatrice, main, intime) - avec prise de rendez-vous par telephone ou WhatsApp.
+              Medecine esthetique, visage, silhouette, seins, chirurgie reparatrice et chirurgie de la main.
+              Information claire et rendez-vous par telephone ou WhatsApp.
             </p>
 
             <div class="mt-7 flex flex-col gap-3 sm:flex-row">
-              <a
-                href={site.links.tel}
-                class="inline-flex items-center justify-center rounded-full bg-ink px-6 py-3 text-sm font-semibold text-paper shadow-soft transition hover:shadow-lift"
-              >
-                Prendre rendez-vous (Appeler)
-              </a>
-              <a
-                href={site.links.whatsapp}
-                class="inline-flex items-center justify-center rounded-full border border-ink/15 bg-paper px-6 py-3 text-sm font-semibold text-ink/85 transition hover:border-ink/25"
-              >
-                WhatsApp
-              </a>
+              <a href={site.links.tel} class="btn btn-pill btn-lg btn-primary">Prendre rendez-vous (Appeler)</a>
+              <a href={site.links.whatsapp} class="btn btn-pill btn-lg btn-secondary">WhatsApp</a>
             </div>
 
             <div class="mt-8 grid gap-3 text-sm text-ink/70 sm:grid-cols-3">
@@ -58,7 +50,7 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
           </div>
           <div class="mt-3 flex items-center justify-between text-xs text-ink/60">
             <span>Cabinet - {site.contact.city}</span>
-            <a href="/contact" class="font-semibold text-ink/70 hover:text-ink">Rendez-vous →</a>
+            <a href="/contact" class="link">Rendez-vous →</a>
           </div>
         </div>
       </div>
@@ -68,7 +60,7 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
   <section class="mx-auto max-w-6xl px-4 py-14">
     <div class="grid gap-10 sm:grid-cols-12">
       <div class="sm:col-span-5">
-        <h2 class="font-display text-3xl tracking-tight">Tout a propos du docteur</h2>
+        <h2 class="font-display text-3xl tracking-tight">Tout savoir sur le docteur</h2>
         <p class="mt-4 text-ink/75">
           Je suis la Dr Sirine Soussi, chirurgienne specialisee en chirurgie plastique, esthetique et
           reconstructrice, avec une expertise en chirurgie de la main. Formee a la Faculte de Medecine
@@ -96,9 +88,9 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
             <div class="min-w-0">
               <div class="font-display text-2xl tracking-tight">Dr Sirine Soussi</div>
               <div class="mt-1 text-sm text-ink/70">Chirurgie plastique, esthetique, reconstructrice - chirurgie de la main</div>
-              <a href="/dr-sirine-soussi" class="mt-2 inline-flex text-sm font-semibold text-ink/70 hover:text-ink">
-                En savoir plus →
-              </a>
+               <a href="/dr-sirine-soussi" class="link mt-2 inline-flex text-sm">
+                 En savoir plus →
+               </a>
             </div>
           </div>
 
@@ -132,18 +124,8 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
           </div>
 
           <div class="mt-7 flex flex-col gap-3 sm:flex-row">
-            <a
-              href="/contact#consultation"
-              class="inline-flex items-center justify-center rounded-full bg-ink px-6 py-3 text-sm font-semibold text-paper"
-            >
-              Comprendre la consultation
-            </a>
-            <a
-              href="/interventions"
-              class="inline-flex items-center justify-center rounded-full border border-ink/15 bg-paper px-6 py-3 text-sm font-semibold text-ink/85"
-            >
-              Voir les interventions
-            </a>
+            <a href="/contact#consultation" class="btn btn-pill btn-lg btn-primary">Comprendre la consultation</a>
+            <a href="/interventions" class="btn btn-pill btn-lg btn-secondary">Voir les interventions</a>
           </div>
         </div>
       </div>
@@ -157,9 +139,7 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
           <h2 class="font-display text-2xl tracking-tight">Interventions</h2>
           <p class="mt-2 text-ink/70">Explorer les categories et trouver l’information adaptee.</p>
         </div>
-        <a href="/interventions" class="rounded-full bg-copper px-5 py-2.5 text-sm font-semibold text-paper">
-          Acceder aux interventions
-        </a>
+         <a href="/interventions" class="btn btn-pill btn-md btn-accent">Acceder aux interventions</a>
       </div>
 
       <div class="mt-8 grid gap-4 sm:grid-cols-3">
@@ -173,7 +153,7 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
                 src={c.thumbnailSrc}
                 width="1200"
                 height="900"
-                alt=""
+                alt={c.title}
                 loading="lazy"
                 class="h-full w-full object-cover"
               />
