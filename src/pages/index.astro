@@ -60,37 +60,67 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
     </div>
   </section>
 
-  <section class="mx-auto max-w-6xl px-4 pb-12">
+  <section class="mx-auto max-w-6xl px-4 pb-10">
+    <div class="flex items-baseline justify-between gap-4 pb-4">
+      <h2 class="font-display text-2xl tracking-tight">Choisir votre besoin</h2>
+      <p class="text-sm text-ink/65">Deux parcours clairs pour aller à l’essentiel.</p>
+    </div>
+
     <div class="grid gap-4 sm:grid-cols-2">
-      <div class="fx-frame fx-lift rounded-3xl bg-paper p-6 shadow-soft">
-        <div class="font-display text-2xl tracking-tight">Médecine esthétique & visage</div>
-        <p class="mt-2 text-ink/70">Soins, injectables, harmonisation et rajeunissement.</p>
-        <div class="mt-4 flex flex-wrap gap-2 text-sm text-ink/75">
-          <span class="chip">Médecine esthétique</span>
-          <span class="chip">Visage</span>
-          <span class="chip">Silhouette</span>
-          <span class="chip">Seins</span>
+      <article class="group card-focus fx-frame fx-lift overflow-hidden rounded-3xl bg-paper">
+        <div class="relative h-32 w-full overflow-hidden">
+          <img
+            src="/images/thumbnails/medecine-esthetique.webp"
+            alt="Soins esthétiques et harmonisation du visage"
+            class="h-full w-full object-cover"
+            loading="lazy"
+          />
+          <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,19,0.35),transparent_55%)]"></div>
         </div>
-        <div class="mt-5 flex flex-wrap gap-2">
-          <a href="/interventions/medecine-esthetique" class="btn btn-pill btn-sm btn-secondary">Médecine esthétique</a>
-          <a href="/interventions/visage" class="btn btn-pill btn-sm btn-secondary">Visage</a>
-          <a href="/interventions/silhouette" class="btn btn-pill btn-sm btn-secondary">Silhouette</a>
-          <a href="/interventions/seins" class="btn btn-pill btn-sm btn-secondary">Seins</a>
+        <div class="space-y-3 p-6">
+          <div>
+            <div class="font-display text-xl tracking-tight">Médecine esthétique & visage</div>
+            <p class="mt-1 text-sm text-ink/70">Injectables, qualité de peau, harmonisation douce et naturelle.</p>
+          </div>
+          <ul class="space-y-1 text-sm text-ink/75">
+            <li>• Traitements doux et personnalisés</li>
+            <li>• Focus naturel sur le visage et le regard</li>
+            <li>• Information claire sur suites et entretien</li>
+          </ul>
+          <div class="flex flex-wrap gap-2">
+            <a href="/interventions/medecine-esthetique" class="btn btn-pill btn-md btn-primary">Explorer l’esthétique</a>
+            <a href="/interventions/visage" class="link text-sm">Visage</a>
+            <a href="/interventions/silhouette" class="link text-sm">Silhouette</a>
+          </div>
         </div>
-      </div>
-      <div class="fx-frame fx-lift rounded-3xl bg-paper p-6 shadow-soft">
-        <div class="font-display text-2xl tracking-tight">Main & reconstruction</div>
-        <p class="mt-2 text-ink/70">Pathologies de la main, chirurgie réparatrice, suites et suivi.</p>
-        <div class="mt-4 flex flex-wrap gap-2 text-sm text-ink/75">
-          <span class="chip">Chirurgie de la main</span>
-          <span class="chip">Chirurgie réparatrice</span>
-          <span class="chip">Séquelles cutanées</span>
+      </article>
+
+      <article class="group card-focus fx-frame fx-lift overflow-hidden rounded-3xl bg-paper">
+        <div class="relative h-32 w-full overflow-hidden">
+          <img
+            src="/images/thumbnails/chirurgie-de-la-main.webp"
+            alt="Chirurgie de la main et reconstruction"
+            class="h-full w-full object-cover"
+            loading="lazy"
+          />
+          <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,19,0.35),transparent_55%)]"></div>
         </div>
-        <div class="mt-5 flex flex-wrap gap-2">
-          <a href="/interventions/chirurgie-de-la-main" class="btn btn-pill btn-sm btn-secondary">Chirurgie de la main</a>
-          <a href="/interventions/chirurgie-reparatrice" class="btn btn-pill btn-sm btn-secondary">Chirurgie réparatrice</a>
+        <div class="space-y-3 p-6">
+          <div>
+            <div class="font-display text-xl tracking-tight">Main & reconstruction</div>
+            <p class="mt-1 text-sm text-ink/70">Pathologies, traumatologie, réparatrice et suivi spécialisé.</p>
+          </div>
+          <ul class="space-y-1 text-sm text-ink/75">
+            <li>• Douleurs, compressions nerveuses, séquelles</li>
+            <li>• Traumatologie & reconstruction personnalisée</li>
+            <li>• Accompagnement et récupération fonctionnelle</li>
+          </ul>
+          <div class="flex flex-wrap gap-2">
+            <a href="/interventions/chirurgie-de-la-main" class="btn btn-pill btn-md btn-primary">Explorer la main</a>
+            <a href="/interventions/chirurgie-reparatrice" class="link text-sm">Chirurgie réparatrice</a>
+          </div>
         </div>
-      </div>
+      </article>
     </div>
   </section>
 
@@ -268,13 +298,4 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
     transform: translateY(-1px);
   }
 
-  .chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.35rem 0.7rem;
-    border-radius: 9999px;
-    border: 1px solid rgba(var(--c-ink) / 0.08);
-    background: rgba(var(--c-paper) / 0.8);
-  }
 </style>
