@@ -170,3 +170,7 @@ dialog[data-menu-dialog]:focus {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
+
+.card-focus {
+  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper;
+}

@@ -12,24 +12,27 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
         <div class="sm:col-span-6">
           <div class="max-w-2xl">
             <p class="text-sm font-semibold text-ink/70">
-              Chirurgie plastique, esthetique et reconstructrice — chirurgie de la main
+              Chirurgie plastique, esthétique et reconstructrice — chirurgie de la main
             </p>
             <h1 class="mt-3 font-display text-4xl tracking-tight sm:text-5xl">
-              Une approche precise, naturelle et personnalisee a {site.contact.city}.
+              Une approche précise, naturelle et personnalisée à {site.contact.city}.
             </h1>
             <p class="mt-5 text-lg text-ink/75">
-              Medecine esthetique, visage, silhouette, seins, chirurgie reparatrice et chirurgie de la main.
-              Information claire et rendez-vous par telephone ou WhatsApp.
+              Médecine esthétique, visage, silhouette, seins, chirurgie réparatrice et chirurgie de la main.
+              Information claire et rendez-vous par téléphone ou WhatsApp.
             </p>
 
             <div class="mt-7 flex flex-col gap-3 sm:flex-row">
-              <a href={site.links.tel} class="btn btn-pill btn-lg btn-primary">Prendre rendez-vous (Appeler)</a>
+              <a href="/contact" class="btn btn-pill btn-lg btn-primary">Prendre rendez-vous</a>
+              <a href={site.links.tel} class="btn btn-pill btn-lg btn-secondary">Appeler</a>
               <a href={site.links.whatsapp} class="btn btn-pill btn-lg btn-secondary">WhatsApp</a>
             </div>
 
+            <div class="mt-2 text-xs text-ink/60">Réponse selon disponibilités.</div>
+
             <div class="mt-8 grid gap-3 text-sm text-ink/70 sm:grid-cols-3">
-              <div class="rounded-2xl border border-ink/10 bg-paper/70 p-4">Consultation et indication adaptee</div>
-              <div class="rounded-2xl border border-ink/10 bg-paper/70 p-4">Recherche d’un resultat harmonieux</div>
+              <div class="rounded-2xl border border-ink/10 bg-paper/70 p-4">Consultation et indication adaptée</div>
+              <div class="rounded-2xl border border-ink/10 bg-paper/70 p-4">Résultat naturel et harmonieux</div>
               <div class="rounded-2xl border border-ink/10 bg-paper/70 p-4">Suivi et information claire</div>
             </div>
           </div>
@@ -41,7 +44,7 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
               src="/images/hero-clinic-01.webp"
               width="1536"
               height="1024"
-              alt="Cabinet medical, ambiance lumineuse et apaisante"
+               alt="Cabinet médical, ambiance lumineuse et apaisante"
               loading="eager"
               fetchpriority="high"
               class="h-[18rem] w-full object-cover sm:h-[24rem]"
@@ -57,21 +60,55 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
     </div>
   </section>
 
+  <section class="mx-auto max-w-6xl px-4 pb-12">
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="rounded-3xl border border-ink/10 bg-paper p-6 shadow-soft">
+        <div class="font-display text-2xl tracking-tight">Médecine esthétique & visage</div>
+        <p class="mt-2 text-ink/70">Soins, injectables, harmonisation et rajeunissement.</p>
+        <ul class="mt-4 space-y-2 text-sm text-ink/75">
+          <li>• Médecine esthétique</li>
+          <li>• Visage</li>
+          <li>• Silhouette</li>
+          <li>• Seins</li>
+        </ul>
+        <div class="mt-5 flex flex-wrap gap-2">
+          <a href="/interventions/medecine-esthetique" class="btn btn-pill btn-sm btn-secondary">Médecine esthétique</a>
+          <a href="/interventions/visage" class="btn btn-pill btn-sm btn-secondary">Visage</a>
+          <a href="/interventions/silhouette" class="btn btn-pill btn-sm btn-secondary">Silhouette</a>
+          <a href="/interventions/seins" class="btn btn-pill btn-sm btn-secondary">Seins</a>
+        </div>
+      </div>
+      <div class="rounded-3xl border border-ink/10 bg-paper p-6 shadow-soft">
+        <div class="font-display text-2xl tracking-tight">Main & reconstruction</div>
+        <p class="mt-2 text-ink/70">Pathologies de la main, chirurgie réparatrice, suites et suivi.</p>
+        <ul class="mt-4 space-y-2 text-sm text-ink/75">
+          <li>• Chirurgie de la main</li>
+          <li>• Chirurgie réparatrice</li>
+          <li>• Séquelles et tumeurs cutanées</li>
+        </ul>
+        <div class="mt-5 flex flex-wrap gap-2">
+          <a href="/interventions/chirurgie-de-la-main" class="btn btn-pill btn-sm btn-secondary">Chirurgie de la main</a>
+          <a href="/interventions/chirurgie-reparatrice" class="btn btn-pill btn-sm btn-secondary">Chirurgie réparatrice</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="mx-auto max-w-6xl px-4 py-14">
     <div class="grid gap-10 sm:grid-cols-12">
       <div class="sm:col-span-5">
         <h2 class="font-display text-3xl tracking-tight">Tout savoir sur le docteur</h2>
         <p class="mt-4 text-ink/75">
-          Je suis la Dr Sirine Soussi, chirurgienne specialisee en chirurgie plastique, esthetique et
-          reconstructrice, avec une expertise en chirurgie de la main. Formee a la Faculte de Medecine
-          de Tunis, j’ai complete mon internat puis mon residanat (2012-2016) en Tunisie, avec une
-          experience hospitaliere a Paris (Hopital Saint-Louis).
+          Je suis la Dr Sirine Soussi, chirurgienne spécialisée en chirurgie plastique, esthétique et
+          reconstructrice, avec une expertise en chirurgie de la main. Formée à la Faculté de Médecine
+          de Tunis, j’ai complété mon internat puis mon résidanat (2012-2016) en Tunisie, avec une
+          expérience hospitalière à Paris (Hôpital Saint-Louis).
         </p>
         <p class="mt-4 text-ink/75">
-          En 2016, j’ai soutenu une these sur la prise en charge du dermatofibrosarcome protuberant,
-          distinguee (hauts honneurs, felicitations du jury). Mon activite s’articule autour de la
-          chirurgie de la main et du poignet, de la reconstruction, des sequelles de brulures et de
-          certaines pathologies cutanees.
+          En 2016, j’ai soutenu une thèse sur la prise en charge du dermatofibrosarcome protubérant,
+          distinguée (hauts honneurs, félicitations du jury). Mon activité s’articule autour de la
+          chirurgie de la main et du poignet, de la reconstruction, des séquelles de brûlures et de
+          certaines pathologies cutanées.
         </p>
       </div>
       <div class="sm:col-span-7">
@@ -87,31 +124,50 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
             />
             <div class="min-w-0">
               <div class="font-display text-2xl tracking-tight">Dr Sirine Soussi</div>
-              <div class="mt-1 text-sm text-ink/70">Chirurgie plastique, esthetique, reconstructrice - chirurgie de la main</div>
-               <a href="/dr-sirine-soussi" class="link mt-2 inline-flex text-sm">
-                 En savoir plus →
-               </a>
+               <div class="mt-1 text-sm text-ink/70">Chirurgie plastique, esthétique, reconstructrice - chirurgie de la main</div>
+                <a href="/dr-sirine-soussi" class="link mt-2 inline-flex text-sm">
+                  En savoir plus →
+                </a>
+            </div>
+          </div>
+
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-2xl border border-ink/10 bg-paper/70 p-4 text-sm text-ink/75">
+              <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">En bref</div>
+              <ul class="mt-2 space-y-1">
+                <li>Spécialités: esthétique, reconstructrice, main</li>
+                <li>Expérience hospitalière: Hôpital Saint-Louis (Paris)</li>
+                <li>Faculté de Médecine de Tunis</li>
+              </ul>
+            </div>
+            <div class="rounded-2xl border border-ink/10 bg-paper/70 p-4 text-sm text-ink/75">
+              <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">Consultation</div>
+              <ul class="mt-2 space-y-1">
+                <li>Indication personnalisée</li>
+                <li>Information claire et consentement</li>
+                <li>Suivi et accompagnement</li>
+              </ul>
             </div>
           </div>
 
           <div class="grid gap-6 sm:grid-cols-2">
             <div>
-              <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">Specialites</div>
+              <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">Spécialités</div>
               <ul class="mt-2 space-y-1 text-sm text-ink/75">
-                <li>Chirurgie plastique, esthetique, reconstructrice</li>
+                <li>Chirurgie plastique, esthétique, reconstructrice</li>
                 <li>Chirurgie de la main</li>
               </ul>
             </div>
             <div>
               <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">Parcours</div>
               <ul class="mt-2 space-y-1 text-sm text-ink/75">
-                <li>Faculte de Medecine de Tunis</li>
-                <li>Residant 2012-2016 (Tunisie)</li>
-                <li>Experience: Hopital Saint-Louis (Paris)</li>
+                <li>Faculté de Médecine de Tunis</li>
+                <li>Résidanat 2012-2016 (Tunisie)</li>
+                <li>Expérience: Hôpital Saint-Louis (Paris)</li>
               </ul>
             </div>
             <div>
-              <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">These (2016)</div>
+              <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">Thèse (2016)</div>
               <p class="mt-2 text-sm text-ink/75">
                 The Role of Plastic Surgery in the Management of Dermatofibrosarcoma Protuberans.
               </p>
@@ -137,16 +193,16 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
       <div class="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
         <div>
           <h2 class="font-display text-2xl tracking-tight">Interventions</h2>
-          <p class="mt-2 text-ink/70">Explorer les categories et trouver l’information adaptee.</p>
+          <p class="mt-2 text-ink/70">Explorer les catégories et trouver l’information adaptée.</p>
         </div>
-         <a href="/interventions" class="btn btn-pill btn-md btn-accent">Acceder aux interventions</a>
+         <a href="/interventions" class="btn btn-pill btn-md btn-accent">Accéder aux interventions</a>
       </div>
 
       <div class="mt-8 grid gap-4 sm:grid-cols-3">
         {interventionCategories.slice(0, 6).map((c) => (
           <a
             href={interventionCategoryHref(c.key)}
-            class="group overflow-hidden rounded-2xl border border-ink/10 bg-mist transition hover:border-ink/20"
+            class="group card-focus overflow-hidden rounded-2xl border border-ink/10 bg-mist transition hover:border-ink/20"
           >
             <div class="relative aspect-[4/3] w-full">
               <img
@@ -162,7 +218,7 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
             <div class="p-5">
               <div class="font-display text-lg tracking-tight">{c.title}</div>
               <div class="mt-2 text-sm text-ink/70">{c.description}</div>
-              <div class="mt-4 text-sm font-semibold text-ink/80 transition group-hover:text-ink">Decouvrir →</div>
+              <div class="mt-4 text-sm font-semibold text-ink/80 transition group-hover:text-ink">Découvrir →</div>
             </div>
           </a>
         ))}

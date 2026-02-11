@@ -10,9 +10,9 @@ export type ContactInfo = {
 
 export const site = {
   name: 'Dr Sirine Soussi',
-  tagline: 'Chirurgie plastique, esthetique et reconstructrice - Chirurgie de la main',
+  tagline: 'Chirurgie plastique, esthétique et reconstructrice - Chirurgie de la main',
   description:
-    'Site d’information medicale: chirurgie plastique, esthetique, reconstructrice et chirurgie de la main. Prise de rendez-vous par telephone ou WhatsApp.',
+    'Site d’information médicale: chirurgie plastique, esthétique, reconstructrice et chirurgie de la main. Prise de rendez-vous par téléphone ou WhatsApp.',
   locale: 'fr_FR',
   contact: {
     // Placeholders (do not ship to production)
@@ -22,12 +22,12 @@ export const site = {
     addressLines: ['99 Rue Exemple', '1000 Tunis, Tunisie'],
     hoursLines: ['Lun-Ven 09:00-18:00'],
     city: 'Tunis',
-    country: 'Tunisie'
+    country: 'Tunisie',
   } satisfies ContactInfo,
   links: {
     tel: 'tel:+21699999999',
-    whatsapp: 'https://wa.me/21699999999'
-  }
+    whatsapp: 'https://wa.me/21699999999',
+  },
 };
 
 export function buildTitle(pageTitle?: string) {

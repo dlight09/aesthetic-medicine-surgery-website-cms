@@ -1,7 +1,7 @@
 export const interventionCategories = [
   {
     key: 'medecine-esthetique',
-    title: 'Medecine esthetique',
+    title: 'Médecine esthétique',
     description: 'Injectables et soins de la peau.',
     thumbnailSrc: '/images/thumbnails/medecine-esthetique.webp',
   },
@@ -14,25 +14,25 @@ export const interventionCategories = [
   {
     key: 'silhouette',
     title: 'Silhouette',
-    description: 'Contour du corps et relachement cutane.',
+    description: 'Contour du corps et relâchement cutané.',
     thumbnailSrc: '/images/thumbnails/silhouette.webp',
   },
   {
     key: 'seins',
     title: 'Seins',
-    description: 'Augmentation, reduction, lifting, reconstruction.',
+    description: 'Augmentation, réduction, lifting, reconstruction.',
     thumbnailSrc: '/images/thumbnails/seins.webp',
   },
   {
     key: 'chirurgie-reparatrice',
-    title: 'Chirurgie reparatrice',
-    description: 'Tumeurs cutanees, brulures, sequelles.',
+    title: 'Chirurgie réparatrice',
+    description: 'Tumeurs cutanées, brûlures, séquelles.',
     thumbnailSrc: '/images/thumbnails/chirurgie-reparatrice.webp',
   },
   {
     key: 'chirurgie-de-la-main',
     title: 'Chirurgie de la main',
-    description: 'Pathologies, traumatologie et sequelles.',
+    description: 'Pathologies, traumatologie et séquelles.',
     thumbnailSrc: '/images/thumbnails/chirurgie-de-la-main.webp',
   },
   {
@@ -68,7 +68,7 @@ export const interventionCategoryFallbackList: Partial<Record<InterventionCatego
       'Genioplastie',
     ],
     silhouette: [
-      'Abdominoplastie inversee',
+      'Abdominoplastie inversée',
       'Lipoaspiration',
       'Lifting des bras',
       'Lifting des cuisses',
@@ -89,18 +89,18 @@ export const interventionCategoryFallbackList: Partial<Record<InterventionCatego
       'Tumeur benigne et cancer de la peau',
       'Sequelles de brulures',
       'Chirurgie des escarres',
-      'Lambeau cutane',
+      'Lambeau cutané',
     ],
     'chirurgie-de-la-main': [
       'Maladie de Dupuytren',
-      'Main rhumatoide (PR - polyarthrite rhumatoide)',
-      'Pseudarthrose du scaphoide',
+      'Main rhumatoïde (PR - polyarthrite rhumatoïde)',
+      'Pseudarthrose du scaphoïde',
       'Chirurgie traumatique de la main',
     ],
     intime: [
-      'Chirurgie esthetique de la verge',
-      'Nymphoplastie (petites levres)',
-      'Chirurgie esthetique des grandes levres',
+      'Chirurgie esthétique de la verge',
+      'Nymphoplastie (petites lèvres)',
+      'Chirurgie esthétique des grandes lèvres',
       'Hymenoplastie',
       'Vaginoplastie',
     ],
