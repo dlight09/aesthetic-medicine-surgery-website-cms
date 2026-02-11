@@ -177,7 +177,30 @@ function isActive(href: string) {
                   class="w-48 bg-transparent text-sm text-ink/80 outline-none placeholder:text-ink/40"
                 />
               </label>
-              <a href="/" class="btn btn-pill btn-sm btn-secondary">Voir le site</a>
+              <a href="/" target="_blank" rel="noopener noreferrer" class="btn btn-pill btn-sm btn-secondary">
+                Voir le site
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                  class="-mr-1 h-4 w-4"
+                >
+                  <path
+                    d="M14 4h6v6M20 4l-9 9"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M20 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </a>
               <button type="button" class="btn btn-pill btn-sm btn-secondary" data-cms-logout>Deconnexion</button>
             </div>
           </header>
