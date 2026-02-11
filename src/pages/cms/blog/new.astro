@@ -1,0 +1,54 @@
+---
+import CmsLayout from '@/layouts/CmsLayout.astro';
+---
+
+<CmsLayout title="Nouvel article">
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <section class="rounded-3xl border border-ink/10 bg-paper p-7 shadow-soft">
+      <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Blog</div>
+      <h1 class="mt-2 font-display text-3xl tracking-tight">Nouvel article</h1>
+
+      <div class="mt-8 grid gap-5">
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Titre</span>
+          <input class="rounded-xl border border-ink/10 bg-paper px-4 py-2" placeholder="Titre de l’article" />
+        </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Description courte</span>
+          <textarea rows={3} class="rounded-xl border border-ink/10 bg-paper px-4 py-3"></textarea>
+        </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Date</span>
+          <input class="rounded-xl border border-ink/10 bg-paper px-4 py-2" placeholder="JJ/MM/AAAA" />
+        </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Contenu (Markdown)</span>
+          <textarea rows={10} class="rounded-2xl border border-ink/10 bg-paper px-4 py-3"></textarea>
+        </label>
+      </div>
+    </section>
+
+    <aside class="rounded-3xl border border-ink/10 bg-mist p-6 shadow-soft">
+      <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Publication</div>
+      <div class="mt-4 grid gap-3">
+        <label class="flex items-center justify-between rounded-2xl border border-ink/10 bg-paper px-4 py-3 text-sm">
+          <span>Statut</span>
+          <select class="bg-transparent text-sm">
+            <option>Brouillon</option>
+            <option>Publie</option>
+          </select>
+        </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Slug</span>
+          <input class="rounded-xl border border-ink/10 bg-paper px-4 py-2" placeholder="ex: suite-post-op" />
+        </label>
+      </div>
+
+      <div class="mt-6 space-y-3">
+        <button type="button" class="btn btn-pill btn-md btn-primary w-full">Enregistrer brouillon</button>
+        <button type="button" class="btn btn-pill btn-md btn-secondary w-full">Publier</button>
+      </div>
+      <div class="mt-4 text-xs text-ink/60">UI uniquement — sauvegarde activee apres integration.</div>
+    </aside>
+  </div>
+</CmsLayout>

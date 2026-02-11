@@ -1,0 +1,79 @@
+---
+import CmsLayout from '@/layouts/CmsLayout.astro';
+import { cmsBookings } from '@/lib/cms/mock';
+
+export async function getStaticPaths() {
+  return cmsBookings.map((b) => ({ params: { id: b.id } }));
+}
+
+const { id } = Astro.params;
+const booking = cmsBookings.find((b) => b.id === id) ?? cmsBookings[0];
+---
+
+<CmsLayout title="Demande">
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <section class="rounded-3xl border border-ink/10 bg-paper p-7 shadow-soft">
+      <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Demande</div>
+      <h1 class="mt-2 font-display text-3xl tracking-tight">{booking.patientName}</h1>
+      <p class="mt-2 text-sm text-ink/60">Reference: {booking.id}</p>
+
+      <div class="mt-8 grid gap-4 sm:grid-cols-2">
+        <div class="rounded-2xl border border-ink/10 bg-mist p-4 text-sm">
+          <div class="text-xs uppercase tracking-wide text-ink/50">Telephone</div>
+          <div class="mt-2 font-semibold text-ink/90">{booking.phone}</div>
+        </div>
+        <div class="rounded-2xl border border-ink/10 bg-mist p-4 text-sm">
+          <div class="text-xs uppercase tracking-wide text-ink/50">Canal</div>
+          <div class="mt-2 font-semibold text-ink/90">{booking.channel}</div>
+        </div>
+        <div class="rounded-2xl border border-ink/10 bg-mist p-4 text-sm">
+          <div class="text-xs uppercase tracking-wide text-ink/50">Motif</div>
+          <div class="mt-2 font-semibold text-ink/90">{booking.category}</div>
+        </div>
+        <div class="rounded-2xl border border-ink/10 bg-mist p-4 text-sm">
+          <div class="text-xs uppercase tracking-wide text-ink/50">Date souhaitee</div>
+          <div class="mt-2 font-semibold text-ink/90">{booking.desiredDate}</div>
+        </div>
+      </div>
+
+      <div class="mt-8">
+        <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Notes internes</div>
+        <textarea
+          rows={6}
+          class="mt-2 w-full rounded-2xl border border-ink/10 bg-paper px-4 py-3 text-sm"
+          placeholder="Notes internes, commentaires, prochaines actions..."
+        ></textarea>
+      </div>
+
+      <div class="mt-8 rounded-2xl border border-ink/10 bg-mist p-4 text-sm text-ink/70">
+        <div class="font-semibold text-ink/80">Historique</div>
+        <ul class="mt-3 space-y-2">
+          <li>11/02/2026 — Demande creee</li>
+          <li>11/02/2026 — Premiere tentative d’appel</li>
+        </ul>
+      </div>
+    </section>
+
+    <aside class="rounded-3xl border border-ink/10 bg-mist p-6 shadow-soft">
+      <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Actions</div>
+      <div class="mt-3 space-y-2">
+        <a href={`tel:${booking.phone.replace(/\s/g, '')}`} class="btn btn-pill btn-md btn-primary w-full">Appeler</a>
+        <a href={`https://wa.me/${booking.phone.replace(/\D/g, '')}`} class="btn btn-pill btn-md btn-secondary w-full">
+          WhatsApp
+        </a>
+      </div>
+
+      <div class="mt-6">
+        <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Statut</div>
+        <select class="mt-2 w-full rounded-xl border border-ink/10 bg-paper px-3 py-2 text-sm">
+          <option selected={booking.status === 'Nouveau'}>Nouveau</option>
+          <option selected={booking.status === 'Contacte'}>Contacte</option>
+          <option selected={booking.status === 'Planifie'}>Planifie</option>
+          <option>Cloture</option>
+        </select>
+      </div>
+
+      <div class="mt-6 text-xs text-ink/60">UI uniquement — sauvegarde activee apres integration.</div>
+    </aside>
+  </div>
+</CmsLayout>

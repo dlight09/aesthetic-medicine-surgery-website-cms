@@ -1,0 +1,80 @@
+---
+import CmsLayout from '@/layouts/CmsLayout.astro';
+import { cmsBookings } from '@/lib/cms/mock';
+
+const statusClass = (status: string) => {
+  switch (status) {
+    case 'Nouveau':
+      return 'bg-copper/15 text-copper';
+    case 'Contacte':
+      return 'bg-ink/10 text-ink/80';
+    case 'Planifie':
+      return 'bg-emerald-100 text-emerald-700';
+    case 'Cloture':
+      return 'bg-ink/5 text-ink/60';
+    default:
+      return 'bg-ink/10 text-ink/70';
+  }
+};
+---
+
+<CmsLayout title="Demandes">
+  <div class="space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Gestion manuelle</div>
+        <h1 class="mt-1 font-display text-3xl tracking-tight">Demandes de rendez-vous</h1>
+      </div>
+      <a href="/cms/bookings/new" class="btn btn-pill btn-sm btn-primary">Nouvelle demande</a>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <select class="rounded-full border border-ink/10 bg-paper px-4 py-2 text-sm">
+        <option>Statut: tous</option>
+        <option>Nouveau</option>
+        <option>Contacte</option>
+        <option>Planifie</option>
+        <option>Cloture</option>
+      </select>
+      <input
+        type="search"
+        placeholder="Rechercher par nom, categorie, date..."
+        class="min-w-[220px] rounded-full border border-ink/10 bg-paper px-4 py-2 text-sm"
+      />
+    </div>
+
+    <div class="rounded-3xl border border-ink/10 bg-paper shadow-soft">
+      <div class="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr] gap-4 border-b border-ink/10 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-ink/50">
+        <div>Patient</div>
+        <div>Canal</div>
+        <div>Motif</div>
+        <div>Date souhaitee</div>
+        <div>Statut</div>
+      </div>
+      <div class="divide-y divide-ink/5">
+        {cmsBookings.map((b) => (
+          <a
+            href={`/cms/bookings/${b.id}`}
+            class="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr] gap-4 px-6 py-4 text-sm hover:bg-mist/60"
+          >
+            <div>
+              <div class="font-semibold text-ink/90">{b.patientName}</div>
+              <div class="text-xs text-ink/60">{b.phone}</div>
+            </div>
+            <div class="text-ink/70">{b.channel}</div>
+            <div class="text-ink/70">{b.category}</div>
+            <div class="text-ink/70">{b.desiredDate}</div>
+            <div>
+              <span class:list={[
+                'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold',
+                statusClass(b.status)
+              ]}>
+                {b.status}
+              </span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</CmsLayout>

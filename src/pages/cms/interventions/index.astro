@@ -1,0 +1,45 @@
+---
+import CmsLayout from '@/layouts/CmsLayout.astro';
+import { cmsInterventions } from '@/lib/cms/mock';
+
+const statusClass = (status: string) =>
+  status === 'Publie' ? 'bg-emerald-100 text-emerald-700' : 'bg-ink/10 text-ink/70';
+---
+
+<CmsLayout title="Interventions">
+  <div class="space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Fiches</div>
+        <h1 class="mt-1 font-display text-3xl tracking-tight">Interventions</h1>
+      </div>
+      <a href="/cms/interventions/new" class="btn btn-pill btn-sm btn-primary">Nouvelle intervention</a>
+    </div>
+
+    <div class="rounded-3xl border border-ink/10 bg-paper shadow-soft">
+      <div class="grid grid-cols-[1.4fr_1fr_0.6fr_0.6fr] gap-4 border-b border-ink/10 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-ink/50">
+        <div>Titre</div>
+        <div>Categorie</div>
+        <div>Ordre</div>
+        <div>Statut</div>
+      </div>
+      <div class="divide-y divide-ink/5">
+        {cmsInterventions.map((item) => (
+          <a
+            href={`/cms/interventions/${item.slug}`}
+            class="grid grid-cols-[1.4fr_1fr_0.6fr_0.6fr] gap-4 px-6 py-4 text-sm hover:bg-mist/60"
+          >
+            <div class="font-semibold text-ink/90">{item.title}</div>
+            <div class="text-ink/70">{item.category}</div>
+            <div class="text-ink/70">{item.order}</div>
+            <div>
+              <span class:list={['rounded-full px-3 py-1 text-xs font-semibold', statusClass(item.status)]}>
+                {item.status}
+              </span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</CmsLayout>

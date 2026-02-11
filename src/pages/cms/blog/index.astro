@@ -1,0 +1,40 @@
+---
+import CmsLayout from '@/layouts/CmsLayout.astro';
+import { cmsBlogPosts } from '@/lib/cms/mock';
+
+const statusClass = (status: string) =>
+  status === 'Publie' ? 'bg-emerald-100 text-emerald-700' : 'bg-ink/10 text-ink/70';
+---
+
+<CmsLayout title="Blog">
+  <div class="space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Articles</div>
+        <h1 class="mt-1 font-display text-3xl tracking-tight">Blog</h1>
+      </div>
+      <a href="/cms/blog/new" class="btn btn-pill btn-sm btn-primary">Nouvel article</a>
+    </div>
+
+    <div class="grid gap-4">
+      {cmsBlogPosts.map((post) => (
+        <div class="rounded-3xl border border-ink/10 bg-paper p-6 shadow-soft">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">{post.date}</div>
+              <div class="mt-2 font-display text-2xl tracking-tight">{post.title}</div>
+            </div>
+            <span class:list={['rounded-full px-3 py-1 text-xs font-semibold', statusClass(post.status)]}>
+              {post.status}
+            </span>
+          </div>
+          <p class="mt-3 text-ink/70">{post.description}</p>
+          <div class="mt-5 flex flex-wrap gap-3 text-sm font-semibold">
+            <a href={`/cms/blog/${post.slug}`} class="link">Modifier</a>
+            <a href={`/blog/${post.slug}`} class="link">Voir →</a>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</CmsLayout>

@@ -1,0 +1,61 @@
+---
+import CmsLayout from '@/layouts/CmsLayout.astro';
+import { cmsAvantApres } from '@/lib/cms/mock';
+
+const statusClass = (status: string) =>
+  status === 'Publie' ? 'bg-emerald-100 text-emerald-700' : 'bg-ink/10 text-ink/70';
+---
+
+<CmsLayout title="Avant/Apres">
+  <div class="space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Cas</div>
+        <h1 class="mt-1 font-display text-3xl tracking-tight">Avant/Apres</h1>
+      </div>
+      <a href="/cms/avant-apres/new" class="btn btn-pill btn-sm btn-primary">Nouveau cas</a>
+    </div>
+
+    <div class="rounded-3xl border border-ink/10 bg-paper shadow-soft">
+      <div class="grid grid-cols-[1.4fr_0.8fr_0.8fr_0.6fr] gap-4 border-b border-ink/10 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-ink/50">
+        <div>Cas</div>
+        <div>Zone</div>
+        <div>Consentement</div>
+        <div>Statut</div>
+      </div>
+      <div class="divide-y divide-ink/5">
+        {cmsAvantApres.map((item) => (
+          <a
+            href={`/cms/avant-apres/${item.id}`}
+            class="grid grid-cols-[1.4fr_0.8fr_0.8fr_0.6fr] gap-4 px-6 py-4 text-sm hover:bg-mist/60"
+          >
+            <div class="flex items-center gap-3">
+              <div class="flex gap-2">
+                <img src={item.beforeThumb} alt="Avant" class="h-10 w-14 rounded-lg object-cover" />
+                <img src={item.afterThumb} alt="Apres" class="h-10 w-14 rounded-lg object-cover" />
+              </div>
+              <div>
+                <div class="font-semibold text-ink/90">{item.title}</div>
+                <div class="text-xs text-ink/60">MAJ: {item.updatedAt}</div>
+              </div>
+            </div>
+            <div class="text-ink/70">{item.category}</div>
+            <div>
+              <span class:list={[
+                'rounded-full px-3 py-1 text-xs font-semibold',
+                item.consent ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+              ]}>
+                {item.consent ? 'Consent OK' : 'Sans consentement'}
+              </span>
+            </div>
+            <div>
+              <span class:list={['rounded-full px-3 py-1 text-xs font-semibold', statusClass(item.status)]}>
+                {item.status}
+              </span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</CmsLayout>

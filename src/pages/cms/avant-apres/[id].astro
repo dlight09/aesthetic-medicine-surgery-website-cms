@@ -1,0 +1,67 @@
+---
+import CmsLayout from '@/layouts/CmsLayout.astro';
+import { cmsAvantApres } from '@/lib/cms/mock';
+
+export async function getStaticPaths() {
+  return cmsAvantApres.map((item) => ({ params: { id: item.id } }));
+}
+
+const { id } = Astro.params;
+const item = cmsAvantApres.find((x) => x.id === id) ?? cmsAvantApres[0];
+---
+
+<CmsLayout title="Edition cas">
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <section class="rounded-3xl border border-ink/10 bg-paper p-7 shadow-soft">
+      <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant/Apres</div>
+      <h1 class="mt-2 font-display text-3xl tracking-tight">{item.title}</h1>
+
+      <div class="mt-8 grid gap-5">
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Titre</span>
+          <input class="rounded-xl border border-ink/10 bg-paper px-4 py-2" value={item.title} />
+        </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Zone</span>
+          <input class="rounded-xl border border-ink/10 bg-paper px-4 py-2" value={item.category} />
+        </label>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="rounded-2xl border border-ink/10 bg-mist p-4">
+            <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant</div>
+            <img src={item.beforeThumb} alt="Avant" class="mt-3 h-32 w-full rounded-xl object-cover" />
+            <button type="button" class="mt-3 btn btn-pill btn-sm btn-secondary">Remplacer</button>
+          </div>
+          <div class="rounded-2xl border border-ink/10 bg-mist p-4">
+            <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Apres</div>
+            <img src={item.afterThumb} alt="Apres" class="mt-3 h-32 w-full rounded-xl object-cover" />
+            <button type="button" class="mt-3 btn btn-pill btn-sm btn-secondary">Remplacer</button>
+          </div>
+        </div>
+
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Caption</span>
+          <input class="rounded-xl border border-ink/10 bg-paper px-4 py-2" placeholder="Resultat a 6 mois" />
+        </label>
+      </div>
+    </section>
+
+    <aside class="rounded-3xl border border-ink/10 bg-mist p-6 shadow-soft">
+      <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Consentement</div>
+      <label class="mt-3 flex items-center gap-2 text-sm">
+        <input type="checkbox" class="h-4 w-4" checked={item.consent} />
+        <span>Consentement obtenu</span>
+      </label>
+      <label class="mt-4 grid gap-2 text-sm">
+        <span class="font-semibold text-ink/80">Date du consentement</span>
+        <input class="rounded-xl border border-ink/10 bg-paper px-3 py-2" placeholder="JJ/MM/AAAA" />
+      </label>
+
+      <div class="mt-6 space-y-3">
+        <button type="button" class="btn btn-pill btn-md btn-primary w-full">Enregistrer</button>
+        <button type="button" class="btn btn-pill btn-md btn-secondary w-full">Publier</button>
+      </div>
+      <div class="mt-4 text-xs text-ink/60">UI uniquement — sauvegarde activee apres integration.</div>
+    </aside>
+  </div>
+</CmsLayout>
