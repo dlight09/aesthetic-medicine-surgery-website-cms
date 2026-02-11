@@ -162,7 +162,7 @@ function isActive(href: string) {
                 />
               </label>
               <a href="/" class="btn btn-pill btn-sm btn-secondary">Voir le site</a>
-              <button type="button" class="btn btn-pill btn-sm btn-secondary">Profil</button>
+              <button type="button" class="btn btn-pill btn-sm btn-secondary" data-cms-logout>Deconnexion</button>
             </div>
           </header>
 
@@ -189,6 +189,27 @@ function isActive(href: string) {
         dialog.addEventListener('click', (e) => {
           if (e.target === dialog) close();
         });
+      })();
+    </script>
+
+    <script is:inline>
+      (() => {
+        const isLogin = window.location.pathname === '/cms/login' || window.location.pathname === '/cms/login/';
+        if (!isLogin) {
+          const authed = window.localStorage.getItem('cms-auth') === 'true';
+          if (!authed) {
+            window.location.href = '/cms/login';
+            return;
+          }
+        }
+
+        const logoutBtn = document.querySelector('[data-cms-logout]');
+        if (logoutBtn instanceof HTMLButtonElement) {
+          logoutBtn.addEventListener('click', () => {
+            window.localStorage.removeItem('cms-auth');
+            window.location.href = '/cms/login';
+          });
+        }
       })();
     </script>
   </body>

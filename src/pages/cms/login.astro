@@ -1,0 +1,77 @@
+---
+import '@/styles/global.css';
+import { buildTitle } from '@/lib/site';
+
+const cmsPassword = import.meta.env.PUBLIC_CMS_PASSWORD ?? 'drsoussi';
+const fullTitle = buildTitle('CMS - Connexion');
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>{fullTitle}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="min-h-screen bg-paper font-body text-ink">
+    <main class="mx-auto flex min-h-screen max-w-5xl items-center justify-center px-4 py-12">
+      <div class="grid w-full gap-6 rounded-3xl border border-ink/10 bg-paper p-8 shadow-soft sm:max-w-md">
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Espace CMS</div>
+          <h1 class="mt-2 font-display text-3xl tracking-tight">Connexion</h1>
+          <p class="mt-2 text-sm text-ink/60">Acces reserve au cabinet. Mot de passe requis.</p>
+        </div>
+
+        <form id="cms-login" class="grid gap-4" data-expected={cmsPassword}>
+          <label class="grid gap-2 text-sm">
+            <span class="font-semibold text-ink/80">Mot de passe</span>
+            <input
+              type="password"
+              class="rounded-xl border border-ink/10 bg-paper px-4 py-2"
+              placeholder="Mot de passe"
+              autocomplete="current-password"
+              required
+            />
+          </label>
+          <button type="submit" class="btn btn-pill btn-md btn-primary">Se connecter</button>
+          <p id="cms-error" class="hidden text-sm text-rose-600">Mot de passe incorrect.</p>
+        </form>
+
+        <div class="text-xs text-ink/50">
+          Astuce: definissez la variable PUBLIC_CMS_PASSWORD dans Vercel pour changer le mot de passe.
+        </div>
+      </div>
+    </main>
+
+    <script is:inline>
+      (() => {
+        const form = document.getElementById('cms-login');
+        const error = document.getElementById('cms-error');
+        if (!(form instanceof HTMLFormElement)) return;
+        const expected = form.dataset.expected ?? '';
+
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const input = form.querySelector('input[type="password"]');
+          if (!(input instanceof HTMLInputElement)) return;
+          if (input.value === expected) {
+            window.localStorage.setItem('cms-auth', 'true');
+            window.location.href = '/cms';
+            return;
+          }
+          if (error) error.classList.remove('hidden');
+          input.focus();
+          input.select();
+        });
+      })();
+    </script>
+  </body>
+</html>
