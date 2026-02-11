@@ -70,7 +70,12 @@ function isActive(href: string) {
       <dialog id="cms-nav" class="cms-drawer sm:hidden">
         <div class="cms-drawer-panel">
           <div class="flex items-center justify-between border-b border-ink/10 px-5 py-4">
-            <div class="text-sm font-semibold uppercase tracking-wide text-ink/60">Navigation</div>
+            <div class="flex items-center gap-2">
+              <span class="rounded-full bg-ink/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink/70">
+                CMS
+              </span>
+              <div class="text-sm font-semibold uppercase tracking-wide text-ink/60">Navigation</div>
+            </div>
             <button
               type="button"
               class="rounded-full px-3 py-2 text-sm font-semibold text-ink/70 hover:text-ink"
@@ -189,10 +194,13 @@ function isActive(href: string) {
             <div class="flex items-center gap-3">
               <button
                 type="button"
-                class="inline-flex items-center rounded-full border border-ink/10 bg-paper px-3 py-2 text-sm font-semibold text-ink/70 hover:text-ink sm:hidden"
+                class="inline-flex items-center justify-center rounded-full border border-ink/10 bg-paper p-2 text-ink/70 hover:text-ink sm:hidden"
                 data-cms-open
+                aria-label="Ouvrir le menu"
               >
-                Menu
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="h-5 w-5">
+                  <path d="M5 7h14M5 12h14M5 17h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
               </button>
               <div>
                 <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">CMS</div>
