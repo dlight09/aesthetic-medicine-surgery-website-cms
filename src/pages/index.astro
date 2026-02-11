@@ -23,7 +23,7 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
             </p>
 
             <div class="mt-7 flex flex-col gap-3 sm:flex-row">
-              <a href="/contact" class="btn btn-pill btn-lg btn-primary">Prendre rendez-vous</a>
+              <a href="/contact" class="btn btn-pill btn-lg btn-primary home-cta-primary">Prendre rendez-vous</a>
               <a href={site.links.tel} class="btn btn-pill btn-lg btn-secondary">Appeler</a>
               <a href={site.links.whatsapp} class="btn btn-pill btn-lg btn-secondary">WhatsApp</a>
             </div>
@@ -39,7 +39,7 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
         </div>
 
         <div class="sm:col-span-6">
-          <div class="relative overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-lift">
+          <div class="fx-frame fx-glow fx-lift relative overflow-hidden rounded-3xl bg-paper">
             <img
               src="/images/hero-clinic-01.webp"
               width="1536"
@@ -62,15 +62,15 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
 
   <section class="mx-auto max-w-6xl px-4 pb-12">
     <div class="grid gap-4 sm:grid-cols-2">
-      <div class="rounded-3xl border border-ink/10 bg-paper p-6 shadow-soft">
+      <div class="fx-frame fx-lift rounded-3xl bg-paper p-6 shadow-soft">
         <div class="font-display text-2xl tracking-tight">Médecine esthétique & visage</div>
         <p class="mt-2 text-ink/70">Soins, injectables, harmonisation et rajeunissement.</p>
-        <ul class="mt-4 space-y-2 text-sm text-ink/75">
-          <li>• Médecine esthétique</li>
-          <li>• Visage</li>
-          <li>• Silhouette</li>
-          <li>• Seins</li>
-        </ul>
+        <div class="mt-4 flex flex-wrap gap-2 text-sm text-ink/75">
+          <span class="chip">Médecine esthétique</span>
+          <span class="chip">Visage</span>
+          <span class="chip">Silhouette</span>
+          <span class="chip">Seins</span>
+        </div>
         <div class="mt-5 flex flex-wrap gap-2">
           <a href="/interventions/medecine-esthetique" class="btn btn-pill btn-sm btn-secondary">Médecine esthétique</a>
           <a href="/interventions/visage" class="btn btn-pill btn-sm btn-secondary">Visage</a>
@@ -78,14 +78,14 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
           <a href="/interventions/seins" class="btn btn-pill btn-sm btn-secondary">Seins</a>
         </div>
       </div>
-      <div class="rounded-3xl border border-ink/10 bg-paper p-6 shadow-soft">
+      <div class="fx-frame fx-lift rounded-3xl bg-paper p-6 shadow-soft">
         <div class="font-display text-2xl tracking-tight">Main & reconstruction</div>
         <p class="mt-2 text-ink/70">Pathologies de la main, chirurgie réparatrice, suites et suivi.</p>
-        <ul class="mt-4 space-y-2 text-sm text-ink/75">
-          <li>• Chirurgie de la main</li>
-          <li>• Chirurgie réparatrice</li>
-          <li>• Séquelles et tumeurs cutanées</li>
-        </ul>
+        <div class="mt-4 flex flex-wrap gap-2 text-sm text-ink/75">
+          <span class="chip">Chirurgie de la main</span>
+          <span class="chip">Chirurgie réparatrice</span>
+          <span class="chip">Séquelles cutanées</span>
+        </div>
         <div class="mt-5 flex flex-wrap gap-2">
           <a href="/interventions/chirurgie-de-la-main" class="btn btn-pill btn-sm btn-secondary">Chirurgie de la main</a>
           <a href="/interventions/chirurgie-reparatrice" class="btn btn-pill btn-sm btn-secondary">Chirurgie réparatrice</a>
@@ -112,7 +112,7 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
         </p>
       </div>
       <div class="sm:col-span-7">
-        <div class="rounded-3xl border border-ink/10 bg-mist p-8 shadow-soft">
+        <div class="fx-frame fx-glow fx-lift rounded-3xl bg-mist p-8 shadow-soft">
           <div class="mb-6 flex items-center gap-5">
             <img
               src="/images/doctor/dr-sirine-soussi-01.png"
@@ -200,10 +200,10 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
 
       <div class="mt-8 grid gap-4 sm:grid-cols-3">
         {interventionCategories.slice(0, 6).map((c) => (
-          <a
-            href={interventionCategoryHref(c.key)}
-            class="group card-focus overflow-hidden rounded-2xl border border-ink/10 bg-mist transition hover:border-ink/20"
-          >
+            <a
+              href={interventionCategoryHref(c.key)}
+              class="group card-focus fx-frame fx-lift overflow-hidden rounded-2xl bg-mist"
+            >
             <div class="relative aspect-[4/3] w-full">
               <img
                 src={c.thumbnailSrc}
@@ -226,3 +226,55 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
     </div>
   </section>
 </BaseLayout>
+
+<style>
+  .fx-frame {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(rgb(var(--c-paper))) padding-box,
+      linear-gradient(135deg, rgba(var(--c-sand) / 0.4), rgba(var(--c-copper) / 0.35), transparent) border-box;
+    box-shadow: 0 14px 38px rgba(17, 24, 39, 0.04);
+    transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease;
+  }
+
+  .fx-glow:hover,
+  .fx-glow:focus-visible,
+  .fx-glow:focus-within {
+    box-shadow:
+      0 20px 50px rgba(17, 24, 39, 0.08),
+      0 0 0 1px rgba(var(--c-copper) / 0.25),
+      0 18px 60px rgba(var(--c-copper) / 0.18);
+  }
+
+  .fx-lift:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 18px 48px rgba(17, 24, 39, 0.09),
+      0 0 0 1px rgba(var(--c-copper) / 0.18);
+  }
+
+  .home-cta-primary {
+    box-shadow:
+      0 14px 38px rgba(17, 24, 39, 0.1),
+      0 0 0 0px rgba(var(--c-copper) / 0.0);
+    transition: box-shadow 200ms ease, transform 200ms ease;
+  }
+
+  .home-cta-primary:hover,
+  .home-cta-primary:focus-visible {
+    box-shadow:
+      0 20px 56px rgba(17, 24, 39, 0.16),
+      0 0 0 2px rgba(var(--c-copper) / 0.32);
+    transform: translateY(-1px);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(var(--c-ink) / 0.08);
+    background: rgba(var(--c-paper) / 0.8);
+  }
+</style>
