@@ -34,6 +34,10 @@
     @apply bg-paper text-ink shadow-soft;
   }
 
+  .cms-nav-icon {
+    @apply h-4 w-4 text-ink/50;
+  }
+
   .cms-card {
     @apply rounded-3xl border border-ink/10 bg-paper;
     box-shadow: 0 14px 36px rgba(17, 24, 39, 0.06);
@@ -58,14 +62,26 @@
     @apply outline-none focus-visible:ring-2 focus-visible:ring-copper/30 focus-visible:ring-offset-2 focus-visible:ring-offset-paper;
   }
 
+  .cms-input:focus-visible {
+    box-shadow: 0 0 0 4px rgba(var(--c-copper) / 0.14);
+  }
+
   .cms-textarea {
     @apply rounded-2xl border border-ink/10 bg-paper px-4 py-3 text-sm;
     @apply outline-none focus-visible:ring-2 focus-visible:ring-copper/30 focus-visible:ring-offset-2 focus-visible:ring-offset-paper;
   }
 
+  .cms-textarea:focus-visible {
+    box-shadow: 0 0 0 4px rgba(var(--c-copper) / 0.14);
+  }
+
   .cms-select {
     @apply rounded-xl border border-ink/10 bg-paper px-4 py-2 text-sm;
     @apply outline-none focus-visible:ring-2 focus-visible:ring-copper/30 focus-visible:ring-offset-2 focus-visible:ring-offset-paper;
+  }
+
+  .cms-select:focus-visible {
+    box-shadow: 0 0 0 4px rgba(var(--c-copper) / 0.14);
   }
 
   .cms-row {
