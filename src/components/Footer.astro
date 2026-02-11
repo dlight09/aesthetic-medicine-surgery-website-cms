@@ -1,0 +1,43 @@
+---
+import { site } from '@/lib/site';
+---
+
+<footer class="border-t border-ink/10 bg-paper">
+  <div class="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3">
+    <div>
+      <div class="font-display text-lg">{site.name}</div>
+      <p class="mt-2 text-sm text-ink/70">{site.tagline}</p>
+    </div>
+
+    <div class="text-sm">
+      <div class="font-semibold">Contact</div>
+      <div class="mt-2 text-ink/70">
+        <div>{site.contact.phoneDisplay}</div>
+        {site.contact.addressLines.map((l) => (
+          <div>{l}</div>
+        ))}
+        {site.contact.hoursLines.map((l) => (
+          <div>{l}</div>
+        ))}
+      </div>
+    </div>
+
+    <div class="text-sm">
+      <div class="font-semibold">Informations</div>
+      <div class="mt-2 grid gap-1">
+        <a class="text-ink/70 hover:text-ink" href="/dr-sirine-soussi">Dr Sirine Soussi</a>
+        <a class="text-ink/70 hover:text-ink" href="/contact#consultation">Consultation</a>
+        <a class="text-ink/70 hover:text-ink" href="/contact">Rendez-vous</a>
+        <a class="text-ink/70 hover:text-ink" href="/mentions-legales">Mentions legales</a>
+        <a class="text-ink/70 hover:text-ink" href="/confidentialite">Confidentialite</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="border-t border-ink/10">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 text-xs text-ink/60">
+      <div>© {new Date().getFullYear()} {site.name}</div>
+      <div>Site d’information - ne remplace pas une consultation.</div>
+    </div>
+  </div>
+</footer>

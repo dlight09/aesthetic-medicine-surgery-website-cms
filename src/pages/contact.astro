@@ -1,0 +1,92 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { site } from '@/lib/site';
+---
+
+<BaseLayout title="Rendez-vous" description="Prendre rendez-vous: telephone, WhatsApp, adresse, horaires et informations de consultation.">
+  <section class="mx-auto max-w-4xl px-4 py-14">
+    <h1 class="font-display text-4xl tracking-tight">Rendez-vous</h1>
+    <p class="mt-4 text-ink/75">
+      Pour une prise de rendez-vous: telephone ou WhatsApp. Adresse et horaires ci-dessous. Vous trouverez aussi le deroule d’une
+      consultation.
+    </p>
+
+    <div class="mt-7 overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft">
+      <img
+        src="/images/hero-clinic-01.webp"
+        width="1536"
+        height="1024"
+        alt="Cabinet medical"
+        loading="lazy"
+        class="h-44 w-full object-cover sm:h-56"
+      />
+    </div>
+
+    <div class="mt-10 grid gap-4 sm:grid-cols-2">
+      <div class="rounded-3xl border border-ink/10 bg-mist p-7">
+        <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">Telephone</div>
+        <div class="mt-2 font-display text-2xl">{site.contact.phoneDisplay}</div>
+        <div class="mt-5 flex gap-3">
+          <a href={site.links.tel} class="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper">Appeler</a>
+          <a href={site.links.whatsapp} class="rounded-full border border-ink/15 bg-paper px-5 py-2.5 text-sm font-semibold text-ink">WhatsApp</a>
+        </div>
+      </div>
+      <div class="rounded-3xl border border-ink/10 bg-paper p-7 shadow-soft">
+        <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">Adresse</div>
+        <div class="mt-2 text-ink/75">
+          {site.contact.addressLines.map((l) => (
+            <div>{l}</div>
+          ))}
+        </div>
+        <div class="mt-6 text-xs font-semibold uppercase tracking-wide text-ink/60">Horaires</div>
+        <div class="mt-2 text-ink/75">
+          {site.contact.hoursLines.map((l) => (
+            <div>{l}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8 rounded-3xl border border-ink/10 bg-paper p-6 text-sm text-ink/70">
+      Les informations de localisation seront precisees avant publication (placeholder actuellement).
+    </div>
+
+    <div id="consultation" class="mt-14">
+      <div class="rounded-3xl border border-ink/10 bg-paper p-8 shadow-soft">
+        <h2 class="font-display text-3xl tracking-tight">Consultation</h2>
+        <p class="mt-4 text-ink/75">
+          La consultation permet de comprendre votre demande, d’identifier l’option la plus adaptee, d’expliquer les benefices
+          attendus, les limites, les suites et les risques possibles.
+        </p>
+
+        <div class="mt-10 grid gap-4 sm:grid-cols-2">
+          <div class="rounded-3xl border border-ink/10 bg-mist p-7">
+            <div class="font-display text-2xl tracking-tight">1. Echange</div>
+            <p class="mt-2 text-ink/75">Vos objectifs, vos antecedents, vos priorites, vos contraintes.</p>
+          </div>
+          <div class="rounded-3xl border border-ink/10 bg-mist p-7">
+            <div class="font-display text-2xl tracking-tight">2. Examen clinique</div>
+            <p class="mt-2 text-ink/75">Evaluation medicale et analyse anatomique.</p>
+          </div>
+          <div class="rounded-3xl border border-ink/10 bg-mist p-7">
+            <div class="font-display text-2xl tracking-tight">3. Proposition</div>
+            <p class="mt-2 text-ink/75">Options possibles, indication, alternatives, devis selon les cas.</p>
+          </div>
+          <div class="rounded-3xl border border-ink/10 bg-mist p-7">
+            <div class="font-display text-2xl tracking-tight">4. Suivi</div>
+            <p class="mt-2 text-ink/75">Conseils, consignes, controle et accompagnement.</p>
+          </div>
+        </div>
+
+        <div class="mt-10 rounded-3xl border border-ink/10 bg-mist p-8">
+          <div class="font-display text-2xl tracking-tight">Prendre rendez-vous</div>
+          <p class="mt-2 text-ink/75">Par telephone ou WhatsApp.</p>
+          <div class="mt-5 flex flex-col gap-3 sm:flex-row">
+            <a href={site.links.tel} class="rounded-full bg-ink px-6 py-3 text-center text-sm font-semibold text-paper">Appeler</a>
+            <a href={site.links.whatsapp} class="rounded-full border border-ink/15 bg-paper px-6 py-3 text-center text-sm font-semibold text-ink">WhatsApp</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

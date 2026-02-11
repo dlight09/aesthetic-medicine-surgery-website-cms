@@ -1,0 +1,237 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { site } from '@/lib/site';
+---
+
+<BaseLayout
+  title="Dr Sirine Soussi"
+  description="Parcours, specialites et approche du Dr Sirine Soussi - chirurgie plastique, esthetique et reconstructrice."
+>
+  <section class="mx-auto max-w-6xl px-4 py-14">
+    <div class="grid gap-8 sm:grid-cols-[1.2fr_0.8fr] sm:items-start">
+      <div>
+        <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">A propos</div>
+        <h1 class="mt-3 font-display text-5xl tracking-tight">Dr Sirine Soussi</h1>
+        <p class="mt-5 max-w-2xl text-ink/75">
+          Chirurgie plastique, esthetique et reconstructrice - chirurgie de la main. Une approche medicale, sobre et
+          personnalisee: comprendre, expliquer clairement, proposer l'option la plus adaptee.
+        </p>
+
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+          <a
+            href="/contact"
+            class="inline-flex items-center justify-center rounded-full bg-ink px-6 py-3 text-sm font-semibold text-paper shadow-soft transition hover:shadow-lift"
+          >
+            Prendre rendez-vous
+          </a>
+          <a
+            href="/interventions"
+            class="inline-flex items-center justify-center rounded-full border border-ink/15 bg-mist px-6 py-3 text-sm font-semibold text-ink/85 transition hover:border-ink/25 hover:bg-paper"
+          >
+            Voir les interventions
+          </a>
+        </div>
+
+        <div class="mt-10 rounded-3xl border border-ink/10 bg-paper p-6 shadow-soft">
+          <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">Acces rapides</div>
+          <div class="mt-4 flex flex-wrap gap-2">
+            {[
+              { href: '#parcours', label: 'Parcours' },
+              { href: '#specialites', label: 'Specialites' },
+              { href: '#philosophie', label: 'Approche' },
+              { href: '#repere', label: 'Reperes' },
+              { href: '#rendez-vous', label: 'Rendez-vous' }
+            ].map((x) => (
+              <a
+                href={x.href}
+                class="rounded-full border border-ink/10 bg-mist px-4 py-2 text-sm font-semibold text-ink/80 transition hover:border-ink/20 hover:bg-paper"
+              >
+                {x.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div class="sm:sticky sm:top-24">
+        <div class="grain overflow-hidden rounded-3xl border border-ink/10 bg-mist p-6 shadow-soft">
+          <div class="relative overflow-hidden rounded-2xl border border-ink/10 bg-paper">
+            <img
+              src="/images/doctor/dr-sirine-soussi-01.png"
+              width="1200"
+              height="1500"
+              alt="Portrait du Dr Sirine Soussi"
+              loading="eager"
+              fetchpriority="high"
+              class="h-64 w-full object-cover"
+            />
+            <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,19,0.45),transparent_55%)]"></div>
+            <div class="absolute bottom-3 left-3 right-3">
+              <div class="rounded-2xl bg-paper/85 px-4 py-3 backdrop-blur">
+                <div class="font-display text-lg tracking-tight">Dr Sirine Soussi</div>
+                <div class="mt-0.5 text-xs text-ink/70">Chirurgie plastique - esthetique - reconstructrice</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6">
+            <div class="font-display text-2xl tracking-tight">Cabinet</div>
+            <div class="mt-1 text-sm text-ink/70">{site.contact.city}</div>
+          </div>
+          <div class="mt-6 text-sm text-ink/70">
+            <div class="font-semibold text-ink">Contact</div>
+            <div class="mt-2">{site.contact.phoneDisplay}</div>
+            <div class="mt-2">{site.contact.addressLines.join(' - ')}</div>
+          </div>
+          <div class="mt-6 grid gap-2">
+            <a
+              href={site.links.tel}
+              class="inline-flex items-center justify-center rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-paper"
+            >
+              Appeler
+            </a>
+            <a
+              href={site.links.whatsapp}
+              class="inline-flex items-center justify-center rounded-xl border border-ink/15 bg-paper px-4 py-3 text-sm font-semibold text-ink"
+            >
+              WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-14 grid gap-10">
+      <section id="parcours" class="rounded-3xl border border-ink/10 bg-paper p-8 shadow-soft">
+        <h2 class="font-display text-3xl tracking-tight">Parcours</h2>
+        <p class="mt-4 max-w-3xl text-ink/75">
+          Une formation centree sur la chirurgie plastique, la reconstruction et la precision du geste. L'objectif est de
+          proposer des options realistes, expliquees simplement, avec un suivi attentif.
+        </p>
+        <div class="mt-8 grid gap-4 sm:grid-cols-3">
+          {[
+            { t: 'Formation', d: 'Etudes medicales, internat et formation continue.' },
+            { t: 'Experience', d: 'Experience hospitaliere et pratique en cabinet.' },
+            { t: 'Suivi', d: 'Accompagnement avant / apres, consignes et controles.' }
+          ].map((x) => (
+            <div class="rounded-3xl border border-ink/10 bg-mist p-7">
+              <div class="font-display text-2xl tracking-tight">{x.t}</div>
+              <div class="mt-2 text-ink/70">{x.d}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="specialites" class="rounded-3xl border border-ink/10 bg-paper p-8 shadow-soft">
+        <h2 class="font-display text-3xl tracking-tight">Specialites</h2>
+        <p class="mt-4 max-w-3xl text-ink/75">
+          Les indications sont discutees en consultation selon l'examen clinique et vos attentes. La priorite: securite,
+          proportion et resultat naturel.
+        </p>
+        <div class="mt-8 grid gap-4 sm:grid-cols-2">
+          {[
+            {
+              t: 'Chirurgie esthetique',
+              d: 'Visage, silhouette, seins, intime: objectifs et strategie adaptes au patient.'
+            },
+            {
+              t: 'Medecine esthetique',
+              d: 'Toxine botulique, acide hyaluronique, skin quality: plans de soin progressifs.'
+            },
+            {
+              t: 'Chirurgie reconstructrice',
+              d: 'Reparation et reconstruction: prise en charge des sequelles, cicatrices et pathologies cutanees.'
+            },
+            {
+              t: 'Chirurgie de la main',
+              d: 'Pathologies et traumatologie de la main: evaluation, options, suites et reeducation.'
+            }
+          ].map((x) => (
+            <div class="rounded-3xl border border-ink/10 bg-mist p-7">
+              <div class="font-display text-2xl tracking-tight">{x.t}</div>
+              <div class="mt-2 text-ink/70">{x.d}</div>
+              <div class="mt-5">
+                <a href="/interventions" class="text-sm font-semibold text-ink/70 hover:text-ink">Explorer →</a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="philosophie" class="rounded-3xl border border-ink/10 bg-paper p-8 shadow-soft">
+        <h2 class="font-display text-3xl tracking-tight">Approche</h2>
+        <div class="mt-6 grid gap-4 sm:grid-cols-3">
+          {[
+            {
+              t: 'Ecoute et precision',
+              d: "Clarifier la demande, definir des objectifs concrets, expliquer les limites et les suites."
+            },
+            {
+              t: 'Esthetique naturelle',
+              d: "Recherche d'un resultat harmonieux: proportions, reliefs, subtilite."
+            },
+            {
+              t: 'Securite et transparence',
+              d: 'Information claire sur les risques possibles, les contraintes et le suivi.'
+            }
+          ].map((x) => (
+            <div class="rounded-3xl border border-ink/10 bg-mist p-7">
+              <div class="font-display text-2xl tracking-tight">{x.t}</div>
+              <div class="mt-2 text-ink/70">{x.d}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="repere" class="rounded-3xl border border-ink/10 bg-paper p-8 shadow-soft">
+        <h2 class="font-display text-3xl tracking-tight">Reperes</h2>
+        <div class="mt-6 grid gap-4 sm:grid-cols-2">
+          <div class="rounded-3xl border border-ink/10 bg-mist p-7">
+            <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">Information</div>
+            <div class="mt-3 text-ink/75">
+              Ce site fournit une information generale. Seule une consultation permet de confirmer une indication et de
+              definir un plan de traitement.
+            </div>
+          </div>
+          <div class="rounded-3xl border border-ink/10 bg-mist p-7">
+            <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">Avant / apres</div>
+            <div class="mt-3 text-ink/75">
+              Les resultats varient selon chaque patient. Le suivi et les consignes post-procedure font partie du resultat.
+            </div>
+            <div class="mt-5">
+              <a href="/avant-apres" class="text-sm font-semibold text-ink/70 hover:text-ink">Voir des exemples →</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="rendez-vous" class="rounded-3xl border border-ink/10 bg-paper p-8 shadow-soft">
+        <h2 class="font-display text-3xl tracking-tight">Rendez-vous</h2>
+        <p class="mt-4 max-w-3xl text-ink/75">
+          Pour une demande, une orientation ou un rendez-vous: telephone ou WhatsApp. Vous pouvez aussi consulter le deroule
+          d'une consultation.
+        </p>
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+          <a
+            href={site.links.tel}
+            class="inline-flex items-center justify-center rounded-full bg-ink px-6 py-3 text-sm font-semibold text-paper"
+          >
+            Appeler
+          </a>
+          <a
+            href={site.links.whatsapp}
+            class="inline-flex items-center justify-center rounded-full border border-ink/15 bg-mist px-6 py-3 text-sm font-semibold text-ink"
+          >
+            WhatsApp
+          </a>
+          <a
+            href="/contact#consultation"
+            class="inline-flex items-center justify-center rounded-full border border-ink/15 bg-paper px-6 py-3 text-sm font-semibold text-ink/85"
+          >
+            Comprendre la consultation
+          </a>
+        </div>
+      </section>
+    </div>
+  </section>
+</BaseLayout>

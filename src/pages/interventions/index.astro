@@ -1,0 +1,40 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { interventionCategories, interventionCategoryHref } from '@/lib/interventions';
+---
+
+<BaseLayout title="Interventions" description="Chirurgie et medecine esthetique: categories et fiches d’information.">
+  <section class="mx-auto max-w-6xl px-4 py-14">
+    <h1 class="font-display text-4xl tracking-tight">Interventions</h1>
+    <p class="mt-4 max-w-2xl text-ink/75">
+      Cette page rassemble les categories d’interventions. L’objectif est d’aider chaque patient a identifier
+      l’intervention adaptee, a comprendre le deroule et les suites, et a poser les bonnes questions en consultation.
+    </p>
+
+    <div class="mt-10 grid gap-4 sm:grid-cols-2">
+      {interventionCategories.map((c) => (
+        <a
+          href={interventionCategoryHref(c.key)}
+          class="group overflow-hidden rounded-3xl border border-ink/10 bg-mist shadow-soft transition hover:shadow-lift"
+        >
+          <div class="relative aspect-[4/3] w-full">
+            <img
+              src={c.thumbnailSrc}
+              width="1200"
+              height="900"
+              alt=""
+              loading="lazy"
+              class="h-full w-full object-cover"
+            />
+            <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,19,0.40),transparent_60%)]"></div>
+          </div>
+          <div class="p-7">
+            <div class="font-display text-2xl tracking-tight">{c.title}</div>
+            <div class="mt-2 text-ink/70">{c.description}</div>
+            <div class="mt-5 text-sm font-semibold text-ink/80 transition group-hover:text-ink">Voir →</div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

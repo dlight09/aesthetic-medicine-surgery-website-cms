@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --c-ink: 20 20 19;
+  --c-paper: 248 245 240;
+  --c-sand: 231 219 200;
+  --c-copper: 185 111 84;
+  --c-mist: 242 242 240;
+}
+
+html {
+  background: rgb(var(--c-paper));
+  color: rgb(var(--c-ink));
+}
+
+::selection {
+  background: rgb(var(--c-sand));
+}
+
+.grain {
+  position: relative;
+}
+
+.grain:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    radial-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 1px);
+  background-size:
+    24px 24px,
+    36px 36px;
+  background-position:
+    0 0,
+    12px 14px;
+  mix-blend-mode: multiply;
+  opacity: 0.35;
+}
+
+/* A slightly more editorial rhythm */
+.prose-med {
+  font-family: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+html.menu-scroll-lock,
+body.menu-scroll-lock {
+  overflow: hidden;
+}
+
+dialog[data-menu-dialog] {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  border: 0;
+}
+
+dialog[data-menu-dialog]:focus {
+  outline: none;
+}
+
+.mobile-menu-panel {
+  transform: translateY(10px) scale(0.99);
+  opacity: 0;
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 180ms ease;
+}
+
+.mobile-menu-panel.mobile-menu-enter {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.mega-panel {
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(10px) scale(0.99);
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 150ms ease;
+}
+
+.mega-panel.mega-open {
+  pointer-events: auto;
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}

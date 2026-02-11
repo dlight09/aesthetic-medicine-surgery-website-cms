@@ -1,0 +1,30 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog'))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<BaseLayout title="Blog" description="Articles d’information medicale: preparation, suites, questions frequentes.">
+  <section class="mx-auto max-w-6xl px-4 py-14">
+    <h1 class="font-display text-4xl tracking-tight">Blog</h1>
+    <p class="mt-4 max-w-2xl text-ink/75">
+      Articles d’information (generale) - ils ne remplacent pas une consultation.
+    </p>
+
+    <div class="mt-10 grid gap-4 sm:grid-cols-2">
+      {posts.map((p) => (
+        <a href={`/blog/${p.slug}`} class="rounded-3xl border border-ink/10 bg-paper p-7 shadow-soft transition hover:shadow-lift">
+          <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">
+            {p.data.date.toLocaleDateString('fr-FR')}
+          </div>
+          <div class="mt-2 font-display text-2xl tracking-tight">{p.data.title}</div>
+          <div class="mt-2 text-ink/70">{p.data.description}</div>
+          <div class="mt-5 text-sm font-semibold">Lire →</div>
+        </a>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

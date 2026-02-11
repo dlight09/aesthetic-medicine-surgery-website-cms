@@ -1,0 +1,32 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { site } from '@/lib/site';
+---
+
+<BaseLayout title="Mentions legales" description="Mentions legales du site.">
+  <section class="mx-auto max-w-3xl px-4 py-14">
+    <h1 class="font-display text-4xl tracking-tight">Mentions legales</h1>
+    <div class="mt-8 space-y-6 text-ink/75">
+      <div>
+        <div class="font-semibold text-ink">Editeur</div>
+        <p>{site.name}</p>
+      </div>
+      <div>
+        <div class="font-semibold text-ink">Contact</div>
+        <p>{site.contact.phoneDisplay}</p>
+        <p>{site.contact.addressLines.join(' - ')}</p>
+      </div>
+      <div>
+        <div class="font-semibold text-ink">Objet</div>
+        <p>
+          Le site fournit une information generale. Il ne constitue pas un avis medical personnalise et ne remplace pas
+          une consultation.
+        </p>
+      </div>
+      <div>
+        <div class="font-semibold text-ink">Hebergement</div>
+        <p>A completer selon l’hebergeur (placeholder).</p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

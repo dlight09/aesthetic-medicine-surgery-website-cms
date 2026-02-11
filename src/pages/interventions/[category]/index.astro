@@ -1,0 +1,84 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import {
+  interventionCategoryFallbackList,
+  interventionCategories,
+  interventionCategoryKeys,
+  interventionCategoryMeta,
+  type InterventionCategoryKey
+} from '@/lib/interventions';
+
+export async function getStaticPaths() {
+  return interventionCategoryKeys.map((category) => ({ params: { category } }));
+}
+
+const category = Astro.params.category as InterventionCategoryKey;
+const items = (await getCollection('interventions'))
+  .filter((i) => i.data.category === category)
+  .sort((a, b) => (a.data.order ?? 999) - (b.data.order ?? 999));
+
+function leafSlug(full: string) {
+  const parts = full.split('/').filter(Boolean);
+  return parts[parts.length - 1] ?? full;
+}
+
+const title = interventionCategoryMeta[category]?.title ?? 'Interventions';
+const thumbSrc = interventionCategories.find((c) => c.key === category)?.thumbnailSrc;
+---
+
+<BaseLayout title={title} description={`Interventions - ${title}.`}> 
+  <section class="mx-auto max-w-6xl px-4 py-14">
+    <a href="/interventions" class="text-sm font-semibold text-ink/70 hover:text-ink">← Toutes les categories</a>
+    <h1 class="mt-3 font-display text-4xl tracking-tight">{title}</h1>
+
+    {thumbSrc ? (
+      <div class="mt-7 overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft">
+        <img
+          src={thumbSrc}
+          width="1200"
+          height="900"
+          alt=""
+          loading="lazy"
+          class="h-44 w-full object-cover sm:h-56"
+        />
+      </div>
+    ) : null}
+
+    {category === 'visage' ? (
+      <p class="mt-4 max-w-2xl text-ink/75">
+        Aider le patient a identifier l’intervention adaptee. En consultation, nous discutons des attentes, de l’examen
+        clinique, des options possibles et des suites.
+      </p>
+    ) : null}
+
+    {items.length ? (
+      <div class="mt-10 grid gap-4 sm:grid-cols-2">
+        {items.map((i) => (
+          <a
+            href={`/interventions/${i.data.category}/${leafSlug(i.slug)}`}
+            class="rounded-3xl border border-ink/10 bg-mist p-7 shadow-soft transition hover:shadow-lift"
+          >
+            <div class="font-display text-2xl tracking-tight">{i.data.title}</div>
+            <div class="mt-2 text-ink/70">{i.data.description}</div>
+            <div class="mt-5 text-sm font-semibold">Lire la fiche →</div>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <div class="mt-10 rounded-3xl border border-ink/10 bg-paper p-8 text-ink/75">
+        <div class="font-display text-2xl tracking-tight">Liste des interventions</div>
+        {interventionCategoryFallbackList[category]?.length ? (
+          <ul class="mt-5 grid gap-2 sm:grid-cols-2">
+            {interventionCategoryFallbackList[category]!.map((x) => (
+              <li class="rounded-2xl border border-ink/10 bg-mist px-4 py-3 text-sm">{x}</li>
+            ))}
+          </ul>
+        ) : (
+          <p class="mt-4">Les fiches detaillees arrivent bientot pour cette categorie.</p>
+        )}
+
+      </div>
+    )}
+  </section>
+</BaseLayout>

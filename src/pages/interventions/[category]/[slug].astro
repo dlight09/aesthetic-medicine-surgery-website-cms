@@ -1,0 +1,62 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { site } from '@/lib/site';
+import { interventionCategories } from '@/lib/interventions';
+
+export async function getStaticPaths() {
+  const items = await getCollection('interventions');
+  return items.map((entry) => {
+    const parts = entry.slug.split('/').filter(Boolean);
+    const slug = parts[parts.length - 1] ?? entry.slug;
+    return {
+      params: { category: entry.data.category, slug },
+      props: { entry }
+    };
+  });
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+const categoryThumb = interventionCategories.find((c) => c.key === entry.data.category)?.thumbnailSrc;
+---
+
+<BaseLayout title={entry.data.title} description={entry.data.description}>
+  <section class="mx-auto max-w-3xl px-4 py-14">
+    <a href={`/interventions/${entry.data.category}`} class="text-sm font-semibold text-ink/70 hover:text-ink">
+      ← Retour a la categorie
+    </a>
+    <h1 class="mt-3 font-display text-4xl tracking-tight">{entry.data.title}</h1>
+    <p class="mt-4 text-lg text-ink/75">{entry.data.description}</p>
+
+    {categoryThumb ? (
+      <div class="mt-7 overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft">
+        <img
+          src={categoryThumb}
+          width="1200"
+          height="900"
+          alt=""
+          loading="lazy"
+          class="h-40 w-full object-cover sm:h-52"
+        />
+      </div>
+    ) : null}
+
+    <div class="mt-8 rounded-3xl border border-ink/10 bg-mist p-6 text-sm text-ink/75">
+      <div class="font-semibold text-ink">Prendre rendez-vous</div>
+      <div class="mt-2">Telephone: {site.contact.phoneDisplay}</div>
+      <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+        <a href={site.links.tel} class="rounded-full bg-ink px-5 py-2.5 text-center font-semibold text-paper">Appeler</a>
+        <a href={site.links.whatsapp} class="rounded-full border border-ink/15 bg-paper px-5 py-2.5 text-center font-semibold text-ink">WhatsApp</a>
+      </div>
+    </div>
+
+    <article class="prose-med mt-10 max-w-none">
+      <Content />
+    </article>
+
+    <div class="mt-10 rounded-3xl border border-ink/10 bg-paper p-6 text-sm text-ink/70">
+      Information generale - ne remplace pas une consultation. Les resultats et les suites varient selon chaque patient.
+    </div>
+  </section>
+</BaseLayout>
