@@ -29,7 +29,7 @@ const statusClass = (status: string) => {
     </div>
 
     <div class="flex flex-wrap items-center gap-3">
-      <select class="rounded-full border border-ink/10 bg-paper px-4 py-2 text-sm">
+      <select class="cms-select rounded-full">
         <option>Statut: tous</option>
         <option>Nouveau</option>
         <option>Contacte</option>
@@ -39,11 +39,11 @@ const statusClass = (status: string) => {
       <input
         type="search"
         placeholder="Rechercher par nom, categorie, date..."
-        class="min-w-[220px] rounded-full border border-ink/10 bg-paper px-4 py-2 text-sm"
+        class="cms-input min-w-[220px] rounded-full"
       />
     </div>
 
-    <div class="rounded-3xl border border-ink/10 bg-paper shadow-soft">
+    <div class="cms-card shadow-soft">
       <div class="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr] gap-4 border-b border-ink/10 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-ink/50">
         <div>Patient</div>
         <div>Canal</div>
@@ -53,10 +53,7 @@ const statusClass = (status: string) => {
       </div>
       <div class="divide-y divide-ink/5">
         {cmsBookings.map((b) => (
-          <a
-            href={`/cms/bookings/${b.id}`}
-            class="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr] gap-4 px-6 py-4 text-sm hover:bg-mist/60"
-          >
+          <a href={`/cms/bookings/${b.id}`} class="cms-row grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr] gap-4 px-6 py-4 text-sm">
             <div>
               <div class="font-semibold text-ink/90">{b.patientName}</div>
               <div class="text-xs text-ink/60">{b.phone}</div>
@@ -65,10 +62,7 @@ const statusClass = (status: string) => {
             <div class="text-ink/70">{b.category}</div>
             <div class="text-ink/70">{b.desiredDate}</div>
             <div>
-              <span class:list={[
-                'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold',
-                statusClass(b.status)
-              ]}>
+              <span class:list={['cms-pill', statusClass(b.status)]}>
                 {b.status}
               </span>
             </div>

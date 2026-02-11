@@ -4,22 +4,22 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
 
 <CmsLayout title="Nouvelle intervention">
   <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-    <section class="rounded-3xl border border-ink/10 bg-paper p-7 shadow-soft">
+    <section class="cms-card p-7">
       <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Intervention</div>
       <h1 class="mt-2 font-display text-3xl tracking-tight">Nouvelle fiche</h1>
 
       <div class="mt-8 grid gap-5">
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Titre</span>
-          <input class="rounded-xl border border-ink/10 bg-paper px-4 py-2" placeholder="Titre de l’intervention" />
+          <input class="cms-input" placeholder="Titre de l’intervention" />
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Description courte</span>
-          <textarea rows={3} class="rounded-xl border border-ink/10 bg-paper px-4 py-3"></textarea>
+          <textarea rows={3} class="cms-textarea"></textarea>
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Categorie</span>
-          <select class="rounded-xl border border-ink/10 bg-paper px-4 py-2">
+          <select class="cms-select">
             <option>medecine-esthetique</option>
             <option>visage</option>
             <option>silhouette</option>
@@ -31,16 +31,16 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Ordre</span>
-          <input class="rounded-xl border border-ink/10 bg-paper px-4 py-2" placeholder="1" />
+          <input class="cms-input" placeholder="1" />
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Contenu (Markdown)</span>
-          <textarea rows={10} class="rounded-2xl border border-ink/10 bg-paper px-4 py-3"></textarea>
+          <textarea rows={10} class="cms-textarea"></textarea>
         </label>
       </div>
     </section>
 
-    <aside class="rounded-3xl border border-ink/10 bg-mist p-6 shadow-soft">
+    <aside class="cms-panel p-6">
       <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Publication</div>
       <div class="mt-4 grid gap-3">
         <label class="flex items-center justify-between rounded-2xl border border-ink/10 bg-paper px-4 py-3 text-sm">
@@ -52,7 +52,7 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Slug</span>
-          <input class="rounded-xl border border-ink/10 bg-paper px-4 py-2" placeholder="ex: blepharoplastie" />
+          <input class="cms-input" placeholder="ex: blepharoplastie" />
         </label>
       </div>
 

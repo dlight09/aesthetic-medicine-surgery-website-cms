@@ -16,7 +16,7 @@ const statusClass = (status: string) =>
       <a href="/cms/avant-apres/new" class="btn btn-pill btn-sm btn-primary">Nouveau cas</a>
     </div>
 
-    <div class="rounded-3xl border border-ink/10 bg-paper shadow-soft">
+    <div class="cms-card shadow-soft">
       <div class="grid grid-cols-[1.4fr_0.8fr_0.8fr_0.6fr] gap-4 border-b border-ink/10 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-ink/50">
         <div>Cas</div>
         <div>Zone</div>
@@ -25,10 +25,7 @@ const statusClass = (status: string) =>
       </div>
       <div class="divide-y divide-ink/5">
         {cmsAvantApres.map((item) => (
-          <a
-            href={`/cms/avant-apres/${item.id}`}
-            class="grid grid-cols-[1.4fr_0.8fr_0.8fr_0.6fr] gap-4 px-6 py-4 text-sm hover:bg-mist/60"
-          >
+          <a href={`/cms/avant-apres/${item.id}`} class="cms-row grid grid-cols-[1.4fr_0.8fr_0.8fr_0.6fr] gap-4 px-6 py-4 text-sm">
             <div class="flex items-center gap-3">
               <div class="flex gap-2">
                 <img src={item.beforeThumb} alt="Avant" class="h-10 w-14 rounded-lg object-cover" />
@@ -42,14 +39,14 @@ const statusClass = (status: string) =>
             <div class="text-ink/70">{item.category}</div>
             <div>
               <span class:list={[
-                'rounded-full px-3 py-1 text-xs font-semibold',
+                'cms-pill',
                 item.consent ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
               ]}>
                 {item.consent ? 'Consent OK' : 'Sans consentement'}
               </span>
             </div>
             <div>
-              <span class:list={['rounded-full px-3 py-1 text-xs font-semibold', statusClass(item.status)]}>
+              <span class:list={['cms-pill', statusClass(item.status)]}>
                 {item.status}
               </span>
             </div>

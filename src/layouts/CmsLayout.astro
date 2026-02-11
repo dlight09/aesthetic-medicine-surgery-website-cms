@@ -1,5 +1,6 @@
 ---
 import '@/styles/global.css';
+import '@/styles/cms.css';
 import { buildTitle, site } from '@/lib/site';
 
 type Props = {
@@ -51,8 +52,8 @@ function isActive(href: string) {
     <meta property="og:type" content="website" />
     <meta property="og:title" content={fullTitle} />
   </head>
-  <body class="font-body text-ink">
-    <div class="min-h-screen bg-paper">
+  <body class="cms font-body text-ink">
+    <div class="cms-shell min-h-screen">
       <dialog
         id="cms-nav"
         class="fixed inset-0 m-0 h-full w-full bg-transparent p-0 backdrop:bg-black/30 sm:hidden"
@@ -100,7 +101,7 @@ function isActive(href: string) {
       </dialog>
 
       <div class="flex min-h-screen">
-        <aside class="hidden w-64 shrink-0 border-r border-ink/10 bg-mist/50 p-6 sm:flex sm:flex-col">
+        <aside class="cms-sidebar hidden w-64 shrink-0 p-6 sm:flex sm:flex-col">
           <div class="flex items-center justify-between">
             <div>
               <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Cabinet</div>
@@ -113,8 +114,8 @@ function isActive(href: string) {
               <a
                 href={item.href}
                 class:list={[
-                  'rounded-xl px-4 py-3 text-sm font-semibold transition',
-                  isActive(item.href) ? 'bg-paper text-ink shadow-soft' : 'text-ink/75 hover:text-ink'
+                  'cms-nav-link',
+                  isActive(item.href) ? 'cms-nav-link-active' : ''
                 ]}
               >
                 {item.label}
@@ -137,7 +138,7 @@ function isActive(href: string) {
         </aside>
 
         <div class="flex min-h-screen flex-1 flex-col">
-          <header class="flex items-center justify-between border-b border-ink/10 bg-paper px-4 py-4 sm:px-8">
+          <header class="cms-topbar flex items-center justify-between px-4 py-4 sm:px-8">
             <div class="flex items-center gap-3">
               <button
                 type="button"
