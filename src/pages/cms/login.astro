@@ -25,10 +25,18 @@ const fullTitle = buildTitle('CMS - Connexion');
   <body class="cms min-h-screen font-body text-ink">
     <main class="cms-shell mx-auto flex min-h-screen max-w-5xl items-center justify-center px-4 py-12">
       <div class="cms-card-elevated grid w-full gap-6 p-8 sm:max-w-md">
-        <div>
+        <div class="space-y-3 text-center">
+          <div class="flex justify-center">
+            <img
+              src="/images/dr-soussi-logo.svg"
+              alt="Dr Sirine Soussi"
+              class="h-16 w-auto sm:h-20"
+              loading="eager"
+            />
+          </div>
           <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Espace CMS</div>
-          <h1 class="mt-2 font-display text-3xl tracking-tight">Connexion</h1>
-          <p class="mt-2 text-sm text-ink/60">Acces reserve au cabinet. Mot de passe requis.</p>
+          <h1 class="font-display text-3xl tracking-tight">Connexion</h1>
+          <p class="text-sm text-ink/60">Acces reserve au cabinet. Mot de passe requis.</p>
         </div>
 
         <form id="cms-login" class="grid gap-4" data-expected={cmsPassword}>
