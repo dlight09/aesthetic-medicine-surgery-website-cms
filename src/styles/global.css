@@ -71,7 +71,7 @@ body.menu-scroll-lock {
 @layer components {
   /* Base */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap select-none;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap select-none cursor-pointer;
     @apply font-semibold;
     @apply transition;
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper;
