@@ -17,6 +17,25 @@
 }
 
 @layer components {
+  .cms-drawer {
+    @apply fixed inset-0 m-0 h-full w-full bg-transparent p-0 backdrop:bg-black/30 backdrop:backdrop-blur-[2px];
+  }
+
+  .cms-drawer-panel {
+    @apply h-full w-[min(88vw,360px)] border-r border-ink/10 bg-paper shadow-lift;
+    @apply rounded-r-3xl;
+    transform: translateX(-6%);
+    opacity: 0;
+    transition:
+      transform 220ms ease,
+      opacity 200ms ease;
+  }
+
+  .cms-drawer[open] .cms-drawer-panel {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
   .cms-topbar {
     @apply sticky top-0 z-30 border-b border-ink/10 bg-paper/90 backdrop-blur;
   }
