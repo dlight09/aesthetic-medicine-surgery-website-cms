@@ -22,10 +22,12 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
               Information claire et rendez-vous par téléphone ou WhatsApp.
             </p>
 
-            <div class="mt-7 flex flex-col gap-3 sm:flex-row">
-              <a href="/contact" class="btn btn-pill btn-lg btn-primary home-cta-primary">Prendre rendez-vous</a>
-              <a href={site.links.tel} class="btn btn-pill btn-lg btn-secondary">Appeler</a>
-              <a href={site.links.whatsapp} class="btn btn-pill btn-lg btn-secondary">WhatsApp</a>
+            <div class="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <a href="/contact" class="btn btn-pill btn-lg btn-primary home-cta-primary">Prendre rendez-vous</a>
+                <a href={site.links.tel} class="btn btn-pill btn-lg btn-secondary">Appeler</a>
+              </div>
+              <a href={site.links.whatsapp} class="link text-sm">WhatsApp</a>
             </div>
 
             <div class="mt-2 text-xs text-ink/60">Réponse selon disponibilités.</div>
