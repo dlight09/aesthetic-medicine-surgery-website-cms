@@ -164,6 +164,14 @@ dialog[data-menu-dialog]:focus {
     opacity 150ms ease;
 }
 
+.mega-wrap {
+  pointer-events: none;
+}
+
+[data-mega-root][data-open='true'] .mega-wrap {
+  pointer-events: auto;
+}
+
 .mega-panel.mega-open {
   pointer-events: auto;
   visibility: visible;
