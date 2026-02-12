@@ -128,70 +128,6 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
     </div>
   </section>
 
-  <section class="mx-auto max-w-6xl px-4 pb-10">
-    <div class="flex flex-col gap-2 pb-4 sm:flex-row sm:items-baseline sm:justify-between">
-      <h2 class="font-display text-2xl tracking-tight">Choisir votre parcours</h2>
-      <p class="text-sm text-ink/65">Patient(e) ou professionnel(le), accedez vite a l’essentiel.</p>
-    </div>
-
-    <div class="grid gap-4 sm:grid-cols-2">
-      <article class="group card-focus fx-frame fx-lift overflow-hidden rounded-3xl bg-paper">
-        <div class="relative h-32 w-full overflow-hidden">
-          <img
-            src="/images/thumbnails/medecine-esthetique.webp"
-            alt="Soins esthétiques et information patient"
-            class="h-full w-full object-cover object-[50%_20%]"
-            loading="lazy"
-          />
-          <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,19,0.35),transparent_55%)]"></div>
-        </div>
-        <div class="space-y-3 p-6">
-          <div>
-            <div class="font-display text-xl tracking-tight">Patient(e)</div>
-            <p class="mt-1 text-sm text-ink/70">Comprendre les interventions, les indications et les suites.</p>
-          </div>
-          <ul class="space-y-1 text-sm text-ink/75">
-            <li>• Informations claires avant de decider</li>
-            <li>• Parcours de consultation et suivi</li>
-            <li>• Reponses rapides via telephone ou WhatsApp</li>
-          </ul>
-          <div class="flex flex-wrap gap-2">
-            <a href="/interventions" class="btn btn-pill btn-md btn-primary">Explorer les interventions</a>
-            <a href="/interventions/chirurgie-de-la-main" class="link text-sm">Chirurgie de la main</a>
-            <a href="/contact" class="link text-sm">Prendre rendez-vous</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="group card-focus fx-frame fx-lift overflow-hidden rounded-3xl bg-paper">
-        <div class="relative h-32 w-full overflow-hidden">
-          <img
-            src="/images/doctor/dr-sirine-soussi-01.png"
-            alt="Dr Sirine Soussi"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
-          <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,19,0.35),transparent_55%)]"></div>
-        </div>
-        <div class="space-y-3 p-6">
-          <div>
-            <div class="font-display text-xl tracking-tight">Professionnel(le)</div>
-            <p class="mt-1 text-sm text-ink/70">Parcours, expertise et domaines d’intervention.</p>
-          </div>
-          <ul class="space-y-1 text-sm text-ink/75">
-            <li>• Chirurgie de la main et reconstructrice</li>
-            <li>• Experience hospitaliere et these</li>
-            <li>• Possibilites de collaboration et referral</li>
-          </ul>
-          <div class="flex flex-wrap gap-2">
-            <a href="/dr-sirine-soussi" class="btn btn-pill btn-md btn-primary">Parcours & realisations</a>
-            <a href="/contact" class="link text-sm">Contact</a>
-          </div>
-        </div>
-      </article>
-    </div>
-  </section>
-
   <section class="mx-auto max-w-6xl px-4 py-14">
     <div class="grid gap-10 sm:grid-cols-12">
       <div class="sm:col-span-5">
@@ -320,6 +256,45 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
             </div>
           </a>
         ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-4 pb-16">
+    <div class="rounded-3xl border border-ink/10 bg-paper p-8 shadow-soft">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="font-display text-2xl tracking-tight">Temoignages</h2>
+          <p class="mt-2 text-ink/70">Avis recueillis a la suite de consultations et interventions.</p>
+        </div>
+        <a href="/contact" class="btn btn-pill btn-md btn-secondary">Prendre rendez-vous</a>
+      </div>
+
+      <div class="mt-6 grid gap-4 sm:grid-cols-3">
+        <figure class="rounded-2xl border border-ink/10 bg-mist p-5">
+          <blockquote class="text-sm text-ink/75">
+            “Ecoute attentive, explications claires et suivi rassurant. Je me suis sentie en confiance.”
+          </blockquote>
+          <figcaption class="mt-4 text-xs font-semibold uppercase tracking-wide text-ink/60">
+            Consultation esthetique
+          </figcaption>
+        </figure>
+        <figure class="rounded-2xl border border-ink/10 bg-mist p-5">
+          <blockquote class="text-sm text-ink/75">
+            “Prise en charge serieuse et resultat naturel. Le suivi post-operatoire etait excellent.”
+          </blockquote>
+          <figcaption class="mt-4 text-xs font-semibold uppercase tracking-wide text-ink/60">
+            Chirurgie du visage
+          </figcaption>
+        </figure>
+        <figure class="rounded-2xl border border-ink/10 bg-mist p-5">
+          <blockquote class="text-sm text-ink/75">
+            “Equipe disponible, delais respectes, explications claires. Je recommande.”
+          </blockquote>
+          <figcaption class="mt-4 text-xs font-semibold uppercase tracking-wide text-ink/60">
+            Chirurgie de la main
+          </figcaption>
+        </figure>
       </div>
     </div>
   </section>
