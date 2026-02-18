@@ -1,5 +1,5 @@
 ---
-const { beforeUrl, afterUrl, altBefore = 'Avant', altAfter = 'Apres' } = Astro.props;
+const { beforeUrl, afterUrl, altBefore = 'Avant', altAfter = 'Après' } = Astro.props;
 const sliderId = `ba-${crypto.randomUUID()}`;
 const start = 50;
 ---
@@ -11,7 +11,7 @@ const start = 50;
       <img src={beforeUrl} alt={altBefore} class="ba-image" loading="lazy" />
     </div>
     <div class="ba-label ba-label-left">Avant</div>
-    <div class="ba-label ba-label-right">Apres</div>
+    <div class="ba-label ba-label-right">Après</div>
   </div>
   <div class="ba-handle" style={`left: ${start}%`}>
     <span class="ba-dot"></span>
@@ -22,7 +22,7 @@ const start = 50;
     min="0"
     max="100"
     value={start}
-    aria-label="Comparer avant et apres"
+    aria-label="Comparer avant et après"
   />
 </div>
 

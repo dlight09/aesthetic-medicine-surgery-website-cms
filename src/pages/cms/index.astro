@@ -6,7 +6,7 @@ import { listCmsAvantApresCases } from '@/lib/cms/avantApres';
 const latestBookings = cmsBookings.slice(0, 3);
 const latestAvantApres = await listCmsAvantApresCases();
 const latestContent = [
-  { type: 'Avant/Apres', title: latestAvantApres[0]?.title, href: `/cms/avant-apres/${latestAvantApres[0]?.id}` },
+  { type: 'Avant/Après', title: latestAvantApres[0]?.title, href: `/cms/avant-apres/${latestAvantApres[0]?.id}` },
   { type: 'Blog', title: cmsBlogPosts[0]?.title, href: `/cms/blog/${cmsBlogPosts[0]?.slug}` }
 ].filter((x) => x.title);
 ---
@@ -25,7 +25,7 @@ const latestContent = [
         <div class="mt-2 text-sm text-ink/60">Avant publication</div>
       </div>
       <div class="cms-card-elevated p-6">
-        <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant/Apres</div>
+        <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant/Après</div>
         <div class="mt-3 font-display text-3xl">{latestAvantApres.length}</div>
         <div class="mt-2 text-sm text-ink/60">Cas en suivi</div>
       </div>

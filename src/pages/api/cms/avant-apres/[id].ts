@@ -34,10 +34,24 @@ export const PUT: APIRoute = async (context) => {
 
   const status =
     body.status === 'publie' ? 'publie' : body.status === 'brouillon' ? 'brouillon' : undefined;
+  const interventionCategory =
+    typeof body.intervention_category === 'string'
+      ? body.intervention_category
+      : body.intervention_category === null
+        ? null
+        : undefined;
+  const interventionSlug =
+    typeof body.intervention_slug === 'string'
+      ? body.intervention_slug
+      : body.intervention_slug === null
+        ? null
+        : undefined;
   const payload = {
     title: typeof body.title === 'string' ? body.title.trim() : undefined,
     description: typeof body.description === 'string' ? body.description : undefined,
     zone: typeof body.zone === 'string' ? body.zone : undefined,
+    intervention_category: interventionCategory,
+    intervention_slug: interventionSlug,
     status: status as 'brouillon' | 'publie' | undefined,
     consent: typeof body.consent === 'boolean' ? body.consent : undefined,
     consent_date: typeof body.consent_date === 'string' ? body.consent_date : undefined,

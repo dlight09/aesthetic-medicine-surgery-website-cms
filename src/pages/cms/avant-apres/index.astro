@@ -1,24 +1,32 @@
 ---
 import CmsLayout from '@/layouts/CmsLayout.astro';
 import { listCmsAvantApresCases, type AvantApresCaseView } from '@/lib/cms/avantApres';
+import { getCollection } from 'astro:content';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 const statusClass = (status: 'publie' | 'brouillon') =>
   status === 'publie' ? 'bg-emerald-100 text-emerald-700' : 'bg-ink/10 text-ink/70';
 
 const items = (await listCmsAvantApresCases()) as AvantApresCaseView[];
+const interventions = await getCollection('interventions');
+const interventionTitleByRef = new Map(
+  interventions.map((entry) => {
+    const slug = entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug;
+    return [`${entry.data.category}::${slug}`, entry.data.title];
+  }),
+);
 const zones = Array.from(new Set(items.map((item) => item.zone).filter(Boolean))) as string[];
 const formatDate = (value: string) =>
   new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 ---
 
-<CmsLayout title="Avant/Apres">
+<CmsLayout title="Avant/Après">
   <div class="space-y-6">
     <div id="aa-toast" class="hidden rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-      Cas publie avec succes.
+      Cas publié avec succès.
     </div>
     <div id="aa-toast-delete" class="hidden rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-      Cas supprime.
+      Cas supprimé.
     </div>
     <div id="aa-toast-error" class="hidden rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
       Erreur de suppression.
@@ -27,7 +35,7 @@ const formatDate = (value: string) =>
       <div class="cms-card-elevated mx-auto mt-28 w-[min(92vw,420px)] p-6">
         <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Suppression</div>
         <div class="mt-2 font-display text-2xl tracking-tight">Supprimer ce cas ?</div>
-        <p class="mt-3 text-sm text-ink/70">Cette action est definitive et retire le cas du site.</p>
+        <p class="mt-3 text-sm text-ink/70">Cette action est définitive et retire le cas du site.</p>
         <div class="mt-6 flex flex-wrap justify-end gap-3">
           <button type="button" data-cancel class="btn btn-pill btn-sm btn-secondary">Annuler</button>
           <button type="button" data-confirm class="btn btn-pill btn-sm btn-primary">Supprimer</button>
@@ -37,7 +45,7 @@ const formatDate = (value: string) =>
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Cas</div>
-        <h1 class="mt-1 font-display text-3xl tracking-tight">Avant/Apres</h1>
+        <h1 class="mt-1 font-display text-3xl tracking-tight">Avant/Après</h1>
       </div>
       <a href="/cms/avant-apres/new" class="btn btn-pill btn-sm btn-primary">Nouveau cas</a>
     </div>
@@ -52,7 +60,7 @@ const formatDate = (value: string) =>
           <span class="font-semibold text-ink/70">Statut</span>
           <select id="aa-status" class="cms-select">
             <option value="">Tous</option>
-            <option value="publie">Publie</option>
+            <option value="publie">Publié</option>
             <option value="brouillon">Brouillon</option>
           </select>
         </label>
@@ -95,17 +103,25 @@ const formatDate = (value: string) =>
             data-zone={(item.zone ?? '').toLowerCase()}
             data-status={item.status}
             data-consent={item.consent ? 'true' : 'false'}
+            data-intervention={(item.intervention_category && item.intervention_slug
+              ? (interventionTitleByRef.get(`${item.intervention_category}::${item.intervention_slug}`) ?? '').toLowerCase()
+              : '')}
           >
             <div class="flex items-center gap-3">
               <div class="flex gap-2">
                 <img src={item.beforeUrl} alt="Avant" class="h-10 w-14 rounded-lg object-cover" />
-                <img src={item.afterUrl} alt="Apres" class="h-10 w-14 rounded-lg object-cover" />
+                <img src={item.afterUrl} alt="Après" class="h-10 w-14 rounded-lg object-cover" />
               </div>
               <div>
                 <a href={`/cms/avant-apres/${item.id}`} class="font-semibold text-ink/90 hover:text-ink">
                   {item.title}
                 </a>
                 <div class="text-xs text-ink/60">MAJ: {formatDate(item.updated_at)}</div>
+                {item.intervention_category && item.intervention_slug ? (
+                  <div class="text-xs text-ink/50">
+                    Intervention: {interventionTitleByRef.get(`${item.intervention_category}::${item.intervention_slug}`) ?? 'Non renseignée'}
+                  </div>
+                ) : null}
               </div>
             </div>
             <div class="text-ink/70">{item.zone ?? '—'}</div>
@@ -119,7 +135,7 @@ const formatDate = (value: string) =>
             </div>
             <div>
               <span class:list={['cms-pill', statusClass(item.status)]}>
-                {item.status === 'publie' ? 'Publie' : 'Brouillon'}
+                {item.status === 'publie' ? 'Publié' : 'Brouillon'}
               </span>
             </div>
             <div>
@@ -232,7 +248,8 @@ const formatDate = (value: string) =>
         const rZone = row.dataset.zone ?? '';
         const rStatus = row.dataset.status ?? '';
         const rConsent = row.dataset.consent ?? '';
-        const matchesQuery = !q || title.includes(q) || rZone.includes(q);
+        const rIntervention = row.dataset.intervention ?? '';
+        const matchesQuery = !q || title.includes(q) || rZone.includes(q) || rIntervention.includes(q);
         const matchesStatus = !st || rStatus === st;
         const matchesConsent = !co || rConsent === co;
         const matchesZone = !zo || rZone === zo;

@@ -1,6 +1,8 @@
 ---
 import CmsLayout from '@/layouts/CmsLayout.astro';
 import { getCmsAvantApresCase } from '@/lib/cms/avantApres';
+import { getCollection } from 'astro:content';
+import { interventionCategories } from '@/lib/interventions';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 const { id } = Astro.params;
@@ -8,12 +10,28 @@ const item = id ? await getCmsAvantApresCase(id) : null;
 if (!item) {
   return Astro.redirect('/cms/avant-apres');
 }
+
+const interventions = await getCollection('interventions');
+const interventionsByCategory = interventionCategories.map((category) => {
+  const items = interventions
+    .filter((entry) => entry.data.category === category.key)
+    .map((entry) => ({
+      title: entry.data.title,
+      slug: entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug,
+      category: entry.data.category,
+    }));
+  return { label: category.title, key: category.key, items };
+});
+const currentInterventionRef =
+  item.intervention_category && item.intervention_slug
+    ? `${item.intervention_category}::${item.intervention_slug}`
+    : '';
 ---
 
 <CmsLayout title="Edition cas">
   <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
     <section class="cms-card p-7">
-      <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant/Apres</div>
+      <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant/Après</div>
       <h1 class="mt-2 font-display text-3xl tracking-tight">{item.title}</h1>
 
       <form id="aa-form" class="mt-8 grid gap-5" data-id={item.id}>
@@ -29,6 +47,21 @@ if (!item) {
           <span class="font-semibold text-ink/80">Zone</span>
           <input class="cms-input" name="zone" value={item.zone ?? ''} />
         </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Intervention associée</span>
+          <select class="cms-select" name="intervention_ref">
+            <option value="">Aucune</option>
+            {interventionsByCategory.map((group) => (
+              <optgroup label={group.label}>
+                {group.items.map((entry) => (
+                  <option value={`${entry.category}::${entry.slug}`} selected={currentInterventionRef === `${entry.category}::${entry.slug}`}>
+                    {entry.title}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
 
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="rounded-2xl border border-ink/10 bg-mist p-4">
@@ -41,8 +74,8 @@ if (!item) {
             <input type="hidden" name="before_path" data-path="before" value={item.before_path} />
           </div>
           <div class="rounded-2xl border border-ink/10 bg-mist p-4">
-            <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Apres</div>
-            <img data-preview="after" src={item.afterUrl} alt="Apres" class="mt-3 h-32 w-full rounded-xl object-cover" />
+            <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Après</div>
+            <img data-preview="after" src={item.afterUrl} alt="Après" class="mt-3 h-32 w-full rounded-xl object-cover" />
             <input type="file" accept="image/*" class="mt-3 block text-xs" data-upload="after" />
             <div class="mt-2 text-[11px] text-ink/50">JPG/PNG, 10MB max.</div>
             <div data-upload-status="after" class="mt-1 text-[11px] text-ink/60"></div>
@@ -53,7 +86,7 @@ if (!item) {
 
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Caption</span>
-          <input class="cms-input" name="caption" value={item.caption ?? ''} placeholder="Resultat a 6 mois" />
+          <input class="cms-input" name="caption" value={item.caption ?? ''} placeholder="Résultat à 6 mois" />
         </label>
       </form>
     </section>
@@ -69,7 +102,7 @@ if (!item) {
         <input class="cms-input" type="date" name="consent_date" form="aa-form" value={item.consent_date ?? ''} />
       </label>
       <label class="mt-4 grid gap-2 text-sm">
-        <span class="font-semibold text-ink/80">Reference interne</span>
+        <span class="font-semibold text-ink/80">Référence interne</span>
         <input class="cms-input" placeholder="Ref dossier" name="internal_ref" form="aa-form" value={item.internal_ref ?? ''} />
       </label>
 
@@ -112,7 +145,7 @@ if (!item) {
   <div class="cms-card-elevated mx-auto mt-28 w-[min(92vw,420px)] p-6">
     <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Suppression</div>
     <div class="mt-2 font-display text-2xl tracking-tight">Supprimer ce cas ?</div>
-    <p class="mt-3 text-sm text-ink/70">Cette action est definitive et retire le cas du site.</p>
+  <p class="mt-3 text-sm text-ink/70">Cette action est définitive et retire le cas du site.</p>
     <div class="mt-6 flex flex-wrap justify-end gap-3">
       <button type="button" data-cancel class="btn btn-pill btn-sm btn-secondary">Annuler</button>
       <button type="button" data-confirm class="btn btn-pill btn-sm btn-primary">Supprimer</button>
@@ -182,11 +215,11 @@ if (!item) {
           if (pathInput instanceof HTMLInputElement) pathInput.value = data.path;
           const preview = form.querySelector(`[data-preview="${kind}"]`);
           if (preview instanceof HTMLImageElement) preview.src = URL.createObjectURL(file);
-          setUploadState(kind, false, 'Upload termine.');
+          setUploadState(kind, false, 'Upload terminé.');
         } catch (err) {
           setUploadState(kind, false, '');
           if (errorEl instanceof HTMLElement) {
-            errorEl.textContent = "Erreur d'upload. Verifiez votre connexion.";
+            errorEl.textContent = "Erreur d'upload. Vérifiez votre connexion.";
           }
         }
       });
@@ -203,6 +236,8 @@ if (!item) {
         title: String(formData.get('title') ?? '').trim(),
         description: String(formData.get('description') ?? '').trim() || null,
         zone: String(formData.get('zone') ?? '').trim() || null,
+        intervention_category: null,
+        intervention_slug: null,
         caption: String(formData.get('caption') ?? '').trim() || null,
         consent: formData.get('consent') === 'on',
         consent_date: String(formData.get('consent_date') ?? '').trim() || null,
@@ -212,6 +247,13 @@ if (!item) {
         status: intent === 'publish' ? 'publie' : 'brouillon'
       };
 
+      const interventionRef = String(formData.get('intervention_ref') ?? '').trim();
+      if (interventionRef) {
+        const [cat, slug] = interventionRef.split('::');
+        payload.intervention_category = cat || null;
+        payload.intervention_slug = slug || null;
+      }
+
       if (intent === 'publish' && !payload.consent) {
         if (error) error.textContent = 'Le consentement est requis pour publier.';
         if (status) status.textContent = '';
@@ -219,7 +261,7 @@ if (!item) {
       }
 
       if (!payload.title || !payload.before_path || !payload.after_path) {
-        if (error) error.textContent = 'Titre et photos avant/apres obligatoires.';
+        if (error) error.textContent = 'Titre et photos avant/après obligatoires.';
         if (status) status.textContent = '';
         return;
       }
@@ -232,7 +274,7 @@ if (!item) {
           body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('save');
-        if (status) status.textContent = 'Enregistre.';
+        if (status) status.textContent = 'Enregistré.';
         if (intent === 'publish') {
           window.location.href = '/cms/avant-apres?published=1';
           return;

@@ -7,6 +7,8 @@ export type AvantApresCase = {
   title: string;
   description: string | null;
   zone: string | null;
+  intervention_category: string | null;
+  intervention_slug: string | null;
   status: AvantApresStatus;
   consent: boolean;
   consent_date: string | null;
@@ -69,6 +71,34 @@ export async function listPublicAvantApresCases() {
     .eq('consent', true)
     .order('updated_at', { ascending: false });
 
+  if (error) throw error;
+  return await Promise.all((data ?? []).map((item) => withUrls(item as AvantApresCase)));
+}
+
+export async function listPublicAvantApresCasesFiltered(options: {
+  interventionCategory?: string | null;
+  interventionSlug?: string | null;
+  limit?: number;
+}) {
+  const supabase = getSupabaseAdmin();
+  let query = supabase
+    .from(tableName)
+    .select('*')
+    .eq('status', 'publie')
+    .eq('consent', true)
+    .order('updated_at', { ascending: false });
+
+  if (options.interventionCategory) {
+    query = query.eq('intervention_category', options.interventionCategory);
+  }
+  if (options.interventionSlug) {
+    query = query.eq('intervention_slug', options.interventionSlug);
+  }
+  if (options.limit) {
+    query = query.limit(options.limit);
+  }
+
+  const { data, error } = await query;
   if (error) throw error;
   return await Promise.all((data ?? []).map((item) => withUrls(item as AvantApresCase)));
 }

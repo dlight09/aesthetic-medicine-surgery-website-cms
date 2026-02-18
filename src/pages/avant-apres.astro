@@ -1,16 +1,65 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { listPublicAvantApresCases, type AvantApresCaseView } from '@/lib/cms/avantApres';
+import { getCollection } from 'astro:content';
+import {
+  listPublicAvantApresCases,
+  listPublicAvantApresCasesFiltered,
+  type AvantApresCaseView
+} from '@/lib/cms/avantApres';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
-const cases = (await listPublicAvantApresCases()) as AvantApresCaseView[];
+const interventionCategory = Astro.url.searchParams.get('intervention_category');
+const interventionSlug = Astro.url.searchParams.get('intervention_slug');
+const cases = (interventionCategory && interventionSlug
+  ? await listPublicAvantApresCasesFiltered({
+      interventionCategory,
+      interventionSlug,
+    })
+  : await listPublicAvantApresCases()) as AvantApresCaseView[];
+
+const interventions = await getCollection('interventions');
+const interventionMetaByRef = new Map(
+  interventions.map((entry) => {
+    const slug = entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug;
+    return [
+      `${entry.data.category}::${slug}`,
+      {
+        title: entry.data.title,
+        href: `/interventions/${entry.data.category}/${slug}`,
+      },
+    ];
+  }),
+);
+const matchingIntervention =
+  interventionCategory && interventionSlug
+    ? interventions.find((entry) => {
+        const slug = entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug;
+        return entry.data.category === interventionCategory && slug === interventionSlug;
+      })
+    : null;
+const interventionTitle = matchingIntervention?.data.title;
+const interventionHref = matchingIntervention
+  ? `/interventions/${matchingIntervention.data.category}/${interventionSlug}`
+  : null;
+const getInterventionMeta = (item: AvantApresCaseView) => {
+  if (!item.intervention_category || !item.intervention_slug) return null;
+  return interventionMetaByRef.get(`${item.intervention_category}::${item.intervention_slug}`) ?? null;
+};
 ---
 
-<BaseLayout title="Avant-Apres" description="Galerie Avant-Apres (lorsque disponible) avec consentement et mentions.">
+<BaseLayout title="Avant/Après" description="Galerie Avant/Après (lorsque disponible) avec consentement et mentions.">
   <section class="mx-auto max-w-6xl px-4 py-14">
-    <h1 class="font-display text-4xl tracking-tight">Avant-Apres</h1>
+    <h1 class="font-display text-4xl tracking-tight">Avant/Après</h1>
+    {interventionTitle && interventionHref ? (
+      <div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-ink/70">
+        <div>
+          Intervention associée: <a class="link" href={interventionHref}>{interventionTitle}</a>
+        </div>
+        <a class="link" href="/avant-apres">Voir tous les cas</a>
+      </div>
+    ) : null}
     <p class="mt-4 max-w-3xl text-ink/75">
-      Les resultats varient selon chaque patient. Les photos ne constituent pas une garantie de resultat.
+      Les résultats varient selon chaque patient. Les photos ne constituent pas une garantie de résultat.
       Toute publication se fait avec consentement.
     </p>
 
@@ -22,7 +71,7 @@ const cases = (await listPublicAvantApresCases()) as AvantApresCaseView[];
             class="group overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft transition hover:shadow-lift"
           >
             <div class="relative aspect-[4/3] w-full overflow-hidden">
-              <img src={item.afterUrl} alt="Apres" class="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+              <img src={item.afterUrl} alt="Après" class="absolute inset-0 h-full w-full object-cover" loading="lazy" />
               <img
                 src={item.beforeUrl}
                 alt="Avant"
@@ -31,18 +80,23 @@ const cases = (await listPublicAvantApresCases()) as AvantApresCaseView[];
               />
               <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,19,0.55),transparent_55%)]"></div>
               <div class="absolute left-5 top-5 rounded-full bg-paper/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink/70">
-                Apres
+                Après
               </div>
               <div class="absolute right-5 top-5 rounded-full bg-paper/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink/70">
                 Avant
               </div>
               <div class="absolute inset-x-0 bottom-0 p-5 text-paper">
-                <div class="text-xs font-semibold uppercase tracking-wide text-paper/70">Avant / apres</div>
+                <div class="text-xs font-semibold uppercase tracking-wide text-paper/70">Avant / après</div>
                 <div class="mt-1 font-display text-2xl tracking-tight">{item.title}</div>
               </div>
             </div>
             <div class="p-6">
               <div class="text-sm text-ink/70">{item.zone ?? '—'}</div>
+              {getInterventionMeta(item) ? (
+                <div class="mt-1 text-sm text-ink/60">
+                  Intervention: <a class="link" href={getInterventionMeta(item)!.href}>{getInterventionMeta(item)!.title}</a>
+                </div>
+              ) : null}
               <div class="mt-3 text-sm font-semibold text-ink/80 transition group-hover:text-ink">
                 Voir le cas →
               </div>
@@ -52,7 +106,16 @@ const cases = (await listPublicAvantApresCases()) as AvantApresCaseView[];
       </div>
     ) : (
       <div class="mt-10 rounded-3xl border border-ink/10 bg-mist p-10 text-ink/75">
-        Galerie en cours de preparation.
+        {interventionTitle ? (
+          <div>
+            Aucun cas publié pour cette intervention pour le moment.
+            <div class="mt-3">
+              <a class="link" href="/avant-apres">Voir tous les cas</a>
+            </div>
+          </div>
+        ) : (
+          <>Galerie en cours de préparation.</>
+        )}
       </div>
     )}
   </section>

@@ -1,11 +1,25 @@
 ---
 import CmsLayout from '@/layouts/CmsLayout.astro';
+import { getCollection } from 'astro:content';
+import { interventionCategories } from '@/lib/interventions';
+
+const interventions = await getCollection('interventions');
+const interventionsByCategory = interventionCategories.map((category) => {
+  const items = interventions
+    .filter((entry) => entry.data.category === category.key)
+    .map((entry) => ({
+      title: entry.data.title,
+      slug: entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug,
+      category: entry.data.category,
+    }));
+  return { label: category.title, key: category.key, items };
+});
 ---
 
 <CmsLayout title="Nouveau cas">
   <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
     <section class="cms-card p-7">
-      <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant/Apres</div>
+      <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant/Après</div>
       <h1 class="mt-2 font-display text-3xl tracking-tight">Nouveau cas</h1>
 
       <form id="aa-form" class="mt-8 grid gap-5">
@@ -21,12 +35,25 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
           <span class="font-semibold text-ink/80">Zone</span>
           <input class="cms-input" name="zone" placeholder="Visage, Seins, Silhouette..." />
         </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Intervention associée</span>
+          <select class="cms-select" name="intervention_ref">
+            <option value="">Aucune</option>
+            {interventionsByCategory.map((group) => (
+              <optgroup label={group.label}>
+                {group.items.map((item) => (
+                  <option value={`${item.category}::${item.slug}`}>{item.title}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
 
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="rounded-2xl border border-ink/10 bg-mist p-4">
             <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant</div>
             <div data-placeholder="before" class="mt-3 flex h-32 items-center justify-center rounded-xl border border-dashed border-ink/20 bg-paper text-xs text-ink/40">
-              Apercu
+              Aperçu
             </div>
             <img data-preview="before" class="mt-3 hidden h-32 w-full rounded-xl object-cover" alt="" />
             <input type="file" accept="image/*" class="mt-3 block text-xs" data-upload="before" />
@@ -36,9 +63,9 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
             <input type="hidden" name="before_path" data-path="before" />
           </div>
           <div class="rounded-2xl border border-ink/10 bg-mist p-4">
-            <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Apres</div>
+            <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Après</div>
             <div data-placeholder="after" class="mt-3 flex h-32 items-center justify-center rounded-xl border border-dashed border-ink/20 bg-paper text-xs text-ink/40">
-              Apercu
+              Aperçu
             </div>
             <img data-preview="after" class="mt-3 hidden h-32 w-full rounded-xl object-cover" alt="" />
             <input type="file" accept="image/*" class="mt-3 block text-xs" data-upload="after" />
@@ -51,7 +78,7 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
 
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Caption (facultatif)</span>
-          <input class="cms-input" name="caption" placeholder="ex: Resultat a 6 mois" />
+          <input class="cms-input" name="caption" placeholder="ex: Résultat à 6 mois" />
         </label>
       </form>
     </section>
@@ -67,7 +94,7 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
         <input class="cms-input" type="date" name="consent_date" form="aa-form" />
       </label>
       <label class="mt-4 grid gap-2 text-sm">
-        <span class="font-semibold text-ink/80">Reference interne</span>
+        <span class="font-semibold text-ink/80">Référence interne</span>
         <input class="cms-input" placeholder="Ref dossier" name="internal_ref" form="aa-form" />
       </label>
 
@@ -162,11 +189,11 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
             preview.classList.remove('hidden');
           }
           if (placeholder instanceof HTMLElement) placeholder.classList.add('hidden');
-          setUploadState(kind, false, 'Upload termine.');
+          setUploadState(kind, false, 'Upload terminé.');
         } catch (err) {
           setUploadState(kind, false, '');
           if (errorEl instanceof HTMLElement) {
-            errorEl.textContent = "Erreur d'upload. Verifiez votre connexion.";
+            errorEl.textContent = "Erreur d'upload. Vérifiez votre connexion.";
           }
         }
       });
@@ -183,6 +210,8 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
         title: String(formData.get('title') ?? '').trim(),
         description: String(formData.get('description') ?? '').trim() || null,
         zone: String(formData.get('zone') ?? '').trim() || null,
+        intervention_category: null,
+        intervention_slug: null,
         caption: String(formData.get('caption') ?? '').trim() || null,
         consent: formData.get('consent') === 'on',
         consent_date: String(formData.get('consent_date') ?? '').trim() || null,
@@ -192,6 +221,13 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
         status: intent === 'publish' ? 'publie' : 'brouillon'
       };
 
+      const interventionRef = String(formData.get('intervention_ref') ?? '').trim();
+      if (interventionRef) {
+        const [cat, slug] = interventionRef.split('::');
+        payload.intervention_category = cat || null;
+        payload.intervention_slug = slug || null;
+      }
+
       if (intent === 'publish' && !payload.consent) {
         if (error) error.textContent = 'Le consentement est requis pour publier.';
         if (status) status.textContent = '';
@@ -199,7 +235,7 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
       }
 
       if (!payload.title || !payload.before_path || !payload.after_path) {
-        if (error) error.textContent = 'Titre et photos avant/apres obligatoires.';
+        if (error) error.textContent = 'Titre et photos avant/après obligatoires.';
         if (status) status.textContent = '';
         return;
       }
@@ -212,7 +248,7 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
         });
         if (!res.ok) throw new Error('save');
         const data = await res.json();
-        if (status) status.textContent = 'Enregistre.';
+        if (status) status.textContent = 'Enregistré.';
         if (intent === 'publish') {
           window.location.href = '/cms/avant-apres?published=1';
           return;

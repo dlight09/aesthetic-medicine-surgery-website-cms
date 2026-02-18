@@ -33,6 +33,14 @@ export const POST: APIRoute = async (context) => {
     title,
     description: typeof body.description === 'string' ? body.description : null,
     zone: typeof body.zone === 'string' ? body.zone : null,
+    intervention_category:
+      typeof body.intervention_category === 'string' && body.intervention_category.trim()
+        ? body.intervention_category
+        : null,
+    intervention_slug:
+      typeof body.intervention_slug === 'string' && body.intervention_slug.trim()
+        ? body.intervention_slug
+        : null,
     status: status as 'brouillon' | 'publie',
     consent: Boolean(body.consent),
     consent_date: typeof body.consent_date === 'string' ? body.consent_date : null,
