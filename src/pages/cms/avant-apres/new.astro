@@ -30,6 +30,9 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
             </div>
             <img data-preview="before" class="mt-3 hidden h-32 w-full rounded-xl object-cover" alt="" />
             <input type="file" accept="image/*" class="mt-3 block text-xs" data-upload="before" />
+            <div class="mt-2 text-[11px] text-ink/50">JPG/PNG, 10MB max.</div>
+            <div data-upload-status="before" class="mt-1 text-[11px] text-ink/60"></div>
+            <div data-upload-error="before" class="mt-1 text-[11px] text-rose-600"></div>
             <input type="hidden" name="before_path" data-path="before" />
           </div>
           <div class="rounded-2xl border border-ink/10 bg-mist p-4">
@@ -39,6 +42,9 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
             </div>
             <img data-preview="after" class="mt-3 hidden h-32 w-full rounded-xl object-cover" alt="" />
             <input type="file" accept="image/*" class="mt-3 block text-xs" data-upload="after" />
+            <div class="mt-2 text-[11px] text-ink/50">JPG/PNG, 10MB max.</div>
+            <div data-upload-status="after" class="mt-1 text-[11px] text-ink/60"></div>
+            <div data-upload-error="after" class="mt-1 text-[11px] text-rose-600"></div>
             <input type="hidden" name="after_path" data-path="after" />
           </div>
         </div>
@@ -66,14 +72,29 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
       </label>
 
       <div class="mt-6 space-y-3">
-        <button type="submit" value="draft" name="intent" form="aa-form" class="btn btn-pill btn-md btn-primary w-full">
+        <button
+          type="submit"
+          value="draft"
+          name="intent"
+          form="aa-form"
+          data-submit
+          class="btn btn-pill btn-md btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
+        >
           Enregistrer brouillon
         </button>
-        <button type="submit" value="publish" name="intent" form="aa-form" class="btn btn-pill btn-md btn-secondary w-full">
+        <button
+          type="submit"
+          value="publish"
+          name="intent"
+          form="aa-form"
+          data-submit
+          class="btn btn-pill btn-md btn-secondary w-full disabled:cursor-not-allowed disabled:opacity-60"
+        >
           Publier
         </button>
       </div>
-      <div id="aa-error" class="mt-4 text-xs text-rose-600"></div>
+      <div id="aa-status" class="mt-4 text-xs text-ink/60"></div>
+      <div id="aa-error" class="mt-2 text-xs text-rose-600"></div>
     </aside>
   </div>
 </CmsLayout>
@@ -82,17 +103,42 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
   (() => {
     const form = document.getElementById('aa-form');
     const error = document.getElementById('aa-error');
+    const status = document.getElementById('aa-status');
+    const submitButtons = document.querySelectorAll('[data-submit]');
+    const uploadState = { before: false, after: false };
     if (!(form instanceof HTMLFormElement)) return;
 
     const uploadInputs = form.querySelectorAll('[data-upload]');
+    const setSubmitDisabled = (disabled) => {
+      submitButtons.forEach((btn) => {
+        if (btn instanceof HTMLButtonElement) btn.disabled = disabled;
+      });
+    };
+
+    const setUploadState = (kind, isUploading, message = '') => {
+      uploadState[kind] = isUploading;
+      const statusEl = form.querySelector(`[data-upload-status="${kind}"]`);
+      if (statusEl instanceof HTMLElement) statusEl.textContent = message;
+      setSubmitDisabled(uploadState.before || uploadState.after);
+    };
+
     uploadInputs.forEach((input) => {
       if (!(input instanceof HTMLInputElement)) return;
       input.addEventListener('change', async () => {
         const file = input.files?.[0];
         const kind = input.dataset.upload;
         if (!file || (kind !== 'before' && kind !== 'after')) return;
+        const errorEl = form.querySelector(`[data-upload-error="${kind}"]`);
+        if (errorEl instanceof HTMLElement) errorEl.textContent = '';
+        if (file.size > 10 * 1024 * 1024) {
+          if (errorEl instanceof HTMLElement) errorEl.textContent = 'Fichier trop lourd (10MB max).';
+          input.value = '';
+          return;
+        }
         try {
           if (error) error.textContent = '';
+          if (status) status.textContent = '';
+          setUploadState(kind, true, 'Upload en cours...');
           const res = await fetch('/api/cms/avant-apres/upload-url', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -116,8 +162,12 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
             preview.classList.remove('hidden');
           }
           if (placeholder instanceof HTMLElement) placeholder.classList.add('hidden');
+          setUploadState(kind, false, 'Upload termine.');
         } catch (err) {
-          if (error) error.textContent = "Erreur d'upload. Verifiez votre connexion.";
+          setUploadState(kind, false, '');
+          if (errorEl instanceof HTMLElement) {
+            errorEl.textContent = "Erreur d'upload. Verifiez votre connexion.";
+          }
         }
       });
     });
@@ -125,6 +175,7 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (error) error.textContent = '';
+      if (status) status.textContent = 'Enregistrement...';
       const submitter = event.submitter;
       const intent = submitter && submitter instanceof HTMLButtonElement ? submitter.value : 'draft';
       const formData = new FormData(form);
@@ -141,8 +192,15 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
         status: intent === 'publish' ? 'publie' : 'brouillon'
       };
 
+      if (intent === 'publish' && !payload.consent) {
+        if (error) error.textContent = 'Le consentement est requis pour publier.';
+        if (status) status.textContent = '';
+        return;
+      }
+
       if (!payload.title || !payload.before_path || !payload.after_path) {
         if (error) error.textContent = 'Titre et photos avant/apres obligatoires.';
+        if (status) status.textContent = '';
         return;
       }
 
@@ -154,9 +212,11 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
         });
         if (!res.ok) throw new Error('save');
         const data = await res.json();
+        if (status) status.textContent = 'Enregistre.';
         window.location.href = `/cms/avant-apres/${data.id}`;
       } catch (err) {
         if (error) error.textContent = 'Erreur de sauvegarde.';
+        if (status) status.textContent = '';
       }
     });
   })();

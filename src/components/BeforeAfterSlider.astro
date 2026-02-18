@@ -10,6 +10,8 @@ const start = 50;
     <div class="ba-before" style={`width: ${start}%`}> 
       <img src={beforeUrl} alt={altBefore} class="ba-image" loading="lazy" />
     </div>
+    <div class="ba-label ba-label-left">Avant</div>
+    <div class="ba-label ba-label-right">Apres</div>
   </div>
   <div class="ba-handle" style={`left: ${start}%`}>
     <span class="ba-dot"></span>
@@ -53,6 +55,28 @@ const start = 50;
     overflow: hidden;
     border-right: 1px solid rgba(255, 255, 255, 0.6);
     box-shadow: inset -1px 0 0 rgba(20, 20, 19, 0.1);
+  }
+
+  .ba-label {
+    position: absolute;
+    top: 16px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    background: rgba(248, 245, 240, 0.9);
+    color: rgba(20, 20, 19, 0.8);
+    box-shadow: 0 8px 20px rgba(20, 20, 19, 0.15);
+  }
+
+  .ba-label-left {
+    left: 16px;
+  }
+
+  .ba-label-right {
+    right: 16px;
   }
 
   .ba-handle {

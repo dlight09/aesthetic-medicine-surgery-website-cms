@@ -7,6 +7,7 @@ const statusClass = (status: 'publie' | 'brouillon') =>
   status === 'publie' ? 'bg-emerald-100 text-emerald-700' : 'bg-ink/10 text-ink/70';
 
 const items = (await listCmsAvantApresCases()) as AvantApresCaseView[];
+const zones = Array.from(new Set(items.map((item) => item.zone).filter(Boolean))) as string[];
 const formatDate = (value: string) =>
   new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 ---
@@ -21,6 +22,40 @@ const formatDate = (value: string) =>
       <a href="/cms/avant-apres/new" class="btn btn-pill btn-sm btn-primary">Nouveau cas</a>
     </div>
 
+    <div class="cms-card p-6">
+      <div class="grid gap-3 md:grid-cols-[1.2fr_0.7fr_0.7fr_0.6fr]">
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/70">Recherche</span>
+          <input id="aa-search" class="cms-input" placeholder="Titre, zone..." />
+        </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/70">Statut</span>
+          <select id="aa-status" class="cms-select">
+            <option value="">Tous</option>
+            <option value="publie">Publie</option>
+            <option value="brouillon">Brouillon</option>
+          </select>
+        </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/70">Consentement</span>
+          <select id="aa-consent" class="cms-select">
+            <option value="">Tous</option>
+            <option value="true">Consent OK</option>
+            <option value="false">Sans consentement</option>
+          </select>
+        </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/70">Zone</span>
+          <select id="aa-zone" class="cms-select">
+            <option value="">Toutes</option>
+            {zones.map((zone) => (
+              <option value={zone}>{zone}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+    </div>
+
     <div class="cms-card shadow-soft">
       <div class="grid grid-cols-[1.4fr_0.8fr_0.8fr_0.6fr] gap-4 border-b border-ink/10 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-ink/50">
         <div>Cas</div>
@@ -28,9 +63,16 @@ const formatDate = (value: string) =>
         <div>Consentement</div>
         <div>Statut</div>
       </div>
-      <div class="divide-y divide-ink/5">
+      <div id="aa-list" class="divide-y divide-ink/5">
         {items.map((item) => (
-          <a href={`/cms/avant-apres/${item.id}`} class="cms-row grid grid-cols-[1.4fr_0.8fr_0.8fr_0.6fr] gap-4 px-6 py-4 text-sm">
+          <a
+            href={`/cms/avant-apres/${item.id}`}
+            class="cms-row grid grid-cols-[1.4fr_0.8fr_0.8fr_0.6fr] gap-4 px-6 py-4 text-sm"
+            data-title={item.title.toLowerCase()}
+            data-zone={(item.zone ?? '').toLowerCase()}
+            data-status={item.status}
+            data-consent={item.consent ? 'true' : 'false'}
+          >
             <div class="flex items-center gap-3">
               <div class="flex gap-2">
                 <img src={item.beforeUrl} alt="Avant" class="h-10 w-14 rounded-lg object-cover" />
@@ -61,3 +103,38 @@ const formatDate = (value: string) =>
     </div>
   </div>
 </CmsLayout>
+
+<script is:inline>
+  (() => {
+    const list = document.getElementById('aa-list');
+    const search = document.getElementById('aa-search');
+    const status = document.getElementById('aa-status');
+    const consent = document.getElementById('aa-consent');
+    const zone = document.getElementById('aa-zone');
+    if (!(list instanceof HTMLElement)) return;
+
+    const apply = () => {
+      const q = search instanceof HTMLInputElement ? search.value.trim().toLowerCase() : '';
+      const st = status instanceof HTMLSelectElement ? status.value : '';
+      const co = consent instanceof HTMLSelectElement ? consent.value : '';
+      const zo = zone instanceof HTMLSelectElement ? zone.value.toLowerCase() : '';
+      const rows = list.querySelectorAll('a[data-title]');
+      rows.forEach((row) => {
+        if (!(row instanceof HTMLElement)) return;
+        const title = row.dataset.title ?? '';
+        const rZone = row.dataset.zone ?? '';
+        const rStatus = row.dataset.status ?? '';
+        const rConsent = row.dataset.consent ?? '';
+        const matchesQuery = !q || title.includes(q) || rZone.includes(q);
+        const matchesStatus = !st || rStatus === st;
+        const matchesConsent = !co || rConsent === co;
+        const matchesZone = !zo || rZone === zo;
+        row.style.display = matchesQuery && matchesStatus && matchesConsent && matchesZone ? '' : 'none';
+      });
+    };
+
+    [search, status, consent, zone].forEach((el) => {
+      if (el) el.addEventListener('input', apply);
+    });
+  })();
+</script>
