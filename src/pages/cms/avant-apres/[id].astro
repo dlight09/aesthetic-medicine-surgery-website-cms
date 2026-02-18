@@ -108,6 +108,18 @@ if (!item) {
   </div>
 </CmsLayout>
 
+<dialog id="aa-confirm" class="cms-drawer">
+  <div class="cms-card-elevated mx-auto mt-28 w-[min(92vw,420px)] p-6">
+    <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Suppression</div>
+    <div class="mt-2 font-display text-2xl tracking-tight">Supprimer ce cas ?</div>
+    <p class="mt-3 text-sm text-ink/70">Cette action est definitive et retire le cas du site.</p>
+    <div class="mt-6 flex flex-wrap justify-end gap-3">
+      <button type="button" data-cancel class="btn btn-pill btn-sm btn-secondary">Annuler</button>
+      <button type="button" data-confirm class="btn btn-pill btn-sm btn-primary">Supprimer</button>
+    </div>
+  </div>
+</dialog>
+
 <script is:inline>
   (() => {
     const form = document.getElementById('aa-form');
@@ -115,6 +127,9 @@ if (!item) {
     const status = document.getElementById('aa-status');
     const submitButtons = document.querySelectorAll('[data-submit]');
     const deleteButton = document.querySelector('[data-delete]');
+    const confirmDialog = document.getElementById('aa-confirm');
+    const confirmBtn = confirmDialog?.querySelector('[data-confirm]');
+    const cancelBtn = confirmDialog?.querySelector('[data-cancel]');
     const uploadState = { before: false, after: false };
     if (!(form instanceof HTMLFormElement)) return;
 
@@ -232,8 +247,22 @@ if (!item) {
       deleteButton.addEventListener('click', async () => {
         const caseId = form.dataset.id ?? '';
         if (!caseId) return;
-        const confirmed = window.confirm('Supprimer ce cas ? Cette action est definitive.');
-        if (!confirmed) return;
+        if (confirmDialog instanceof HTMLDialogElement) confirmDialog.showModal();
+      });
+    }
+
+    if (confirmDialog instanceof HTMLDialogElement) {
+      const close = () => confirmDialog.close();
+      if (cancelBtn instanceof HTMLElement) cancelBtn.addEventListener('click', close);
+      confirmDialog.addEventListener('click', (event) => {
+        if (event.target === confirmDialog) close();
+      });
+    }
+
+    if (confirmBtn instanceof HTMLButtonElement) {
+      confirmBtn.addEventListener('click', async () => {
+        const caseId = form.dataset.id ?? '';
+        if (!caseId) return;
         if (error) error.textContent = '';
         if (status) status.textContent = 'Suppression...';
         try {
@@ -245,6 +274,8 @@ if (!item) {
         } catch (err) {
           if (error) error.textContent = 'Erreur de suppression.';
           if (status) status.textContent = '';
+        } finally {
+          if (confirmDialog instanceof HTMLDialogElement) confirmDialog.close();
         }
       });
     }
