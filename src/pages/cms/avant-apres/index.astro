@@ -20,6 +20,9 @@ const formatDate = (value: string) =>
     <div id="aa-toast-delete" class="hidden rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
       Cas supprime.
     </div>
+    <div id="aa-toast-error" class="hidden rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+      Erreur de suppression.
+    </div>
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Cas</div>
@@ -135,6 +138,7 @@ const formatDate = (value: string) =>
     }
 
     const deleteToast = document.getElementById('aa-toast-delete');
+    const errorToast = document.getElementById('aa-toast-error');
     if (deleteToast instanceof HTMLElement && params.get('deleted') === '1') {
       deleteToast.classList.remove('hidden');
       window.history.replaceState({}, '', window.location.pathname);
@@ -175,7 +179,10 @@ const formatDate = (value: string) =>
           setTimeout(() => deleteToast.classList.add('hidden'), 3200);
         }
       } catch (err) {
-        window.alert('Erreur de suppression.');
+        if (errorToast instanceof HTMLElement) {
+          errorToast.classList.remove('hidden');
+          setTimeout(() => errorToast.classList.add('hidden'), 3200);
+        }
       }
     });
 
