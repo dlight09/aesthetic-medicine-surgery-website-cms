@@ -210,6 +210,10 @@ if (!item) {
         });
         if (!res.ok) throw new Error('save');
         if (status) status.textContent = 'Enregistre.';
+        if (intent === 'publish') {
+          window.location.href = '/cms/avant-apres?published=1';
+          return;
+        }
       } catch (err) {
         if (error) error.textContent = 'Erreur de sauvegarde.';
         if (status) status.textContent = '';

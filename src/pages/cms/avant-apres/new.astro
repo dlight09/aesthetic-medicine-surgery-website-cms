@@ -213,6 +213,10 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
         if (!res.ok) throw new Error('save');
         const data = await res.json();
         if (status) status.textContent = 'Enregistre.';
+        if (intent === 'publish') {
+          window.location.href = '/cms/avant-apres?published=1';
+          return;
+        }
         window.location.href = `/cms/avant-apres/${data.id}`;
       } catch (err) {
         if (error) error.textContent = 'Erreur de sauvegarde.';

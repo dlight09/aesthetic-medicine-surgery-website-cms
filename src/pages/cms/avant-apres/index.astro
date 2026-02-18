@@ -14,6 +14,9 @@ const formatDate = (value: string) =>
 
 <CmsLayout title="Avant/Apres">
   <div class="space-y-6">
+    <div id="aa-toast" class="hidden rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+      Cas publie avec succes.
+    </div>
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Cas</div>
@@ -106,6 +109,14 @@ const formatDate = (value: string) =>
 
 <script is:inline>
   (() => {
+    const toast = document.getElementById('aa-toast');
+    const params = new URLSearchParams(window.location.search);
+    if (toast instanceof HTMLElement && params.get('published') === '1') {
+      toast.classList.remove('hidden');
+      window.history.replaceState({}, '', window.location.pathname);
+      setTimeout(() => toast.classList.add('hidden'), 3200);
+    }
+
     const list = document.getElementById('aa-list');
     const search = document.getElementById('aa-search');
     const status = document.getElementById('aa-status');
