@@ -70,6 +70,16 @@ const categorySections = interventionsByCategory
     };
   })
   .filter((category) => category.interventions.length > 0);
+
+const interventionOptionsByCategory = new Map(
+  categorySections.map((category) => [
+    category.key,
+    category.interventions.map((intervention) => ({
+      label: intervention.title,
+      ref: intervention.ref,
+    })),
+  ]),
+);
 ---
 
 <CmsLayout title="Avant/Après">
@@ -103,10 +113,45 @@ const categorySections = interventionsByCategory
     </div>
 
     <div class="cms-card p-6">
-      <div class="grid gap-3 md:grid-cols-[1.2fr_0.7fr_0.7fr]">
+      <div class="grid gap-3 md:grid-cols-[1.2fr_0.7fr_0.9fr_0.7fr_0.7fr]">
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/70">Recherche</span>
-          <input id="aa-search" class="cms-input" placeholder="Titre, intervention..." />
+          <div class="relative">
+            <input
+              id="aa-search"
+              class="cms-input w-full pr-9"
+              placeholder="Cas 01, intervention, description..."
+            />
+            <button
+              type="button"
+              id="aa-clear"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink/40 hover:text-ink"
+              aria-label="Réinitialiser la recherche"
+            >
+              ✕
+            </button>
+          </div>
+          <div class="text-xs text-ink/50">Astuce: #02 ou cas:02 pour un numéro.</div>
+        </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/70">Catégorie</span>
+          <select id="aa-category" class="cms-select">
+            <option value="">Toutes</option>
+            {categorySections.map((category) => (
+              <option value={category.key}>{category.title}</option>
+            ))}
+          </select>
+        </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/70">Intervention</span>
+          <select id="aa-intervention" class="cms-select">
+            <option value="">Toutes</option>
+            {categorySections.flatMap((category) =>
+              category.interventions.map((intervention) => (
+                <option value={intervention.ref}>{intervention.title}</option>
+              )),
+            )}
+          </select>
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/70">Statut</span>
@@ -125,12 +170,21 @@ const categorySections = interventionsByCategory
           </select>
         </label>
       </div>
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-ink/60">
+        <div id="aa-count">—</div>
+        <button type="button" id="aa-reset" class="text-sm font-semibold text-ink/70 hover:text-ink">
+          Réinitialiser
+        </button>
+      </div>
     </div>
 
+    <div id="aa-intervention-options" class="hidden" aria-hidden="true">
+      {JSON.stringify(Array.from(interventionOptionsByCategory.entries()))}
+    </div>
     <div id="aa-list" class="space-y-8">
       {categorySections.length ? (
         categorySections.map((category) => (
-          <section class="cms-card p-6" data-category-group>
+          <section class="cms-card p-6" data-category-group data-category-key={category.key}>
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Catégorie</div>
@@ -166,7 +220,8 @@ const categorySections = interventionsByCategory
                         data-title={item.title.toLowerCase()}
                         data-status={item.status}
                         data-consent={item.consent ? 'true' : 'false'}
-                        data-intervention={intervention.title.toLowerCase()}
+                        data-intervention={intervention.ref}
+                        data-intervention-label={intervention.title.toLowerCase()}
                         data-description={(item.description ?? '').toLowerCase()}
                         data-case-number={item.case_number ?? ''}
                       >
@@ -292,9 +347,69 @@ const categorySections = interventionsByCategory
 
     const list = document.getElementById('aa-list');
     const search = document.getElementById('aa-search');
+    const clearBtn = document.getElementById('aa-clear');
     const status = document.getElementById('aa-status');
     const consent = document.getElementById('aa-consent');
+    const category = document.getElementById('aa-category');
+    const intervention = document.getElementById('aa-intervention');
+    const resetBtn = document.getElementById('aa-reset');
+    const counter = document.getElementById('aa-count');
     if (!(list instanceof HTMLElement)) return;
+
+    const interventionOptionsByCategory = new Map(
+      JSON.parse(document.getElementById('aa-intervention-options')?.textContent ?? '[]'),
+    );
+
+    const updateInterventionOptions = () => {
+      if (!(intervention instanceof HTMLSelectElement)) return;
+      const value = category instanceof HTMLSelectElement ? category.value : '';
+      const current = intervention.value;
+      const options = value ? interventionOptionsByCategory.get(value) ?? [] : null;
+      const items = options ?? Array.from(interventionOptionsByCategory.values()).flat();
+      intervention.innerHTML = '<option value="">Toutes</option>';
+      items.forEach((item) => {
+        const opt = document.createElement('option');
+        opt.value = item.ref;
+        opt.textContent = item.label;
+        intervention.appendChild(opt);
+      });
+      if (current && items.some((item) => item.ref === current)) {
+        intervention.value = current;
+      }
+    };
+
+    const parseQuery = () => {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        q: params.get('q') ?? '',
+        stat: params.get('statut') ?? '',
+        consent: params.get('consent') ?? '',
+        cat: params.get('cat') ?? '',
+        ref: params.get('ref') ?? '',
+      };
+    };
+
+    const setQuery = (next) => {
+      const params = new URLSearchParams(window.location.search);
+      ['q', 'statut', 'consent', 'cat', 'ref'].forEach((key) => params.delete(key));
+      if (next.q) params.set('q', next.q);
+      if (next.stat) params.set('statut', next.stat);
+      if (next.consent) params.set('consent', next.consent);
+      if (next.cat) params.set('cat', next.cat);
+      if (next.ref) params.set('ref', next.ref);
+      const query = params.toString();
+      window.history.replaceState({}, '', query ? `?${query}` : window.location.pathname);
+    };
+
+    const setInitialState = () => {
+      const query = parseQuery();
+      if (search instanceof HTMLInputElement) search.value = query.q;
+      if (status instanceof HTMLSelectElement) status.value = query.stat;
+      if (consent instanceof HTMLSelectElement) consent.value = query.consent;
+      if (category instanceof HTMLSelectElement) category.value = query.cat;
+      updateInterventionOptions();
+      if (intervention instanceof HTMLSelectElement) intervention.value = query.ref;
+    };
 
     list.addEventListener('click', async (event) => {
       const target = event.target instanceof HTMLElement ? event.target : null;
@@ -351,46 +466,132 @@ const categorySections = interventionsByCategory
     }
 
     const apply = () => {
-      const q = search instanceof HTMLInputElement ? search.value.trim().toLowerCase() : '';
+      const qRaw = search instanceof HTMLInputElement ? search.value.trim() : '';
+      const q = qRaw.toLowerCase();
       const st = status instanceof HTMLSelectElement ? status.value : '';
       const co = consent instanceof HTMLSelectElement ? consent.value : '';
+      const cat = category instanceof HTMLSelectElement ? category.value : '';
+      const ref = intervention instanceof HTMLSelectElement ? intervention.value : '';
+
+      const matchNumber = (value) => {
+        if (!value) return null;
+        const casMatch = value.match(/(?:^|\s)(?:cas:|#)(\d+)/i);
+        if (casMatch) return casMatch[1];
+        return null;
+      };
+
+      const numberQuery = matchNumber(qRaw);
       const rows = list.querySelectorAll('[data-row]');
+      let visibleCount = 0;
       rows.forEach((row) => {
         if (!(row instanceof HTMLElement)) return;
         const title = row.dataset.title ?? '';
         const rStatus = row.dataset.status ?? '';
         const rConsent = row.dataset.consent ?? '';
-        const rIntervention = row.dataset.intervention ?? '';
+        const rIntervention = row.dataset.interventionLabel ?? '';
         const description = row.dataset.description ?? '';
         const caseNumber = row.dataset.caseNumber ?? '';
+        const rowCat = row.closest('[data-category-group]')?.getAttribute('data-category-key') ?? '';
+        const rowRef = row.dataset.intervention ?? '';
         const matchesQuery =
-          !q || title.includes(q) || rIntervention.includes(q) || description.includes(q) || caseNumber.includes(q);
+          !q ||
+          title.includes(q) ||
+          rIntervention.includes(q) ||
+          description.includes(q) ||
+          caseNumber.includes(q) ||
+          (numberQuery ? caseNumber === numberQuery : false);
         const matchesStatus = !st || rStatus === st;
         const matchesConsent = !co || rConsent === co;
-        row.style.display = matchesQuery && matchesStatus && matchesConsent ? '' : 'none';
+        const matchesCategory = !cat || rowCat === cat;
+        const matchesIntervention = !ref || rowRef === ref;
+        const visible = matchesQuery && matchesStatus && matchesConsent && matchesCategory && matchesIntervention;
+        row.style.display = visible ? '' : 'none';
+        if (visible) visibleCount += 1;
       });
 
       const interventionGroups = list.querySelectorAll('[data-intervention-group]');
+      let visibleInterventions = 0;
       interventionGroups.forEach((group) => {
         if (!(group instanceof HTMLElement)) return;
         const visible = Array.from(group.querySelectorAll('[data-row]')).some(
           (row) => row instanceof HTMLElement && row.style.display !== 'none',
         );
         group.style.display = visible ? '' : 'none';
+        if (visible) visibleInterventions += 1;
       });
 
       const categoryGroups = list.querySelectorAll('[data-category-group]');
+      let visibleCategories = 0;
       categoryGroups.forEach((group) => {
         if (!(group instanceof HTMLElement)) return;
         const visible = Array.from(group.querySelectorAll('[data-intervention-group]')).some(
           (row) => row instanceof HTMLElement && row.style.display !== 'none',
         );
         group.style.display = visible ? '' : 'none';
+        if (visible) visibleCategories += 1;
       });
+
+      if (counter instanceof HTMLElement) {
+        counter.textContent = `${visibleCount} cas • ${visibleInterventions} interventions • ${visibleCategories} catégories`;
+      }
+
+      setQuery({ q: qRaw, stat: st, consent: co, cat, ref });
     };
 
-    [search, status, consent].forEach((el) => {
-      if (el) el.addEventListener('input', apply);
+    const debounce = (fn, delay = 120) => {
+      let t;
+      return (...args) => {
+        window.clearTimeout(t);
+        t = window.setTimeout(() => fn(...args), delay);
+      };
+    };
+
+    const applyDebounced = debounce(apply, 120);
+
+    [search, status, consent, category, intervention].forEach((el) => {
+      if (el) el.addEventListener('input', applyDebounced);
     });
+
+    if (category instanceof HTMLSelectElement) {
+      category.addEventListener('change', () => {
+        updateInterventionOptions();
+        if (intervention instanceof HTMLSelectElement) intervention.value = '';
+        apply();
+      });
+    }
+
+    if (resetBtn instanceof HTMLButtonElement) {
+      resetBtn.addEventListener('click', () => {
+        if (search instanceof HTMLInputElement) search.value = '';
+        if (status instanceof HTMLSelectElement) status.value = '';
+        if (consent instanceof HTMLSelectElement) consent.value = '';
+        if (category instanceof HTMLSelectElement) category.value = '';
+        updateInterventionOptions();
+        if (intervention instanceof HTMLSelectElement) intervention.value = '';
+        apply();
+      });
+    }
+
+    if (clearBtn instanceof HTMLButtonElement && search instanceof HTMLInputElement) {
+      clearBtn.addEventListener('click', () => {
+        search.value = '';
+        apply();
+        search.focus();
+      });
+    }
+
+    window.addEventListener('keydown', (event) => {
+      if (event.key === '/' && search instanceof HTMLInputElement) {
+        event.preventDefault();
+        search.focus();
+      }
+      if (event.key === 'Escape' && search instanceof HTMLInputElement) {
+        search.value = '';
+        apply();
+      }
+    });
+
+    setInitialState();
+    apply();
   })();
 </script>
