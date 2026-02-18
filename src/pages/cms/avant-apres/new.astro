@@ -39,7 +39,9 @@ const interventionsByCategory = interventionCategories.map((category) => {
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Numéro du cas</span>
-          <input class="cms-input" name="case_number" type="number" min="1" step="1" placeholder="ex: 1" required />
+          <div class="cms-input flex items-center text-sm text-ink/70" data-case-display>—</div>
+          <input type="hidden" name="case_number" />
+          <span class="text-xs text-ink/50">Attribué automatiquement selon l’intervention.</span>
         </label>
 
         <div class="grid gap-4 sm:grid-cols-2">
@@ -126,6 +128,9 @@ const interventionsByCategory = interventionCategories.map((category) => {
     const status = document.getElementById('aa-status');
     const submitButtons = document.querySelectorAll('[data-submit]');
     const uploadState = { before: false, after: false };
+    const caseDisplay = form.querySelector('[data-case-display]');
+    const caseInput = form.querySelector('input[name="case_number"]');
+    const interventionSelect = form.querySelector('select[name="intervention_ref"]');
     if (!(form instanceof HTMLFormElement)) return;
 
     const uploadInputs = form.querySelectorAll('[data-upload]');
@@ -141,6 +146,38 @@ const interventionsByCategory = interventionCategories.map((category) => {
       if (statusEl instanceof HTMLElement) statusEl.textContent = message;
       setSubmitDisabled(uploadState.before || uploadState.after);
     };
+
+    const refreshCaseNumber = async () => {
+      if (!(interventionSelect instanceof HTMLSelectElement)) return;
+      if (!(caseDisplay instanceof HTMLElement) || !(caseInput instanceof HTMLInputElement)) return;
+      const value = interventionSelect.value;
+      if (!value) {
+        caseDisplay.textContent = '—';
+        caseInput.value = '';
+        return;
+      }
+      try {
+        const res = await fetch('/api/cms/avant-apres');
+        if (!res.ok) throw new Error('fetch');
+        const items = await res.json();
+        const [cat, slug] = value.split('::');
+        const numbers = items
+          .filter((item) => item.intervention_category === cat && item.intervention_slug === slug)
+          .map((item) => Number(item.case_number))
+          .filter((n) => Number.isFinite(n));
+        const nextNumber = (numbers.length ? Math.max(...numbers) : 0) + 1;
+        caseDisplay.textContent = `Cas ${String(nextNumber).padStart(2, '0')}`;
+        caseInput.value = String(nextNumber);
+      } catch (err) {
+        caseDisplay.textContent = '—';
+        caseInput.value = '';
+      }
+    };
+
+    if (interventionSelect instanceof HTMLSelectElement) {
+      interventionSelect.addEventListener('change', refreshCaseNumber);
+      refreshCaseNumber();
+    }
 
     uploadInputs.forEach((input) => {
       if (!(input instanceof HTMLInputElement)) return;
@@ -232,7 +269,7 @@ const interventionsByCategory = interventionCategories.map((category) => {
       }
 
       if (!payload.case_number) {
-        if (error) error.textContent = 'Renseignez un numéro de cas.';
+        if (error) error.textContent = 'Numéro de cas indisponible. Réessayez.';
         if (status) status.textContent = '';
         return;
       }

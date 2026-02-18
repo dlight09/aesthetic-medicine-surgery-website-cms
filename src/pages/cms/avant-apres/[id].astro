@@ -65,15 +65,11 @@ const currentInterventionRef =
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Numéro du cas</span>
-          <input
-            class="cms-input"
-            name="case_number"
-            type="number"
-            min="1"
-            step="1"
-            value={item.case_number ?? ''}
-            required
-          />
+          <div class="cms-input flex items-center text-sm text-ink/70">
+            {item.case_number ? `Cas ${String(item.case_number).padStart(2, '0')}` : '—'}
+          </div>
+          <input type="hidden" name="case_number" value={item.case_number ?? ''} />
+          <span class="text-xs text-ink/50">Attribué automatiquement selon l’intervention.</span>
         </label>
 
         <div class="grid gap-4 sm:grid-cols-2">
@@ -274,7 +270,7 @@ const currentInterventionRef =
       }
 
       if (!payload.case_number) {
-        if (error) error.textContent = 'Renseignez un numéro de cas.';
+        if (error) error.textContent = 'Numéro de cas indisponible. Réessayez.';
         if (status) status.textContent = '';
         return;
       }
