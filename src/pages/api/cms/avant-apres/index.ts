@@ -1,7 +1,6 @@
 import type { APIRoute } from 'astro';
 import { requireCmsAuth } from '@/lib/cms/auth';
 import { createAvantApresCase, listCmsAvantApresCases } from '@/lib/cms/avantApres';
-import { getSupabaseAdmin } from '@/lib/cms/supabase';
 
 export const GET: APIRoute = async (context) => {
   const auth = requireCmsAuth(context);
@@ -17,7 +16,6 @@ export const POST: APIRoute = async (context) => {
   const auth = requireCmsAuth(context);
   if (auth) return auth;
 
-  const supabase = getSupabaseAdmin();
   const body = await context.request.json().catch(() => null);
   if (!body || typeof body !== 'object') {
     return new Response('Invalid payload', { status: 400 });
@@ -31,20 +29,6 @@ export const POST: APIRoute = async (context) => {
   }
 
   const status = body.status === 'publie' ? 'publie' : 'brouillon';
-  let resolvedCaseNumber: number | null = null;
-  if (body.intervention_category && body.intervention_slug) {
-    const { data: lastCase, error: caseError } = await supabase
-      .from('avant_apres_cases')
-      .select('case_number')
-      .eq('intervention_category', body.intervention_category)
-      .eq('intervention_slug', body.intervention_slug)
-      .order('case_number', { ascending: false })
-      .limit(1);
-    if (caseError) throw caseError;
-    const lastNumber = lastCase?.[0]?.case_number ?? 0;
-    resolvedCaseNumber = Number.isFinite(lastNumber) ? lastNumber + 1 : 1;
-  }
-
   const payload = {
     title,
     description: typeof body.description === 'string' ? body.description : null,
@@ -56,7 +40,7 @@ export const POST: APIRoute = async (context) => {
       typeof body.intervention_slug === 'string' && body.intervention_slug.trim()
         ? body.intervention_slug
         : null,
-    case_number: resolvedCaseNumber,
+    case_number: null,
     status: status as 'brouillon' | 'publie',
     consent: Boolean(body.consent),
     consent_date: typeof body.consent_date === 'string' ? body.consent_date : null,
