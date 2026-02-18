@@ -3,7 +3,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import { site } from '@/lib/site';
 import { interventionCategories } from '@/lib/interventions';
-import { listPublicAvantApresCasesFiltered, type AvantApresCaseView } from '@/lib/cms/avantApres';
+import { listPublicAvantApresCases, type AvantApresCaseView } from '@/lib/cms/avantApres';
 
 export async function getStaticPaths() {
   const items = await getCollection('interventions');
@@ -21,11 +21,11 @@ const { entry } = Astro.props;
 const { Content } = await entry.render();
 const categoryThumb = interventionCategories.find((c) => c.key === entry.data.category)?.thumbnailSrc;
 Astro.response.headers.set('Cache-Control', 'no-store');
-const relatedCases = await listPublicAvantApresCasesFiltered({
-  interventionCategory: entry.data.category,
-  interventionSlug: Astro.params.slug,
-  limit: 4,
-});
+let relatedCases = (await listPublicAvantApresCases()) as AvantApresCaseView[];
+relatedCases = relatedCases.filter(
+  (item) => item.intervention_category === entry.data.category && item.intervention_slug === Astro.params.slug,
+);
+relatedCases = relatedCases.slice(0, 4);
 ---
 
 <BaseLayout title={entry.data.title} description={entry.data.description}>

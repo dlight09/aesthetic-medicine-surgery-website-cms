@@ -2,11 +2,16 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import BeforeAfterSlider from '@/components/BeforeAfterSlider.astro';
 import { getCollection } from 'astro:content';
-import { getPublicAvantApresCase } from '@/lib/cms/avantApres';
+import { getPublicAvantApresCase, type AvantApresCaseView } from '@/lib/cms/avantApres';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 const { id } = Astro.params;
-const item = id ? await getPublicAvantApresCase(id) : null;
+type AvantApresCaseWithIntervention = AvantApresCaseView & {
+  intervention_category?: string | null;
+  intervention_slug?: string | null;
+  description?: string | null;
+};
+const item = (id ? await getPublicAvantApresCase(id) : null) as AvantApresCaseWithIntervention | null;
 if (!item) {
   return Astro.redirect('/avant-apres');
 }
@@ -29,7 +34,7 @@ const interventionHref = relatedIntervention
     <a href="/avant-apres" class="text-sm font-semibold text-ink/70 hover:text-ink">← Avant/après</a>
     <h1 class="mt-3 font-display text-4xl tracking-tight">{item.title}</h1>
     <div class="mt-3 text-sm text-ink/60">{item.zone ?? '—'}</div>
-    {item.caption ? <p class="mt-3 text-lg text-ink/75">{item.caption}</p> : null}
+    {item.description ? <p class="mt-3 text-lg text-ink/75">{item.description}</p> : null}
     {relatedIntervention && interventionHref ? (
       <div class="mt-4 rounded-2xl border border-ink/10 bg-paper px-4 py-3 text-sm text-ink/70">
         En savoir plus sur l’intervention: <a class="link" href={interventionHref}>{relatedIntervention.data.title}</a>

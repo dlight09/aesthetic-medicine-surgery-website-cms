@@ -1,12 +1,17 @@
 ---
 import CmsLayout from '@/layouts/CmsLayout.astro';
-import { getCmsAvantApresCase } from '@/lib/cms/avantApres';
+import { getCmsAvantApresCase, type AvantApresCaseView } from '@/lib/cms/avantApres';
 import { getCollection } from 'astro:content';
 import { interventionCategories } from '@/lib/interventions';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 const { id } = Astro.params;
-const item = id ? await getCmsAvantApresCase(id) : null;
+type AvantApresCaseWithIntervention = AvantApresCaseView & {
+  intervention_category?: string | null;
+  intervention_slug?: string | null;
+  description?: string | null;
+};
+const item = (id ? await getCmsAvantApresCase(id) : null) as AvantApresCaseWithIntervention | null;
 if (!item) {
   return Astro.redirect('/cms/avant-apres');
 }
@@ -36,16 +41,8 @@ const currentInterventionRef =
 
       <form id="aa-form" class="mt-8 grid gap-5" data-id={item.id}>
         <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Titre</span>
-          <input class="cms-input" name="title" value={item.title} required />
-        </label>
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Description courte</span>
+          <span class="font-semibold text-ink/80">Description avant / après</span>
           <textarea rows={3} class="cms-textarea" name="description">{item.description ?? ''}</textarea>
-        </label>
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Zone</span>
-          <input class="cms-input" name="zone" value={item.zone ?? ''} />
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Intervention associée</span>
@@ -61,6 +58,7 @@ const currentInterventionRef =
               </optgroup>
             ))}
           </select>
+          <span class="text-xs text-ink/50">Le titre du cas reprend l’intervention sélectionnée.</span>
         </label>
 
         <div class="grid gap-4 sm:grid-cols-2">
@@ -84,10 +82,6 @@ const currentInterventionRef =
           </div>
         </div>
 
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Caption</span>
-          <input class="cms-input" name="caption" value={item.caption ?? ''} placeholder="Résultat à 6 mois" />
-        </label>
       </form>
     </section>
 
@@ -232,13 +226,16 @@ const currentInterventionRef =
       const submitter = event.submitter;
       const intent = submitter && submitter instanceof HTMLButtonElement ? submitter.value : 'draft';
       const formData = new FormData(form);
+      const interventionSelect = form.querySelector('select[name="intervention_ref"]');
+      const interventionLabel =
+        interventionSelect instanceof HTMLSelectElement
+          ? interventionSelect.selectedOptions[0]?.textContent?.trim() ?? ''
+          : '';
       const payload = {
-        title: String(formData.get('title') ?? '').trim(),
+        title: interventionLabel || item.title,
         description: String(formData.get('description') ?? '').trim() || null,
-        zone: String(formData.get('zone') ?? '').trim() || null,
         intervention_category: null,
         intervention_slug: null,
-        caption: String(formData.get('caption') ?? '').trim() || null,
         consent: formData.get('consent') === 'on',
         consent_date: String(formData.get('consent_date') ?? '').trim() || null,
         internal_ref: String(formData.get('internal_ref') ?? '').trim() || null,
@@ -254,6 +251,12 @@ const currentInterventionRef =
         payload.intervention_slug = slug || null;
       }
 
+      if (!interventionRef || !payload.title) {
+        if (error) error.textContent = 'Sélectionnez une intervention associée.';
+        if (status) status.textContent = '';
+        return;
+      }
+
       if (intent === 'publish' && !payload.consent) {
         if (error) error.textContent = 'Le consentement est requis pour publier.';
         if (status) status.textContent = '';
@@ -261,7 +264,7 @@ const currentInterventionRef =
       }
 
       if (!payload.title || !payload.before_path || !payload.after_path) {
-        if (error) error.textContent = 'Titre et photos avant/après obligatoires.';
+        if (error) error.textContent = 'Intervention et photos avant/après obligatoires.';
         if (status) status.textContent = '';
         return;
       }

@@ -49,7 +49,6 @@ export const PUT: APIRoute = async (context) => {
   const payload = {
     title: typeof body.title === 'string' ? body.title.trim() : undefined,
     description: typeof body.description === 'string' ? body.description : undefined,
-    zone: typeof body.zone === 'string' ? body.zone : undefined,
     intervention_category: interventionCategory,
     intervention_slug: interventionSlug,
     status: status as 'brouillon' | 'publie' | undefined,
@@ -58,7 +57,6 @@ export const PUT: APIRoute = async (context) => {
     internal_ref: typeof body.internal_ref === 'string' ? body.internal_ref : undefined,
     before_path: typeof body.before_path === 'string' ? body.before_path : undefined,
     after_path: typeof body.after_path === 'string' ? body.after_path : undefined,
-    caption: typeof body.caption === 'string' ? body.caption : undefined,
   };
 
   const updated = await updateAvantApresCase(id, payload);

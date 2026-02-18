@@ -1,21 +1,23 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
-import {
-  listPublicAvantApresCases,
-  listPublicAvantApresCasesFiltered,
-  type AvantApresCaseView
-} from '@/lib/cms/avantApres';
+import { listPublicAvantApresCases, type AvantApresCaseView } from '@/lib/cms/avantApres';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 const interventionCategory = Astro.url.searchParams.get('intervention_category');
 const interventionSlug = Astro.url.searchParams.get('intervention_slug');
-const cases = (interventionCategory && interventionSlug
-  ? await listPublicAvantApresCasesFiltered({
-      interventionCategory,
-      interventionSlug,
-    })
-  : await listPublicAvantApresCases()) as AvantApresCaseView[];
+type AvantApresCaseWithIntervention = AvantApresCaseView & {
+  intervention_category?: string | null;
+  intervention_slug?: string | null;
+  description?: string | null;
+};
+let cases = (await listPublicAvantApresCases()) as AvantApresCaseWithIntervention[];
+if (interventionCategory) {
+  cases = cases.filter((item) => item.intervention_category === interventionCategory);
+}
+if (interventionSlug) {
+  cases = cases.filter((item) => item.intervention_slug === interventionSlug);
+}
 
 const interventions = await getCollection('interventions');
 const interventionMetaByRef = new Map(
@@ -41,7 +43,7 @@ const interventionTitle = matchingIntervention?.data.title;
 const interventionHref = matchingIntervention
   ? `/interventions/${matchingIntervention.data.category}/${interventionSlug}`
   : null;
-const getInterventionMeta = (item: AvantApresCaseView) => {
+const getInterventionMeta = (item: AvantApresCaseWithIntervention) => {
   if (!item.intervention_category || !item.intervention_slug) return null;
   return interventionMetaByRef.get(`${item.intervention_category}::${item.intervention_slug}`) ?? null;
 };
@@ -65,7 +67,7 @@ const getInterventionMeta = (item: AvantApresCaseView) => {
 
     {cases.length ? (
       <div class="mt-10 grid gap-6 sm:grid-cols-2">
-        {cases.map((item: AvantApresCaseView) => (
+        {cases.map((item: AvantApresCaseWithIntervention) => (
           <a
             href={`/avant-apres/${item.id}`}
             class="group overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft transition hover:shadow-lift"
@@ -91,11 +93,13 @@ const getInterventionMeta = (item: AvantApresCaseView) => {
               </div>
             </div>
             <div class="p-6">
-              <div class="text-sm text-ink/70">{item.zone ?? '—'}</div>
               {getInterventionMeta(item) ? (
-                <div class="mt-1 text-sm text-ink/60">
+                <div class="text-sm text-ink/60">
                   Intervention: <a class="link" href={getInterventionMeta(item)!.href}>{getInterventionMeta(item)!.title}</a>
                 </div>
+              ) : null}
+              {item.description ? (
+                <div class="mt-2 text-sm text-ink/70">{item.description}</div>
               ) : null}
               <div class="mt-3 text-sm font-semibold text-ink/80 transition group-hover:text-ink">
                 Voir le cas →

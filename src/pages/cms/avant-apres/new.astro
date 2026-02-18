@@ -24,18 +24,6 @@ const interventionsByCategory = interventionCategories.map((category) => {
 
       <form id="aa-form" class="mt-8 grid gap-5">
         <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Titre</span>
-          <input class="cms-input" name="title" placeholder="ex: Rhinoplastie - 6 mois" required />
-        </label>
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Description courte</span>
-          <textarea rows={3} class="cms-textarea" name="description"></textarea>
-        </label>
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Zone</span>
-          <input class="cms-input" name="zone" placeholder="Visage, Seins, Silhouette..." />
-        </label>
-        <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Intervention associée</span>
           <select class="cms-select" name="intervention_ref">
             <option value="">Aucune</option>
@@ -47,6 +35,7 @@ const interventionsByCategory = interventionCategories.map((category) => {
               </optgroup>
             ))}
           </select>
+          <span class="text-xs text-ink/50">Le titre du cas reprend l’intervention sélectionnée.</span>
         </label>
 
         <div class="grid gap-4 sm:grid-cols-2">
@@ -77,8 +66,8 @@ const interventionsByCategory = interventionCategories.map((category) => {
         </div>
 
         <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Caption (facultatif)</span>
-          <input class="cms-input" name="caption" placeholder="ex: Résultat à 6 mois" />
+          <span class="font-semibold text-ink/80">Description avant / après</span>
+          <textarea rows={3} class="cms-textarea" name="description"></textarea>
         </label>
       </form>
     </section>
@@ -206,13 +195,16 @@ const interventionsByCategory = interventionCategories.map((category) => {
       const submitter = event.submitter;
       const intent = submitter && submitter instanceof HTMLButtonElement ? submitter.value : 'draft';
       const formData = new FormData(form);
+      const interventionSelect = form.querySelector('select[name="intervention_ref"]');
+      const interventionLabel =
+        interventionSelect instanceof HTMLSelectElement
+          ? interventionSelect.selectedOptions[0]?.textContent?.trim() ?? ''
+          : '';
       const payload = {
-        title: String(formData.get('title') ?? '').trim(),
+        title: interventionLabel,
         description: String(formData.get('description') ?? '').trim() || null,
-        zone: String(formData.get('zone') ?? '').trim() || null,
         intervention_category: null,
         intervention_slug: null,
-        caption: String(formData.get('caption') ?? '').trim() || null,
         consent: formData.get('consent') === 'on',
         consent_date: String(formData.get('consent_date') ?? '').trim() || null,
         internal_ref: String(formData.get('internal_ref') ?? '').trim() || null,
@@ -228,6 +220,12 @@ const interventionsByCategory = interventionCategories.map((category) => {
         payload.intervention_slug = slug || null;
       }
 
+      if (!interventionRef || !payload.title) {
+        if (error) error.textContent = 'Sélectionnez une intervention associée.';
+        if (status) status.textContent = '';
+        return;
+      }
+
       if (intent === 'publish' && !payload.consent) {
         if (error) error.textContent = 'Le consentement est requis pour publier.';
         if (status) status.textContent = '';
@@ -235,7 +233,7 @@ const interventionsByCategory = interventionCategories.map((category) => {
       }
 
       if (!payload.title || !payload.before_path || !payload.after_path) {
-        if (error) error.textContent = 'Titre et photos avant/après obligatoires.';
+        if (error) error.textContent = 'Intervention et photos avant/après obligatoires.';
         if (status) status.textContent = '';
         return;
       }

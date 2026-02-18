@@ -7,7 +7,12 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 const statusClass = (status: 'publie' | 'brouillon') =>
   status === 'publie' ? 'bg-emerald-100 text-emerald-700' : 'bg-ink/10 text-ink/70';
 
-const items = (await listCmsAvantApresCases()) as AvantApresCaseView[];
+type AvantApresCaseWithIntervention = AvantApresCaseView & {
+  intervention_category?: string | null;
+  intervention_slug?: string | null;
+  description?: string | null;
+};
+const items = (await listCmsAvantApresCases()) as AvantApresCaseWithIntervention[];
 const interventions = await getCollection('interventions');
 const interventionTitleByRef = new Map(
   interventions.map((entry) => {
@@ -15,7 +20,6 @@ const interventionTitleByRef = new Map(
     return [`${entry.data.category}::${slug}`, entry.data.title];
   }),
 );
-const zones = Array.from(new Set(items.map((item) => item.zone).filter(Boolean))) as string[];
 const formatDate = (value: string) =>
   new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 ---
@@ -51,10 +55,10 @@ const formatDate = (value: string) =>
     </div>
 
     <div class="cms-card p-6">
-      <div class="grid gap-3 md:grid-cols-[1.2fr_0.7fr_0.7fr_0.6fr]">
+      <div class="grid gap-3 md:grid-cols-[1.2fr_0.7fr_0.7fr]">
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/70">Recherche</span>
-          <input id="aa-search" class="cms-input" placeholder="Titre, zone..." />
+          <input id="aa-search" class="cms-input" placeholder="Titre, intervention..." />
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/70">Statut</span>
@@ -72,40 +76,30 @@ const formatDate = (value: string) =>
             <option value="false">Sans consentement</option>
           </select>
         </label>
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/70">Zone</span>
-          <select id="aa-zone" class="cms-select">
-            <option value="">Toutes</option>
-            {zones.map((zone) => (
-              <option value={zone}>{zone}</option>
-            ))}
-          </select>
-        </label>
       </div>
     </div>
 
     <div class="cms-card shadow-soft">
-      <div class="grid grid-cols-[1.4fr_0.8fr_0.8fr_0.6fr_0.4fr] gap-4 border-b border-ink/10 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-ink/50">
+      <div class="grid grid-cols-[1.6fr_0.8fr_0.6fr_0.4fr] gap-4 border-b border-ink/10 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-ink/50">
         <div>Cas</div>
-        <div>Zone</div>
         <div>Consentement</div>
         <div>Statut</div>
         <div>Actions</div>
       </div>
       <div id="aa-list" class="divide-y divide-ink/5">
-        {items.map((item) => (
+        {items.map((item: AvantApresCaseWithIntervention) => (
           <div
-            class="cms-row grid grid-cols-[1.4fr_0.8fr_0.8fr_0.6fr_0.4fr] gap-4 px-6 py-4 text-sm"
+            class="cms-row grid grid-cols-[1.6fr_0.8fr_0.6fr_0.4fr] gap-4 px-6 py-4 text-sm"
             data-row
             data-href={`/cms/avant-apres/${item.id}`}
             data-id={item.id}
             data-title={item.title.toLowerCase()}
-            data-zone={(item.zone ?? '').toLowerCase()}
             data-status={item.status}
             data-consent={item.consent ? 'true' : 'false'}
             data-intervention={(item.intervention_category && item.intervention_slug
               ? (interventionTitleByRef.get(`${item.intervention_category}::${item.intervention_slug}`) ?? '').toLowerCase()
               : '')}
+            data-description={(item.description ?? '').toLowerCase()}
           >
             <div class="flex items-center gap-3">
               <div class="flex gap-2">
@@ -117,6 +111,9 @@ const formatDate = (value: string) =>
                   {item.title}
                 </a>
                 <div class="text-xs text-ink/60">MAJ: {formatDate(item.updated_at)}</div>
+                {item.description ? (
+                  <div class="text-xs text-ink/50">{item.description}</div>
+                ) : null}
                 {item.intervention_category && item.intervention_slug ? (
                   <div class="text-xs text-ink/50">
                     Intervention: {interventionTitleByRef.get(`${item.intervention_category}::${item.intervention_slug}`) ?? 'Non renseignée'}
@@ -124,7 +121,6 @@ const formatDate = (value: string) =>
                 ) : null}
               </div>
             </div>
-            <div class="text-ink/70">{item.zone ?? '—'}</div>
             <div>
               <span class:list={[
                 'cms-pill',
@@ -180,7 +176,6 @@ const formatDate = (value: string) =>
     const search = document.getElementById('aa-search');
     const status = document.getElementById('aa-status');
     const consent = document.getElementById('aa-consent');
-    const zone = document.getElementById('aa-zone');
     if (!(list instanceof HTMLElement)) return;
 
     list.addEventListener('click', async (event) => {
@@ -240,24 +235,23 @@ const formatDate = (value: string) =>
       const q = search instanceof HTMLInputElement ? search.value.trim().toLowerCase() : '';
       const st = status instanceof HTMLSelectElement ? status.value : '';
       const co = consent instanceof HTMLSelectElement ? consent.value : '';
-      const zo = zone instanceof HTMLSelectElement ? zone.value.toLowerCase() : '';
       const rows = list.querySelectorAll('[data-row]');
       rows.forEach((row) => {
         if (!(row instanceof HTMLElement)) return;
         const title = row.dataset.title ?? '';
-        const rZone = row.dataset.zone ?? '';
         const rStatus = row.dataset.status ?? '';
         const rConsent = row.dataset.consent ?? '';
         const rIntervention = row.dataset.intervention ?? '';
-        const matchesQuery = !q || title.includes(q) || rZone.includes(q) || rIntervention.includes(q);
+        const description = row.dataset.description ?? '';
+        const matchesQuery =
+          !q || title.includes(q) || rIntervention.includes(q) || description.includes(q);
         const matchesStatus = !st || rStatus === st;
         const matchesConsent = !co || rConsent === co;
-        const matchesZone = !zo || rZone === zo;
-        row.style.display = matchesQuery && matchesStatus && matchesConsent && matchesZone ? '' : 'none';
+        row.style.display = matchesQuery && matchesStatus && matchesConsent ? '' : 'none';
       });
     };
 
-    [search, status, consent, zone].forEach((el) => {
+    [search, status, consent].forEach((el) => {
       if (el) el.addEventListener('input', apply);
     });
   })();

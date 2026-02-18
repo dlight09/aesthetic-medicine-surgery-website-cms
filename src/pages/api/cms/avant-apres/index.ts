@@ -32,7 +32,6 @@ export const POST: APIRoute = async (context) => {
   const payload = {
     title,
     description: typeof body.description === 'string' ? body.description : null,
-    zone: typeof body.zone === 'string' ? body.zone : null,
     intervention_category:
       typeof body.intervention_category === 'string' && body.intervention_category.trim()
         ? body.intervention_category
@@ -47,7 +46,6 @@ export const POST: APIRoute = async (context) => {
     internal_ref: typeof body.internal_ref === 'string' ? body.internal_ref : null,
     before_path,
     after_path,
-    caption: typeof body.caption === 'string' ? body.caption : null,
   };
 
   const created = await createAvantApresCase(payload);
