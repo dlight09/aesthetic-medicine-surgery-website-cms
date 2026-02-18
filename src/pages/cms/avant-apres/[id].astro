@@ -94,6 +94,13 @@ if (!item) {
         >
           Publier
         </button>
+        <button
+          type="button"
+          data-delete
+          class="btn btn-pill btn-md w-full border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+        >
+          Supprimer le cas
+        </button>
       </div>
       <div id="aa-status" class="mt-4 text-xs text-ink/60"></div>
       <div id="aa-error" class="mt-2 text-xs text-rose-600"></div>
@@ -107,6 +114,7 @@ if (!item) {
     const error = document.getElementById('aa-error');
     const status = document.getElementById('aa-status');
     const submitButtons = document.querySelectorAll('[data-submit]');
+    const deleteButton = document.querySelector('[data-delete]');
     const uploadState = { before: false, after: false };
     if (!(form instanceof HTMLFormElement)) return;
 
@@ -219,5 +227,26 @@ if (!item) {
         if (status) status.textContent = '';
       }
     });
+
+    if (deleteButton instanceof HTMLButtonElement) {
+      deleteButton.addEventListener('click', async () => {
+        const caseId = form.dataset.id ?? '';
+        if (!caseId) return;
+        const confirmed = window.confirm('Supprimer ce cas ? Cette action est definitive.');
+        if (!confirmed) return;
+        if (error) error.textContent = '';
+        if (status) status.textContent = 'Suppression...';
+        try {
+          const res = await fetch(`/api/cms/avant-apres/${encodeURIComponent(caseId)}`, {
+            method: 'DELETE'
+          });
+          if (!res.ok) throw new Error('delete');
+          window.location.href = '/cms/avant-apres?deleted=1';
+        } catch (err) {
+          if (error) error.textContent = 'Erreur de suppression.';
+          if (status) status.textContent = '';
+        }
+      });
+    }
   })();
 </script>

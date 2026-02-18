@@ -17,6 +17,9 @@ const formatDate = (value: string) =>
     <div id="aa-toast" class="hidden rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
       Cas publie avec succes.
     </div>
+    <div id="aa-toast-delete" class="hidden rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+      Cas supprime.
+    </div>
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Cas</div>
@@ -60,17 +63,20 @@ const formatDate = (value: string) =>
     </div>
 
     <div class="cms-card shadow-soft">
-      <div class="grid grid-cols-[1.4fr_0.8fr_0.8fr_0.6fr] gap-4 border-b border-ink/10 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-ink/50">
+      <div class="grid grid-cols-[1.4fr_0.8fr_0.8fr_0.6fr_0.4fr] gap-4 border-b border-ink/10 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-ink/50">
         <div>Cas</div>
         <div>Zone</div>
         <div>Consentement</div>
         <div>Statut</div>
+        <div>Actions</div>
       </div>
       <div id="aa-list" class="divide-y divide-ink/5">
         {items.map((item) => (
-          <a
-            href={`/cms/avant-apres/${item.id}`}
-            class="cms-row grid grid-cols-[1.4fr_0.8fr_0.8fr_0.6fr] gap-4 px-6 py-4 text-sm"
+          <div
+            class="cms-row grid grid-cols-[1.4fr_0.8fr_0.8fr_0.6fr_0.4fr] gap-4 px-6 py-4 text-sm"
+            data-row
+            data-href={`/cms/avant-apres/${item.id}`}
+            data-id={item.id}
             data-title={item.title.toLowerCase()}
             data-zone={(item.zone ?? '').toLowerCase()}
             data-status={item.status}
@@ -82,7 +88,9 @@ const formatDate = (value: string) =>
                 <img src={item.afterUrl} alt="Apres" class="h-10 w-14 rounded-lg object-cover" />
               </div>
               <div>
-                <div class="font-semibold text-ink/90">{item.title}</div>
+                <a href={`/cms/avant-apres/${item.id}`} class="font-semibold text-ink/90 hover:text-ink">
+                  {item.title}
+                </a>
                 <div class="text-xs text-ink/60">MAJ: {formatDate(item.updated_at)}</div>
               </div>
             </div>
@@ -100,7 +108,16 @@ const formatDate = (value: string) =>
                 {item.status === 'publie' ? 'Publie' : 'Brouillon'}
               </span>
             </div>
-          </a>
+            <div>
+              <button
+                type="button"
+                data-delete-row
+                class="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
         ))}
       </div>
     </div>
@@ -117,6 +134,13 @@ const formatDate = (value: string) =>
       setTimeout(() => toast.classList.add('hidden'), 3200);
     }
 
+    const deleteToast = document.getElementById('aa-toast-delete');
+    if (deleteToast instanceof HTMLElement && params.get('deleted') === '1') {
+      deleteToast.classList.remove('hidden');
+      window.history.replaceState({}, '', window.location.pathname);
+      setTimeout(() => deleteToast.classList.add('hidden'), 3200);
+    }
+
     const list = document.getElementById('aa-list');
     const search = document.getElementById('aa-search');
     const status = document.getElementById('aa-status');
@@ -124,12 +148,43 @@ const formatDate = (value: string) =>
     const zone = document.getElementById('aa-zone');
     if (!(list instanceof HTMLElement)) return;
 
+    list.addEventListener('click', async (event) => {
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      if (!target) return;
+      const deleteBtn = target.closest('[data-delete-row]');
+      if (!deleteBtn) {
+        const row = target.closest('[data-row]');
+        if (row instanceof HTMLElement) {
+          const href = row.dataset.href;
+          if (href) window.location.href = href;
+        }
+        return;
+      }
+      const row = target.closest('[data-row]');
+      if (!(row instanceof HTMLElement)) return;
+      const caseId = row.dataset.id ?? '';
+      if (!caseId) return;
+      const confirmed = window.confirm('Supprimer ce cas ? Cette action est definitive.');
+      if (!confirmed) return;
+      try {
+        const res = await fetch(`/api/cms/avant-apres/${encodeURIComponent(caseId)}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('delete');
+        row.remove();
+        if (deleteToast instanceof HTMLElement) {
+          deleteToast.classList.remove('hidden');
+          setTimeout(() => deleteToast.classList.add('hidden'), 3200);
+        }
+      } catch (err) {
+        window.alert('Erreur de suppression.');
+      }
+    });
+
     const apply = () => {
       const q = search instanceof HTMLInputElement ? search.value.trim().toLowerCase() : '';
       const st = status instanceof HTMLSelectElement ? status.value : '';
       const co = consent instanceof HTMLSelectElement ? consent.value : '';
       const zo = zone instanceof HTMLSelectElement ? zone.value.toLowerCase() : '';
-      const rows = list.querySelectorAll('a[data-title]');
+      const rows = list.querySelectorAll('[data-row]');
       rows.forEach((row) => {
         if (!(row instanceof HTMLElement)) return;
         const title = row.dataset.title ?? '';
