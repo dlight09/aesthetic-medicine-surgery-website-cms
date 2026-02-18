@@ -10,6 +10,7 @@ type AvantApresCaseWithIntervention = AvantApresCaseView & {
   intervention_category?: string | null;
   intervention_slug?: string | null;
   description?: string | null;
+  case_number?: number | null;
 };
 const item = (id ? await getPublicAvantApresCase(id) : null) as AvantApresCaseWithIntervention | null;
 if (!item) {
@@ -27,19 +28,20 @@ const relatedIntervention =
 const interventionHref = relatedIntervention
   ? `/interventions/${relatedIntervention.data.category}/${item.intervention_slug}`
   : null;
+const caseLabel = item.case_number ? `Cas ${String(item.case_number).padStart(2, '0')}` : null;
+const pageTitle = caseLabel && relatedIntervention ? `${caseLabel} — ${relatedIntervention.data.title}` : item.title;
 ---
 
-<BaseLayout title={item.title} description="Avant/après avec consentement. Les résultats varient selon chaque patient.">
+<BaseLayout title={pageTitle} description="Avant/après avec consentement. Les résultats varient selon chaque patient.">
   <section class="mx-auto max-w-5xl px-4 py-14">
     <a href="/avant-apres" class="text-sm font-semibold text-ink/70 hover:text-ink">← Avant/après</a>
-    <h1 class="mt-3 font-display text-4xl tracking-tight">{item.title}</h1>
-    <div class="mt-3 text-sm text-ink/60">{item.zone ?? '—'}</div>
-    {item.description ? <p class="mt-3 text-lg text-ink/75">{item.description}</p> : null}
+    <h1 class="mt-3 font-display text-4xl tracking-tight">{caseLabel ?? 'Cas'}</h1>
     {relatedIntervention && interventionHref ? (
-      <div class="mt-4 rounded-2xl border border-ink/10 bg-paper px-4 py-3 text-sm text-ink/70">
-        En savoir plus sur l’intervention: <a class="link" href={interventionHref}>{relatedIntervention.data.title}</a>
+      <div class="mt-3 text-sm text-ink/70">
+        Intervention associée: <a class="link" href={interventionHref}>{relatedIntervention.data.title}</a>
       </div>
     ) : null}
+    {item.description ? <p class="mt-3 text-lg text-ink/75">{item.description}</p> : null}
 
     <div class="mt-6 text-sm text-ink/60">Glissez le curseur pour comparer.</div>
     <div class="mt-4">

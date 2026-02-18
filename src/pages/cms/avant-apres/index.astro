@@ -11,6 +11,7 @@ type AvantApresCaseWithIntervention = AvantApresCaseView & {
   intervention_category?: string | null;
   intervention_slug?: string | null;
   description?: string | null;
+  case_number?: number | null;
 };
 const items = (await listCmsAvantApresCases()) as AvantApresCaseWithIntervention[];
 const interventions = await getCollection('interventions');
@@ -22,6 +23,8 @@ const interventionTitleByRef = new Map(
 );
 const formatDate = (value: string) =>
   new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+const formatCaseNumber = (value?: number | null) =>
+  value ? `Cas ${String(value).padStart(2, '0')}` : '—';
 ---
 
 <CmsLayout title="Avant/Après">
@@ -80,8 +83,9 @@ const formatDate = (value: string) =>
     </div>
 
     <div class="cms-card shadow-soft">
-      <div class="grid grid-cols-[1.6fr_0.8fr_0.6fr_0.4fr] gap-4 border-b border-ink/10 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-ink/50">
+      <div class="grid grid-cols-[1.6fr_0.6fr_0.8fr_0.6fr_0.4fr] gap-4 border-b border-ink/10 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-ink/50">
         <div>Cas</div>
+        <div>Numéro</div>
         <div>Consentement</div>
         <div>Statut</div>
         <div>Actions</div>
@@ -89,7 +93,7 @@ const formatDate = (value: string) =>
       <div id="aa-list" class="divide-y divide-ink/5">
         {items.map((item: AvantApresCaseWithIntervention) => (
           <div
-            class="cms-row grid grid-cols-[1.6fr_0.8fr_0.6fr_0.4fr] gap-4 px-6 py-4 text-sm"
+            class="cms-row grid grid-cols-[1.6fr_0.6fr_0.8fr_0.6fr_0.4fr] gap-4 px-6 py-4 text-sm"
             data-row
             data-href={`/cms/avant-apres/${item.id}`}
             data-id={item.id}
@@ -100,6 +104,7 @@ const formatDate = (value: string) =>
               ? (interventionTitleByRef.get(`${item.intervention_category}::${item.intervention_slug}`) ?? '').toLowerCase()
               : '')}
             data-description={(item.description ?? '').toLowerCase()}
+            data-case-number={item.case_number ?? ''}
           >
             <div class="flex items-center gap-3">
               <div class="flex gap-2">
@@ -121,6 +126,7 @@ const formatDate = (value: string) =>
                 ) : null}
               </div>
             </div>
+            <div class="text-ink/70">{formatCaseNumber(item.case_number)}</div>
             <div>
               <span class:list={[
                 'cms-pill',
@@ -243,8 +249,9 @@ const formatDate = (value: string) =>
         const rConsent = row.dataset.consent ?? '';
         const rIntervention = row.dataset.intervention ?? '';
         const description = row.dataset.description ?? '';
+        const caseNumber = row.dataset.caseNumber ?? '';
         const matchesQuery =
-          !q || title.includes(q) || rIntervention.includes(q) || description.includes(q);
+          !q || title.includes(q) || rIntervention.includes(q) || description.includes(q) || caseNumber.includes(q);
         const matchesStatus = !st || rStatus === st;
         const matchesConsent = !co || rConsent === co;
         row.style.display = matchesQuery && matchesStatus && matchesConsent ? '' : 'none';

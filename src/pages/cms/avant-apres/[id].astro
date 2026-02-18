@@ -10,6 +10,7 @@ type AvantApresCaseWithIntervention = AvantApresCaseView & {
   intervention_category?: string | null;
   intervention_slug?: string | null;
   description?: string | null;
+  case_number?: number | null;
 };
 const item = (id ? await getCmsAvantApresCase(id) : null) as AvantApresCaseWithIntervention | null;
 if (!item) {
@@ -37,7 +38,9 @@ const currentInterventionRef =
   <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
     <section class="cms-card p-7">
       <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant/Après</div>
-      <h1 class="mt-2 font-display text-3xl tracking-tight">{item.title}</h1>
+      <h1 class="mt-2 font-display text-3xl tracking-tight">
+        {item.case_number ? `Cas ${String(item.case_number).padStart(2, '0')}` : 'Cas'} — {item.title}
+      </h1>
 
       <form id="aa-form" class="mt-8 grid gap-5" data-id={item.id}>
         <label class="grid gap-2 text-sm">
@@ -59,6 +62,18 @@ const currentInterventionRef =
             ))}
           </select>
           <span class="text-xs text-ink/50">Le titre du cas reprend l’intervention sélectionnée.</span>
+        </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Numéro du cas</span>
+          <input
+            class="cms-input"
+            name="case_number"
+            type="number"
+            min="1"
+            step="1"
+            value={item.case_number ?? ''}
+            required
+          />
         </label>
 
         <div class="grid gap-4 sm:grid-cols-2">
@@ -236,6 +251,7 @@ const currentInterventionRef =
         description: String(formData.get('description') ?? '').trim() || null,
         intervention_category: null,
         intervention_slug: null,
+        case_number: String(formData.get('case_number') ?? '').trim(),
         consent: formData.get('consent') === 'on',
         consent_date: String(formData.get('consent_date') ?? '').trim() || null,
         internal_ref: String(formData.get('internal_ref') ?? '').trim() || null,
@@ -253,6 +269,12 @@ const currentInterventionRef =
 
       if (!interventionRef || !payload.title) {
         if (error) error.textContent = 'Sélectionnez une intervention associée.';
+        if (status) status.textContent = '';
+        return;
+      }
+
+      if (!payload.case_number) {
+        if (error) error.textContent = 'Renseignez un numéro de cas.';
         if (status) status.textContent = '';
         return;
       }

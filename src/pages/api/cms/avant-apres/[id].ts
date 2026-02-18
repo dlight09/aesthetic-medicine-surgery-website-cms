@@ -46,11 +46,18 @@ export const PUT: APIRoute = async (context) => {
       : body.intervention_slug === null
         ? null
         : undefined;
+  const caseNumber =
+    typeof body.case_number === 'number' && Number.isFinite(body.case_number)
+      ? body.case_number
+      : typeof body.case_number === 'string' && body.case_number.trim()
+        ? Number.parseInt(body.case_number, 10)
+        : undefined;
   const payload = {
     title: typeof body.title === 'string' ? body.title.trim() : undefined,
     description: typeof body.description === 'string' ? body.description : undefined,
     intervention_category: interventionCategory,
     intervention_slug: interventionSlug,
+    case_number: Number.isFinite(caseNumber) ? caseNumber : caseNumber === null ? null : undefined,
     status: status as 'brouillon' | 'publie' | undefined,
     consent: typeof body.consent === 'boolean' ? body.consent : undefined,
     consent_date: typeof body.consent_date === 'string' ? body.consent_date : undefined,

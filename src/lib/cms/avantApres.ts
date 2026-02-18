@@ -8,6 +8,7 @@ export type AvantApresCase = {
   description: string | null;
   intervention_category: string | null;
   intervention_slug: string | null;
+  case_number: number | null;
   status: AvantApresStatus;
   consent: boolean;
   consent_date: string | null;

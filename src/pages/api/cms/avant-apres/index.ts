@@ -29,6 +29,12 @@ export const POST: APIRoute = async (context) => {
   }
 
   const status = body.status === 'publie' ? 'publie' : 'brouillon';
+  const caseNumber =
+    typeof body.case_number === 'number' && Number.isFinite(body.case_number)
+      ? body.case_number
+      : typeof body.case_number === 'string' && body.case_number.trim()
+        ? Number.parseInt(body.case_number, 10)
+        : null;
   const payload = {
     title,
     description: typeof body.description === 'string' ? body.description : null,
@@ -40,6 +46,7 @@ export const POST: APIRoute = async (context) => {
       typeof body.intervention_slug === 'string' && body.intervention_slug.trim()
         ? body.intervention_slug
         : null,
+    case_number: Number.isFinite(caseNumber) ? caseNumber : null,
     status: status as 'brouillon' | 'publie',
     consent: Boolean(body.consent),
     consent_date: typeof body.consent_date === 'string' ? body.consent_date : null,

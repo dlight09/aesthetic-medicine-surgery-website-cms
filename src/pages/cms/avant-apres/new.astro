@@ -37,6 +37,10 @@ const interventionsByCategory = interventionCategories.map((category) => {
           </select>
           <span class="text-xs text-ink/50">Le titre du cas reprend l’intervention sélectionnée.</span>
         </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Numéro du cas</span>
+          <input class="cms-input" name="case_number" type="number" min="1" step="1" placeholder="ex: 1" required />
+        </label>
 
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="rounded-2xl border border-ink/10 bg-mist p-4">
@@ -205,6 +209,7 @@ const interventionsByCategory = interventionCategories.map((category) => {
         description: String(formData.get('description') ?? '').trim() || null,
         intervention_category: null,
         intervention_slug: null,
+        case_number: String(formData.get('case_number') ?? '').trim(),
         consent: formData.get('consent') === 'on',
         consent_date: String(formData.get('consent_date') ?? '').trim() || null,
         internal_ref: String(formData.get('internal_ref') ?? '').trim() || null,
@@ -222,6 +227,12 @@ const interventionsByCategory = interventionCategories.map((category) => {
 
       if (!interventionRef || !payload.title) {
         if (error) error.textContent = 'Sélectionnez une intervention associée.';
+        if (status) status.textContent = '';
+        return;
+      }
+
+      if (!payload.case_number) {
+        if (error) error.textContent = 'Renseignez un numéro de cas.';
         if (status) status.textContent = '';
         return;
       }

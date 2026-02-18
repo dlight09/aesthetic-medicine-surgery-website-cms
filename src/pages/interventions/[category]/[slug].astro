@@ -21,11 +21,19 @@ const { entry } = Astro.props;
 const { Content } = await entry.render();
 const categoryThumb = interventionCategories.find((c) => c.key === entry.data.category)?.thumbnailSrc;
 Astro.response.headers.set('Cache-Control', 'no-store');
-let relatedCases = (await listPublicAvantApresCases()) as AvantApresCaseView[];
+type AvantApresCaseWithIntervention = AvantApresCaseView & {
+  intervention_category?: string | null;
+  intervention_slug?: string | null;
+  case_number?: number | null;
+  description?: string | null;
+};
+let relatedCases = (await listPublicAvantApresCases()) as AvantApresCaseWithIntervention[];
 relatedCases = relatedCases.filter(
   (item) => item.intervention_category === entry.data.category && item.intervention_slug === Astro.params.slug,
 );
-relatedCases = relatedCases.slice(0, 4);
+relatedCases = relatedCases
+  .sort((a, b) => (a.case_number ?? 999) - (b.case_number ?? 999))
+  .slice(0, 4);
 ---
 
 <BaseLayout title={entry.data.title} description={entry.data.description}>
@@ -77,21 +85,31 @@ relatedCases = relatedCases.slice(0, 4);
           </a>
         </div>
         <div class="mt-6 grid gap-4 sm:grid-cols-2">
-          {relatedCases.map((item: AvantApresCaseView) => (
-            <a
-              href={`/avant-apres/${item.id}`}
-              class="group overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft transition hover:shadow-lift"
-            >
-              <div class="relative aspect-[4/3] w-full">
-                <img src={item.afterUrl} alt="Après" class="h-full w-full object-cover" loading="lazy" />
-                <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,19,0.55),transparent_55%)]"></div>
-                <div class="absolute inset-x-0 bottom-0 p-5 text-paper">
-                  <div class="text-xs font-semibold uppercase tracking-wide text-paper/70">Avant / après</div>
-                  <div class="mt-1 font-display text-2xl tracking-tight">{item.title}</div>
+            {relatedCases.map((item: AvantApresCaseWithIntervention) => (
+              <a
+                href={`/avant-apres/${item.id}`}
+                class="group overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft transition hover:shadow-lift"
+              >
+                <div class="relative aspect-[4/3] w-full">
+                  <img src={item.afterUrl} alt="Après" class="h-full w-full object-cover" loading="lazy" />
+                  <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,19,0.55),transparent_55%)]"></div>
+                  <div class="absolute inset-x-0 bottom-0 p-5 text-paper">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-paper/70">Avant / après</div>
+                    <div class="mt-1 font-display text-2xl tracking-tight">
+                      {item.case_number ? `Cas ${String(item.case_number).padStart(2, '0')}` : item.title}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </a>
-          ))}
+                <div class="p-5">
+                  {item.case_number ? (
+                    <div class="text-sm text-ink/70">Cas {String(item.case_number).padStart(2, '0')}</div>
+                  ) : null}
+                  {item.description ? (
+                    <div class="mt-2 text-sm text-ink/70">{item.description}</div>
+                  ) : null}
+                </div>
+              </a>
+            ))}
         </div>
       </section>
     ) : null}

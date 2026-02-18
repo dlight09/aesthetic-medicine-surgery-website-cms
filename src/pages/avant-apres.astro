@@ -10,6 +10,7 @@ type AvantApresCaseWithIntervention = AvantApresCaseView & {
   intervention_category?: string | null;
   intervention_slug?: string | null;
   description?: string | null;
+  case_number?: number | null;
 };
 let cases = (await listPublicAvantApresCases()) as AvantApresCaseWithIntervention[];
 if (interventionCategory) {
@@ -17,6 +18,9 @@ if (interventionCategory) {
 }
 if (interventionSlug) {
   cases = cases.filter((item) => item.intervention_slug === interventionSlug);
+}
+if (interventionCategory || interventionSlug) {
+  cases = cases.sort((a, b) => (a.case_number ?? 999) - (b.case_number ?? 999));
 }
 
 const interventions = await getCollection('interventions');
@@ -47,6 +51,8 @@ const getInterventionMeta = (item: AvantApresCaseWithIntervention) => {
   if (!item.intervention_category || !item.intervention_slug) return null;
   return interventionMetaByRef.get(`${item.intervention_category}::${item.intervention_slug}`) ?? null;
 };
+const formatCaseNumber = (value?: number | null) =>
+  value ? `Cas ${String(value).padStart(2, '0')}` : null;
 ---
 
 <BaseLayout title="Avant/Après" description="Galerie Avant/Après (lorsque disponible) avec consentement et mentions.">
@@ -89,7 +95,9 @@ const getInterventionMeta = (item: AvantApresCaseWithIntervention) => {
               </div>
               <div class="absolute inset-x-0 bottom-0 p-5 text-paper">
                 <div class="text-xs font-semibold uppercase tracking-wide text-paper/70">Avant / après</div>
-                <div class="mt-1 font-display text-2xl tracking-tight">{item.title}</div>
+                <div class="mt-1 font-display text-2xl tracking-tight">
+                  {formatCaseNumber(item.case_number) ?? item.title}
+                </div>
               </div>
             </div>
             <div class="p-6">
@@ -97,6 +105,9 @@ const getInterventionMeta = (item: AvantApresCaseWithIntervention) => {
                 <div class="text-sm text-ink/60">
                   Intervention: <a class="link" href={getInterventionMeta(item)!.href}>{getInterventionMeta(item)!.title}</a>
                 </div>
+              ) : null}
+              {formatCaseNumber(item.case_number) ? (
+                <div class="mt-1 text-sm text-ink/70">{formatCaseNumber(item.case_number)}</div>
               ) : null}
               {item.description ? (
                 <div class="mt-2 text-sm text-ink/70">{item.description}</div>
