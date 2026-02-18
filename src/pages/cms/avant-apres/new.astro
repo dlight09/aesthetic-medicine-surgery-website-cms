@@ -4,6 +4,7 @@ import { getCollection } from 'astro:content';
 import { interventionCategories } from '@/lib/interventions';
 
 const interventions = await getCollection('interventions');
+const preselectedRef = Astro.url.searchParams.get('intervention_ref') ?? '';
 const interventionsByCategory = interventionCategories.map((category) => {
   const items = interventions
     .filter((entry) => entry.data.category === category.key)
@@ -30,7 +31,12 @@ const interventionsByCategory = interventionCategories.map((category) => {
             {interventionsByCategory.map((group) => (
               <optgroup label={group.label}>
                 {group.items.map((item) => (
-                  <option value={`${item.category}::${item.slug}`}>{item.title}</option>
+                  <option
+                    value={`${item.category}::${item.slug}`}
+                    selected={preselectedRef === `${item.category}::${item.slug}`}
+                  >
+                    {item.title}
+                  </option>
                 ))}
               </optgroup>
             ))}
@@ -40,7 +46,6 @@ const interventionsByCategory = interventionCategories.map((category) => {
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Numéro du cas</span>
           <div class="cms-input flex items-center text-sm text-ink/70" data-case-display>—</div>
-          <input type="hidden" name="case_number" />
           <span class="text-xs text-ink/50">Attribué automatiquement selon l’intervention.</span>
         </label>
 
@@ -128,8 +133,7 @@ const interventionsByCategory = interventionCategories.map((category) => {
     const status = document.getElementById('aa-status');
     const submitButtons = document.querySelectorAll('[data-submit]');
     const uploadState = { before: false, after: false };
-    const caseDisplay = form.querySelector('[data-case-display]');
-    const caseInput = form.querySelector('input[name="case_number"]');
+      const caseDisplay = form.querySelector('[data-case-display]');
     const interventionSelect = form.querySelector('select[name="intervention_ref"]');
     if (!(form instanceof HTMLFormElement)) return;
 
@@ -149,11 +153,10 @@ const interventionsByCategory = interventionCategories.map((category) => {
 
     const refreshCaseNumber = async () => {
       if (!(interventionSelect instanceof HTMLSelectElement)) return;
-      if (!(caseDisplay instanceof HTMLElement) || !(caseInput instanceof HTMLInputElement)) return;
+      if (!(caseDisplay instanceof HTMLElement)) return;
       const value = interventionSelect.value;
       if (!value) {
         caseDisplay.textContent = '—';
-        caseInput.value = '';
         return;
       }
       try {
@@ -167,10 +170,8 @@ const interventionsByCategory = interventionCategories.map((category) => {
           .filter((n) => Number.isFinite(n));
         const nextNumber = (numbers.length ? Math.max(...numbers) : 0) + 1;
         caseDisplay.textContent = `Cas ${String(nextNumber).padStart(2, '0')}`;
-        caseInput.value = String(nextNumber);
       } catch (err) {
         caseDisplay.textContent = '—';
-        caseInput.value = '';
       }
     };
 
@@ -246,7 +247,6 @@ const interventionsByCategory = interventionCategories.map((category) => {
         description: String(formData.get('description') ?? '').trim() || null,
         intervention_category: null,
         intervention_slug: null,
-        case_number: String(formData.get('case_number') ?? '').trim(),
         consent: formData.get('consent') === 'on',
         consent_date: String(formData.get('consent_date') ?? '').trim() || null,
         internal_ref: String(formData.get('internal_ref') ?? '').trim() || null,
@@ -264,12 +264,6 @@ const interventionsByCategory = interventionCategories.map((category) => {
 
       if (!interventionRef || !payload.title) {
         if (error) error.textContent = 'Sélectionnez une intervention associée.';
-        if (status) status.textContent = '';
-        return;
-      }
-
-      if (!payload.case_number) {
-        if (error) error.textContent = 'Numéro de cas indisponible. Réessayez.';
         if (status) status.textContent = '';
         return;
       }

@@ -2,6 +2,7 @@
 import CmsLayout from '@/layouts/CmsLayout.astro';
 import { listCmsAvantApresCases, type AvantApresCaseView } from '@/lib/cms/avantApres';
 import { getCollection } from 'astro:content';
+import { interventionCategories } from '@/lib/interventions';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 const statusClass = (status: 'publie' | 'brouillon') =>
@@ -15,6 +16,17 @@ type AvantApresCaseWithIntervention = AvantApresCaseView & {
 };
 const items = (await listCmsAvantApresCases()) as AvantApresCaseWithIntervention[];
 const interventions = await getCollection('interventions');
+const interventionsByCategory = interventionCategories.map((category) => {
+  const entries = interventions
+    .filter((entry) => entry.data.category === category.key)
+    .sort((a, b) => (a.data.order ?? 999) - (b.data.order ?? 999))
+    .map((entry) => ({
+      title: entry.data.title,
+      slug: entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug,
+      category: entry.data.category,
+    }));
+  return { ...category, entries };
+});
 const interventionTitleByRef = new Map(
   interventions.map((entry) => {
     const slug = entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug;
@@ -25,6 +37,39 @@ const formatDate = (value: string) =>
   new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 const formatCaseNumber = (value?: number | null) =>
   value ? `Cas ${String(value).padStart(2, '0')}` : '—';
+
+const casesByRef = new Map<string, AvantApresCaseWithIntervention[]>();
+const unassignedCases = items.filter((item) => !item.intervention_category || !item.intervention_slug);
+items.forEach((item) => {
+  if (!item.intervention_category || !item.intervention_slug) return;
+  const ref = `${item.intervention_category}::${item.intervention_slug}`;
+  const list = casesByRef.get(ref) ?? [];
+  list.push(item);
+  casesByRef.set(ref, list);
+});
+casesByRef.forEach((list, key) => {
+  casesByRef.set(
+    key,
+    list.sort((a, b) => (a.case_number ?? 999) - (b.case_number ?? 999)),
+  );
+});
+
+const categorySections = interventionsByCategory
+  .map((category) => {
+    const interventionsWithCases = category.entries
+      .map((entry) => {
+        const ref = `${entry.category}::${entry.slug}`;
+        const cases = casesByRef.get(ref) ?? [];
+        return { ...entry, ref, cases };
+      })
+      .filter((entry) => entry.cases.length > 0);
+    return {
+      ...category,
+      interventions: interventionsWithCases,
+      caseCount: interventionsWithCases.reduce((sum, entry) => sum + entry.cases.length, 0),
+    };
+  })
+  .filter((category) => category.interventions.length > 0);
 ---
 
 <CmsLayout title="Avant/Après">
@@ -82,76 +127,143 @@ const formatCaseNumber = (value?: number | null) =>
       </div>
     </div>
 
-    <div class="cms-card shadow-soft">
-      <div class="grid grid-cols-[1.6fr_0.6fr_0.8fr_0.6fr_0.4fr] gap-4 border-b border-ink/10 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-ink/50">
-        <div>Cas</div>
-        <div>Numéro</div>
-        <div>Consentement</div>
-        <div>Statut</div>
-        <div>Actions</div>
-      </div>
-      <div id="aa-list" class="divide-y divide-ink/5">
-        {items.map((item: AvantApresCaseWithIntervention) => (
-          <div
-            class="cms-row grid grid-cols-[1.6fr_0.6fr_0.8fr_0.6fr_0.4fr] gap-4 px-6 py-4 text-sm"
-            data-row
-            data-href={`/cms/avant-apres/${item.id}`}
-            data-id={item.id}
-            data-title={item.title.toLowerCase()}
-            data-status={item.status}
-            data-consent={item.consent ? 'true' : 'false'}
-            data-intervention={(item.intervention_category && item.intervention_slug
-              ? (interventionTitleByRef.get(`${item.intervention_category}::${item.intervention_slug}`) ?? '').toLowerCase()
-              : '')}
-            data-description={(item.description ?? '').toLowerCase()}
-            data-case-number={item.case_number ?? ''}
-          >
-            <div class="flex items-center gap-3">
-              <div class="flex gap-2">
-                <img src={item.beforeUrl} alt="Avant" class="h-10 w-14 rounded-lg object-cover" />
-                <img src={item.afterUrl} alt="Après" class="h-10 w-14 rounded-lg object-cover" />
-              </div>
+    <div id="aa-list" class="space-y-8">
+      {categorySections.length ? (
+        categorySections.map((category) => (
+          <section class="cms-card p-6" data-category-group>
+            <div class="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <a href={`/cms/avant-apres/${item.id}`} class="font-semibold text-ink/90 hover:text-ink">
-                  {item.title}
-                </a>
-                <div class="text-xs text-ink/60">MAJ: {formatDate(item.updated_at)}</div>
-                {item.description ? (
-                  <div class="text-xs text-ink/50">{item.description}</div>
-                ) : null}
-                {item.intervention_category && item.intervention_slug ? (
-                  <div class="text-xs text-ink/50">
-                    Intervention: {interventionTitleByRef.get(`${item.intervention_category}::${item.intervention_slug}`) ?? 'Non renseignée'}
-                  </div>
-                ) : null}
+                <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Catégorie</div>
+                <h2 class="mt-2 font-display text-2xl tracking-tight">{category.title}</h2>
+                <div class="mt-1 text-sm text-ink/60">{category.description}</div>
               </div>
+              <div class="text-sm text-ink/60">{category.caseCount} cas</div>
             </div>
-            <div class="text-ink/70">{formatCaseNumber(item.case_number)}</div>
-            <div>
-              <span class:list={[
-                'cms-pill',
-                item.consent ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-              ]}>
-                {item.consent ? 'Consent OK' : 'Sans consentement'}
-              </span>
+
+            <div class="mt-6 space-y-6">
+              {category.interventions.map((intervention) => (
+                <div class="rounded-3xl border border-ink/10 bg-mist/40 p-5" data-intervention-group>
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div class="text-sm font-semibold text-ink/85">{intervention.title}</div>
+                      <div class="text-xs text-ink/60">{intervention.cases.length} cas</div>
+                    </div>
+                    <a
+                      href={`/cms/avant-apres/new?intervention_ref=${intervention.ref}`}
+                      class="btn btn-pill btn-sm btn-secondary"
+                    >
+                      Ajouter un cas
+                    </a>
+                  </div>
+
+                  <div class="mt-4 space-y-3">
+                    {intervention.cases.map((item) => (
+                      <div
+                        class="cms-row flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-ink/10 bg-paper px-4 py-3 text-sm"
+                        data-row
+                        data-href={`/cms/avant-apres/${item.id}`}
+                        data-id={item.id}
+                        data-title={item.title.toLowerCase()}
+                        data-status={item.status}
+                        data-consent={item.consent ? 'true' : 'false'}
+                        data-intervention={intervention.title.toLowerCase()}
+                        data-description={(item.description ?? '').toLowerCase()}
+                        data-case-number={item.case_number ?? ''}
+                      >
+                        <div class="flex items-center gap-3">
+                          <div class="flex gap-2">
+                            <img src={item.beforeUrl} alt="Avant" class="h-10 w-14 rounded-lg object-cover" />
+                            <img src={item.afterUrl} alt="Après" class="h-10 w-14 rounded-lg object-cover" />
+                          </div>
+                          <div>
+                            <div class="font-semibold text-ink/90">{formatCaseNumber(item.case_number)}</div>
+                            <div class="text-xs text-ink/60">MAJ: {formatDate(item.updated_at)}</div>
+                            {item.description ? (
+                              <div class="text-xs text-ink/50">{item.description}</div>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                          <span class:list={[
+                            'cms-pill',
+                            item.consent ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                          ]}>
+                            {item.consent ? 'Consent OK' : 'Sans consentement'}
+                          </span>
+                          <span class:list={['cms-pill', statusClass(item.status)]}>
+                            {item.status === 'publie' ? 'Publié' : 'Brouillon'}
+                          </span>
+                          <button
+                            type="button"
+                            data-delete-row
+                            class="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div>
-              <span class:list={['cms-pill', statusClass(item.status)]}>
-                {item.status === 'publie' ? 'Publié' : 'Brouillon'}
-              </span>
-            </div>
-            <div>
-              <button
-                type="button"
-                data-delete-row
-                class="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+          </section>
+        ))
+      ) : (
+        <div class="cms-card p-8 text-sm text-ink/70">Aucun cas pour le moment.</div>
+      )}
+
+      {unassignedCases.length ? (
+        <section class="cms-card p-6" data-category-group>
+          <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Non classé</div>
+          <div class="mt-2 font-display text-2xl tracking-tight">Cas sans intervention</div>
+          <div class="mt-4 space-y-3">
+            {unassignedCases.map((item) => (
+              <div
+                class="cms-row flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-ink/10 bg-paper px-4 py-3 text-sm"
+                data-row
+                data-href={`/cms/avant-apres/${item.id}`}
+                data-id={item.id}
+                data-title={item.title.toLowerCase()}
+                data-status={item.status}
+                data-consent={item.consent ? 'true' : 'false'}
+                data-intervention=""
+                data-description={(item.description ?? '').toLowerCase()}
+                data-case-number={item.case_number ?? ''}
               >
-                Supprimer
-              </button>
-            </div>
+                <div class="flex items-center gap-3">
+                  <div class="flex gap-2">
+                    <img src={item.beforeUrl} alt="Avant" class="h-10 w-14 rounded-lg object-cover" />
+                    <img src={item.afterUrl} alt="Après" class="h-10 w-14 rounded-lg object-cover" />
+                  </div>
+                  <div>
+                    <div class="font-semibold text-ink/90">{formatCaseNumber(item.case_number)}</div>
+                    <div class="text-xs text-ink/60">MAJ: {formatDate(item.updated_at)}</div>
+                  </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class:list={[
+                    'cms-pill',
+                    item.consent ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                  ]}>
+                    {item.consent ? 'Consent OK' : 'Sans consentement'}
+                  </span>
+                  <span class:list={['cms-pill', statusClass(item.status)]}>
+                    {item.status === 'publie' ? 'Publié' : 'Brouillon'}
+                  </span>
+                  <button
+                    type="button"
+                    data-delete-row
+                    class="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </section>
+      ) : null}
     </div>
   </div>
 </CmsLayout>
@@ -221,6 +333,7 @@ const formatCaseNumber = (value?: number | null) =>
           if (!res.ok) throw new Error('delete');
           const row = list.querySelector(`[data-row][data-id="${caseId}"]`);
           if (row instanceof HTMLElement) row.remove();
+          apply();
           if (deleteToast instanceof HTMLElement) {
             deleteToast.classList.remove('hidden');
             setTimeout(() => deleteToast.classList.add('hidden'), 3200);
@@ -255,6 +368,24 @@ const formatCaseNumber = (value?: number | null) =>
         const matchesStatus = !st || rStatus === st;
         const matchesConsent = !co || rConsent === co;
         row.style.display = matchesQuery && matchesStatus && matchesConsent ? '' : 'none';
+      });
+
+      const interventionGroups = list.querySelectorAll('[data-intervention-group]');
+      interventionGroups.forEach((group) => {
+        if (!(group instanceof HTMLElement)) return;
+        const visible = Array.from(group.querySelectorAll('[data-row]')).some(
+          (row) => row instanceof HTMLElement && row.style.display !== 'none',
+        );
+        group.style.display = visible ? '' : 'none';
+      });
+
+      const categoryGroups = list.querySelectorAll('[data-category-group]');
+      categoryGroups.forEach((group) => {
+        if (!(group instanceof HTMLElement)) return;
+        const visible = Array.from(group.querySelectorAll('[data-intervention-group]')).some(
+          (row) => row instanceof HTMLElement && row.style.display !== 'none',
+        );
+        group.style.display = visible ? '' : 'none';
       });
     };
 

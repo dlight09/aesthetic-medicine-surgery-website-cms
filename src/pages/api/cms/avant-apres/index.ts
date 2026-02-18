@@ -31,14 +31,8 @@ export const POST: APIRoute = async (context) => {
   }
 
   const status = body.status === 'publie' ? 'publie' : 'brouillon';
-  const caseNumber =
-    typeof body.case_number === 'number' && Number.isFinite(body.case_number)
-      ? body.case_number
-      : typeof body.case_number === 'string' && body.case_number.trim()
-        ? Number.parseInt(body.case_number, 10)
-        : null;
-  let resolvedCaseNumber = Number.isFinite(caseNumber) ? caseNumber : null;
-  if (!resolvedCaseNumber && body.intervention_category && body.intervention_slug) {
+  let resolvedCaseNumber: number | null = null;
+  if (body.intervention_category && body.intervention_slug) {
     const { data: lastCase, error: caseError } = await supabase
       .from('avant_apres_cases')
       .select('case_number')

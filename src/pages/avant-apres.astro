@@ -2,6 +2,7 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import { listPublicAvantApresCases, type AvantApresCaseView } from '@/lib/cms/avantApres';
+import { interventionCategories } from '@/lib/interventions';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 const interventionCategory = Astro.url.searchParams.get('intervention_category');
@@ -24,6 +25,17 @@ if (interventionCategory || interventionSlug) {
 }
 
 const interventions = await getCollection('interventions');
+const interventionsByCategory = interventionCategories.map((category) => {
+  const entries = interventions
+    .filter((entry) => entry.data.category === category.key)
+    .sort((a, b) => (a.data.order ?? 999) - (b.data.order ?? 999))
+    .map((entry) => ({
+      title: entry.data.title,
+      slug: entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug,
+      category: entry.data.category,
+    }));
+  return { ...category, entries };
+});
 const interventionMetaByRef = new Map(
   interventions.map((entry) => {
     const slug = entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug;
@@ -53,6 +65,37 @@ const getInterventionMeta = (item: AvantApresCaseWithIntervention) => {
 };
 const formatCaseNumber = (value?: number | null) =>
   value ? `Cas ${String(value).padStart(2, '0')}` : null;
+
+const casesByRef = new Map<string, AvantApresCaseWithIntervention[]>();
+cases.forEach((item) => {
+  if (!item.intervention_category || !item.intervention_slug) return;
+  const ref = `${item.intervention_category}::${item.intervention_slug}`;
+  const list = casesByRef.get(ref) ?? [];
+  list.push(item);
+  casesByRef.set(ref, list);
+});
+casesByRef.forEach((list, key) => {
+  casesByRef.set(
+    key,
+    list.sort((a, b) => (a.case_number ?? 999) - (b.case_number ?? 999)),
+  );
+});
+
+const categorySections = interventionsByCategory
+  .map((category) => {
+    const interventionsWithCases = category.entries
+      .map((entry) => {
+        const ref = `${entry.category}::${entry.slug}`;
+        const list = casesByRef.get(ref) ?? [];
+        return { ...entry, ref, cases: list };
+      })
+      .filter((entry) => entry.cases.length > 0);
+    return {
+      ...category,
+      interventions: interventionsWithCases,
+    };
+  })
+  .filter((category) => category.interventions.length > 0);
 ---
 
 <BaseLayout title="Avant/Après" description="Galerie Avant/Après (lorsque disponible) avec consentement et mentions.">
@@ -71,52 +114,65 @@ const formatCaseNumber = (value?: number | null) =>
       Toute publication se fait avec consentement.
     </p>
 
-    {cases.length ? (
-      <div class="mt-10 grid gap-6 sm:grid-cols-2">
-        {cases.map((item: AvantApresCaseWithIntervention) => (
-          <a
-            href={`/avant-apres/${item.id}`}
-            class="group overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft transition hover:shadow-lift"
-          >
-            <div class="relative aspect-[4/3] w-full overflow-hidden">
-              <img src={item.afterUrl} alt="Après" class="absolute inset-0 h-full w-full object-cover" loading="lazy" />
-              <img
-                src={item.beforeUrl}
-                alt="Avant"
-                class="absolute inset-0 h-full w-full object-cover opacity-0 transition duration-300 group-hover:opacity-100"
-                loading="lazy"
-              />
-              <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,19,0.55),transparent_55%)]"></div>
-              <div class="absolute left-5 top-5 rounded-full bg-paper/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink/70">
-                Après
-              </div>
-              <div class="absolute right-5 top-5 rounded-full bg-paper/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-ink/70">
-                Avant
-              </div>
-              <div class="absolute inset-x-0 bottom-0 p-5 text-paper">
-                <div class="text-xs font-semibold uppercase tracking-wide text-paper/70">Avant / après</div>
-                <div class="mt-1 font-display text-2xl tracking-tight">
-                  {formatCaseNumber(item.case_number) ?? item.title}
-                </div>
+    {categorySections.length ? (
+      <div class="mt-10 space-y-8">
+        {categorySections.map((category) => (
+          <section class="rounded-3xl border border-ink/10 bg-paper p-6 shadow-soft">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Catégorie</div>
+                <h2 class="mt-2 font-display text-2xl tracking-tight">{category.title}</h2>
+                <div class="mt-1 text-sm text-ink/60">{category.description}</div>
               </div>
             </div>
-            <div class="p-6">
-              {getInterventionMeta(item) ? (
-                <div class="text-sm text-ink/60">
-                  Intervention: <a class="link" href={getInterventionMeta(item)!.href}>{getInterventionMeta(item)!.title}</a>
+
+            <div class="mt-6 space-y-6">
+              {category.interventions.map((intervention) => (
+                <div class="rounded-3xl border border-ink/10 bg-mist/40 p-5">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div class="text-sm font-semibold text-ink/85">{intervention.title}</div>
+                      <div class="text-xs text-ink/60">{intervention.cases.length} cas</div>
+                    </div>
+                    <a
+                      class="link text-sm"
+                      href={`/interventions/${intervention.category}/${intervention.slug}`}
+                    >
+                      Voir l’intervention →
+                    </a>
+                  </div>
+
+                  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    {intervention.cases.map((item) => (
+                      <a
+                        href={`/avant-apres/${item.id}`}
+                        class="group overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft transition hover:shadow-lift"
+                      >
+                        <div class="relative aspect-[4/3] w-full overflow-hidden">
+                          <img src={item.afterUrl} alt="Après" class="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+                          <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,19,0.55),transparent_55%)]"></div>
+                          <div class="absolute inset-x-0 bottom-0 p-5 text-paper">
+                            <div class="text-xs font-semibold uppercase tracking-wide text-paper/70">Avant / après</div>
+                            <div class="mt-1 font-display text-2xl tracking-tight">
+                              {formatCaseNumber(item.case_number) ?? 'Cas'}
+                            </div>
+                          </div>
+                        </div>
+                        <div class="p-5">
+                          {item.description ? (
+                            <div class="text-sm text-ink/70">{item.description}</div>
+                          ) : null}
+                          <div class="mt-3 text-sm font-semibold text-ink/80 transition group-hover:text-ink">
+                            Voir le cas →
+                          </div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
                 </div>
-              ) : null}
-              {formatCaseNumber(item.case_number) ? (
-                <div class="mt-1 text-sm text-ink/70">{formatCaseNumber(item.case_number)}</div>
-              ) : null}
-              {item.description ? (
-                <div class="mt-2 text-sm text-ink/70">{item.description}</div>
-              ) : null}
-              <div class="mt-3 text-sm font-semibold text-ink/80 transition group-hover:text-ink">
-                Voir le cas →
-              </div>
+              ))}
             </div>
-          </a>
+          </section>
         ))}
       </div>
     ) : (
