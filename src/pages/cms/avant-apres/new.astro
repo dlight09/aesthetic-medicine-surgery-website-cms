@@ -8,60 +8,156 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
       <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant/Apres</div>
       <h1 class="mt-2 font-display text-3xl tracking-tight">Nouveau cas</h1>
 
-      <div class="mt-8 grid gap-5">
+      <form id="aa-form" class="mt-8 grid gap-5">
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Titre</span>
-          <input class="cms-input" placeholder="ex: Rhinoplastie - 6 mois" />
+          <input class="cms-input" name="title" placeholder="ex: Rhinoplastie - 6 mois" required />
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Description courte</span>
-          <textarea rows={3} class="cms-textarea"></textarea>
+          <textarea rows={3} class="cms-textarea" name="description"></textarea>
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Zone</span>
-          <input class="cms-input" placeholder="Visage, Seins, Silhouette..." />
+          <input class="cms-input" name="zone" placeholder="Visage, Seins, Silhouette..." />
         </label>
 
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="rounded-2xl border border-ink/10 bg-mist p-4">
             <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant</div>
-            <div class="mt-3 h-32 rounded-xl border border-dashed border-ink/20 bg-paper"></div>
-            <button type="button" class="mt-3 btn btn-pill btn-sm btn-secondary">Ajouter photo</button>
+            <div data-placeholder="before" class="mt-3 flex h-32 items-center justify-center rounded-xl border border-dashed border-ink/20 bg-paper text-xs text-ink/40">
+              Apercu
+            </div>
+            <img data-preview="before" class="mt-3 hidden h-32 w-full rounded-xl object-cover" alt="" />
+            <input type="file" accept="image/*" class="mt-3 block text-xs" data-upload="before" />
+            <input type="hidden" name="before_path" data-path="before" />
           </div>
           <div class="rounded-2xl border border-ink/10 bg-mist p-4">
             <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Apres</div>
-            <div class="mt-3 h-32 rounded-xl border border-dashed border-ink/20 bg-paper"></div>
-            <button type="button" class="mt-3 btn btn-pill btn-sm btn-secondary">Ajouter photo</button>
+            <div data-placeholder="after" class="mt-3 flex h-32 items-center justify-center rounded-xl border border-dashed border-ink/20 bg-paper text-xs text-ink/40">
+              Apercu
+            </div>
+            <img data-preview="after" class="mt-3 hidden h-32 w-full rounded-xl object-cover" alt="" />
+            <input type="file" accept="image/*" class="mt-3 block text-xs" data-upload="after" />
+            <input type="hidden" name="after_path" data-path="after" />
           </div>
         </div>
 
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Caption (facultatif)</span>
-          <input class="cms-input" placeholder="ex: Resultat a 6 mois" />
+          <input class="cms-input" name="caption" placeholder="ex: Resultat a 6 mois" />
         </label>
-      </div>
+      </form>
     </section>
 
     <aside class="cms-panel p-6">
       <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Consentement</div>
       <label class="mt-3 flex items-center gap-2 text-sm">
-        <input type="checkbox" class="h-4 w-4" />
+        <input type="checkbox" class="h-4 w-4" name="consent" form="aa-form" />
         <span>Consentement obtenu</span>
       </label>
       <label class="mt-4 grid gap-2 text-sm">
         <span class="font-semibold text-ink/80">Date du consentement</span>
-        <input class="cms-input" placeholder="JJ/MM/AAAA" />
+        <input class="cms-input" type="date" name="consent_date" form="aa-form" />
       </label>
       <label class="mt-4 grid gap-2 text-sm">
         <span class="font-semibold text-ink/80">Reference interne</span>
-        <input class="cms-input" placeholder="Ref dossier" />
+        <input class="cms-input" placeholder="Ref dossier" name="internal_ref" form="aa-form" />
       </label>
 
       <div class="mt-6 space-y-3">
-        <button type="button" class="btn btn-pill btn-md btn-primary w-full">Enregistrer brouillon</button>
-        <button type="button" class="btn btn-pill btn-md btn-secondary w-full">Publier</button>
+        <button type="submit" value="draft" name="intent" form="aa-form" class="btn btn-pill btn-md btn-primary w-full">
+          Enregistrer brouillon
+        </button>
+        <button type="submit" value="publish" name="intent" form="aa-form" class="btn btn-pill btn-md btn-secondary w-full">
+          Publier
+        </button>
       </div>
-      <div class="mt-4 text-xs text-ink/60">UI uniquement — sauvegarde activee apres integration.</div>
+      <div id="aa-error" class="mt-4 text-xs text-rose-600"></div>
     </aside>
   </div>
 </CmsLayout>
+
+<script is:inline>
+  (() => {
+    const form = document.getElementById('aa-form');
+    const error = document.getElementById('aa-error');
+    if (!(form instanceof HTMLFormElement)) return;
+
+    const uploadInputs = form.querySelectorAll('[data-upload]');
+    uploadInputs.forEach((input) => {
+      if (!(input instanceof HTMLInputElement)) return;
+      input.addEventListener('change', async () => {
+        const file = input.files?.[0];
+        const kind = input.dataset.upload;
+        if (!file || (kind !== 'before' && kind !== 'after')) return;
+        try {
+          if (error) error.textContent = '';
+          const res = await fetch('/api/cms/avant-apres/upload-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileName: file.name, kind })
+          });
+          if (!res.ok) throw new Error('upload-url');
+          const data = await res.json();
+          const uploadRes = await fetch(data.signedUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': file.type },
+            body: file
+          });
+          if (!uploadRes.ok) throw new Error('upload');
+
+          const pathInput = form.querySelector(`[data-path="${kind}"]`);
+          if (pathInput instanceof HTMLInputElement) pathInput.value = data.path;
+          const preview = form.querySelector(`[data-preview="${kind}"]`);
+          const placeholder = form.querySelector(`[data-placeholder="${kind}"]`);
+          if (preview instanceof HTMLImageElement) {
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove('hidden');
+          }
+          if (placeholder instanceof HTMLElement) placeholder.classList.add('hidden');
+        } catch (err) {
+          if (error) error.textContent = "Erreur d'upload. Verifiez votre connexion.";
+        }
+      });
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (error) error.textContent = '';
+      const submitter = event.submitter;
+      const intent = submitter && submitter instanceof HTMLButtonElement ? submitter.value : 'draft';
+      const formData = new FormData(form);
+      const payload = {
+        title: String(formData.get('title') ?? '').trim(),
+        description: String(formData.get('description') ?? '').trim() || null,
+        zone: String(formData.get('zone') ?? '').trim() || null,
+        caption: String(formData.get('caption') ?? '').trim() || null,
+        consent: formData.get('consent') === 'on',
+        consent_date: String(formData.get('consent_date') ?? '').trim() || null,
+        internal_ref: String(formData.get('internal_ref') ?? '').trim() || null,
+        before_path: String(formData.get('before_path') ?? '').trim(),
+        after_path: String(formData.get('after_path') ?? '').trim(),
+        status: intent === 'publish' ? 'publie' : 'brouillon'
+      };
+
+      if (!payload.title || !payload.before_path || !payload.after_path) {
+        if (error) error.textContent = 'Titre et photos avant/apres obligatoires.';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/cms/avant-apres', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('save');
+        const data = await res.json();
+        window.location.href = `/cms/avant-apres/${data.id}`;
+      } catch (err) {
+        if (error) error.textContent = 'Erreur de sauvegarde.';
+      }
+    });
+  })();
+</script>

@@ -1,0 +1,115 @@
+---
+const { beforeUrl, afterUrl, altBefore = 'Avant', altAfter = 'Apres' } = Astro.props;
+const sliderId = `ba-${crypto.randomUUID()}`;
+const start = 50;
+---
+
+<div id={sliderId} class="ba-slider" data-start={start}>
+  <div class="ba-media">
+    <img src={afterUrl} alt={altAfter} class="ba-image" loading="lazy" />
+    <div class="ba-before" style={`width: ${start}%`}> 
+      <img src={beforeUrl} alt={altBefore} class="ba-image" loading="lazy" />
+    </div>
+  </div>
+  <div class="ba-handle" style={`left: ${start}%`}>
+    <span class="ba-dot"></span>
+  </div>
+  <input
+    class="ba-range"
+    type="range"
+    min="0"
+    max="100"
+    value={start}
+    aria-label="Comparer avant et apres"
+  />
+</div>
+
+<style>
+  .ba-slider {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 24px;
+    border: 1px solid rgba(20, 20, 19, 0.1);
+    background: rgba(248, 245, 240, 0.8);
+  }
+
+  .ba-media {
+    position: relative;
+    aspect-ratio: 16 / 10;
+  }
+
+  .ba-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ba-before {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-right: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: inset -1px 0 0 rgba(20, 20, 19, 0.1);
+  }
+
+  .ba-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(248, 245, 240, 0.9);
+    transform: translateX(-1px);
+    box-shadow: 0 0 0 1px rgba(20, 20, 19, 0.2);
+    pointer-events: none;
+  }
+
+  .ba-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background: rgba(248, 245, 240, 0.95);
+    box-shadow: 0 8px 20px rgba(20, 20, 19, 0.18);
+    transform: translate(-50%, -50%);
+  }
+
+  .ba-range {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: ew-resize;
+  }
+
+  .ba-slider:focus-within .ba-handle {
+    box-shadow: 0 0 0 2px rgba(185, 111, 84, 0.55);
+  }
+</style>
+
+<script is:inline define:vars={{ sliderId }}>
+  (() => {
+    const root = document.getElementById(sliderId);
+    if (!(root instanceof HTMLElement)) return;
+    const range = root.querySelector('.ba-range');
+    const beforeLayer = root.querySelector('.ba-before');
+    const handle = root.querySelector('.ba-handle');
+    if (!(range instanceof HTMLInputElement) || !(beforeLayer instanceof HTMLElement) || !(handle instanceof HTMLElement)) {
+      return;
+    }
+
+    const update = (value) => {
+      const pct = Math.max(0, Math.min(100, Number(value)));
+      beforeLayer.style.width = `${pct}%`;
+      handle.style.left = `${pct}%`;
+    };
+
+    update(range.value);
+    range.addEventListener('input', (event) => {
+      update(event.target.value);
+    });
+  })();
+</script>

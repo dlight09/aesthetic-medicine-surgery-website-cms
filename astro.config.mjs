@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
+import vercel from '@astrojs/vercel/serverless';
 
 const site =
   process.env.SITE_URL ??
@@ -8,5 +9,7 @@ const site =
 
 export default defineConfig({
   site,
+  output: 'server',
+  adapter: vercel(),
   integrations: [tailwind(), sitemap()],
 });

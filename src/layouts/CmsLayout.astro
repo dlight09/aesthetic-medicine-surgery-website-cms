@@ -11,6 +11,10 @@ type Props = {
 const { title, noindex = true } = Astro.props;
 const fullTitle = buildTitle(title ? `CMS - ${title}` : 'CMS');
 const pathname = Astro.url.pathname;
+const authed = Astro.cookies.get('cms_auth')?.value === 'true';
+if (!authed) {
+  return Astro.redirect('/cms/login');
+}
 
 const navItems = [
   {
@@ -283,19 +287,10 @@ function isActive(href: string) {
 
     <script is:inline>
       (() => {
-        const isLogin = window.location.pathname === '/cms/login' || window.location.pathname === '/cms/login/';
-        if (!isLogin) {
-          const authed = window.localStorage.getItem('cms-auth') === 'true';
-          if (!authed) {
-            window.location.href = '/cms/login';
-            return;
-          }
-        }
-
         const logoutBtn = document.querySelector('[data-cms-logout]');
         if (logoutBtn instanceof HTMLButtonElement) {
-          logoutBtn.addEventListener('click', () => {
-            window.localStorage.removeItem('cms-auth');
+          logoutBtn.addEventListener('click', async () => {
+            await fetch('/api/cms/logout', { method: 'POST' }).catch(() => null);
             window.location.href = '/cms/login';
           });
         }

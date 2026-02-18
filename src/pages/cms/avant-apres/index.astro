@@ -1,9 +1,14 @@
 ---
 import CmsLayout from '@/layouts/CmsLayout.astro';
-import { cmsAvantApres } from '@/lib/cms/mock';
+import { listCmsAvantApresCases, type AvantApresCaseView } from '@/lib/cms/avantApres';
 
-const statusClass = (status: string) =>
-  status === 'Publie' ? 'bg-emerald-100 text-emerald-700' : 'bg-ink/10 text-ink/70';
+Astro.response.headers.set('Cache-Control', 'no-store');
+const statusClass = (status: 'publie' | 'brouillon') =>
+  status === 'publie' ? 'bg-emerald-100 text-emerald-700' : 'bg-ink/10 text-ink/70';
+
+const items = (await listCmsAvantApresCases()) as AvantApresCaseView[];
+const formatDate = (value: string) =>
+  new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 ---
 
 <CmsLayout title="Avant/Apres">
@@ -24,19 +29,19 @@ const statusClass = (status: string) =>
         <div>Statut</div>
       </div>
       <div class="divide-y divide-ink/5">
-        {cmsAvantApres.map((item) => (
+        {items.map((item) => (
           <a href={`/cms/avant-apres/${item.id}`} class="cms-row grid grid-cols-[1.4fr_0.8fr_0.8fr_0.6fr] gap-4 px-6 py-4 text-sm">
             <div class="flex items-center gap-3">
               <div class="flex gap-2">
-                <img src={item.beforeThumb} alt="Avant" class="h-10 w-14 rounded-lg object-cover" />
-                <img src={item.afterThumb} alt="Apres" class="h-10 w-14 rounded-lg object-cover" />
+                <img src={item.beforeUrl} alt="Avant" class="h-10 w-14 rounded-lg object-cover" />
+                <img src={item.afterUrl} alt="Apres" class="h-10 w-14 rounded-lg object-cover" />
               </div>
               <div>
                 <div class="font-semibold text-ink/90">{item.title}</div>
-                <div class="text-xs text-ink/60">MAJ: {item.updatedAt}</div>
+                <div class="text-xs text-ink/60">MAJ: {formatDate(item.updated_at)}</div>
               </div>
             </div>
-            <div class="text-ink/70">{item.category}</div>
+            <div class="text-ink/70">{item.zone ?? '—'}</div>
             <div>
               <span class:list={[
                 'cms-pill',
@@ -47,7 +52,7 @@ const statusClass = (status: string) =>
             </div>
             <div>
               <span class:list={['cms-pill', statusClass(item.status)]}>
-                {item.status}
+                {item.status === 'publie' ? 'Publie' : 'Brouillon'}
               </span>
             </div>
           </a>
