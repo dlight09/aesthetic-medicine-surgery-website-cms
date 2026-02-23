@@ -36,3 +36,10 @@ Security notes:
 
 - Prefer using a dev project/branch.
 - Keep "confirm tool calls" enabled in your client.
+
+## CMS media bucket
+
+Intervention blocks support image upload via `POST /api/cms/media/upload-url`.
+
+- Create a Supabase Storage bucket named `cms-media` (or set `SUPABASE_CMS_MEDIA_BUCKET`).
+- Set the bucket to public if you want stable public URLs.

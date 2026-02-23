@@ -1,5 +1,6 @@
 import type { InterventionCategoryKey } from '@/lib/interventions';
 import { getSupabaseAdmin } from './supabase';
+import type { InterventionContentBlock } from './interventionBlocks';
 
 export type InterventionStatus = 'brouillon' | 'publie';
 
@@ -10,6 +11,7 @@ export type CmsIntervention = {
   title: string;
   description: string;
   body_md: string;
+  content_blocks: InterventionContentBlock[] | null;
   order: number | null;
   status: InterventionStatus;
   seo_title: string | null;

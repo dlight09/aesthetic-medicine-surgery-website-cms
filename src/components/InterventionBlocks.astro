@@ -1,0 +1,132 @@
+---
+import type { InterventionContentBlock } from '@/lib/cms/interventionBlocks';
+import { renderMarkdown } from '@/lib/markdown';
+
+type Props = {
+  blocks: InterventionContentBlock[];
+};
+
+const { blocks } = Astro.props;
+
+const safeBlocks = Array.isArray(blocks) ? blocks : [];
+---
+
+<div class="space-y-10">
+  {
+    safeBlocks.map((block) => {
+      if (block.type === 'bullets') {
+        return (
+          <section>
+            <h2 class="font-display text-2xl tracking-tight">{block.heading}</h2>
+            <ul class="mt-4 grid gap-2 rounded-3xl border border-ink/10 bg-mist/40 p-6 text-ink/80 shadow-soft">
+              {block.items.map((item) => (
+                <li class="flex gap-3">
+                  <span aria-hidden="true" class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ink/40"></span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      }
+
+      if (block.type === 'section') {
+        return (
+          <section>
+            <h2 class="font-display text-2xl tracking-tight">{block.heading}</h2>
+            <div class="prose-med mt-4 max-w-none">
+              <Fragment set:html={renderMarkdown(block.body)} />
+            </div>
+          </section>
+        );
+      }
+
+      if (block.type === 'image') {
+        const layout = block.layout ?? 'card';
+        const wrapClass =
+          layout === 'full'
+            ? 'overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft'
+            : 'overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft';
+
+        const figureClass =
+          layout === 'left'
+            ? 'grid gap-5 md:grid-cols-[280px_minmax(0,1fr)]'
+            : layout === 'right'
+              ? 'grid gap-5 md:grid-cols-[minmax(0,1fr)_280px]'
+              : 'grid gap-4';
+
+        const imgClass = 'h-full w-full object-cover';
+        const imgWrapClass =
+          layout === 'left' || layout === 'right'
+            ? 'overflow-hidden rounded-3xl border border-ink/10 bg-mist/40'
+            : 'overflow-hidden rounded-3xl border border-ink/10 bg-mist/40';
+
+        return (
+          <section>
+            {block.heading ? <h2 class="font-display text-2xl tracking-tight">{block.heading}</h2> : null}
+            <div class:list={[wrapClass, block.heading ? 'mt-4 p-6' : 'p-6']}>
+              <figure class:list={[figureClass]}>
+                {layout === 'right' ? (
+                  <>
+                    <figcaption class="order-1">
+                      {block.caption ? <div class="text-sm text-ink/70">{block.caption}</div> : null}
+                    </figcaption>
+                    <div class:list={[imgWrapClass, 'order-2']}>
+                      <img src={block.url} alt={block.alt} class={imgClass} loading="lazy" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div class={imgWrapClass}>
+                      <img src={block.url} alt={block.alt} class={imgClass} loading="lazy" />
+                    </div>
+                    {block.caption ? <figcaption class="text-sm text-ink/70">{block.caption}</figcaption> : null}
+                  </>
+                )}
+              </figure>
+            </div>
+          </section>
+        );
+      }
+
+      if (block.type === 'faq') {
+        return (
+          <section>
+            <h2 class="font-display text-2xl tracking-tight">{block.heading}</h2>
+            <div class="mt-5 grid gap-3">
+              {block.items.map((item) => (
+                <details class="group rounded-3xl border border-ink/10 bg-paper p-5 shadow-soft">
+                  <summary class="cursor-pointer list-none select-none font-semibold text-ink/85">
+                    <div class="flex items-start justify-between gap-4">
+                      <span>{item.question}</span>
+                      <span class="mt-1 text-ink/50 transition group-open:rotate-45">+</span>
+                    </div>
+                  </summary>
+                  <div class="prose-med mt-4 max-w-none text-ink/80">
+                    <Fragment set:html={renderMarkdown(item.answer)} />
+                  </div>
+                </details>
+              ))}
+            </div>
+          </section>
+        );
+      }
+
+      if (block.type === 'cta') {
+        return (
+          <section class="rounded-3xl border border-ink/10 bg-mist/40 p-7 shadow-soft">
+            <h2 class="font-display text-2xl tracking-tight">{block.heading}</h2>
+            <div class="prose-med mt-3 max-w-none text-ink/80">
+              <Fragment set:html={renderMarkdown(block.body)} />
+            </div>
+            <div class="mt-5">
+              <a href={block.button_href} class="btn btn-pill btn-md btn-primary">{block.button_label}</a>
+            </div>
+          </section>
+        );
+      }
+
+      return null;
+    })
+  }
+</div>

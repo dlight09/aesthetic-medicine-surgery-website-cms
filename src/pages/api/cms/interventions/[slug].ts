@@ -6,6 +6,7 @@ import {
   getCmsInterventionBySlug,
   updateInterventionBySlug,
 } from '@/lib/cms/interventions';
+import { coerceBlocks } from '@/lib/cms/interventionBlocks';
 
 function isCategory(value: string): value is InterventionCategoryKey {
   return (interventionCategoryKeys as readonly string[]).includes(value);
@@ -53,6 +54,8 @@ export const PUT: APIRoute = async (context) => {
     title: typeof body.title === 'string' ? body.title.trim() : undefined,
     description: typeof body.description === 'string' ? body.description.trim() : undefined,
     body_md: typeof body.body_md === 'string' ? body.body_md : undefined,
+    content_blocks:
+      body.content_blocks !== undefined ? coerceBlocks(body.content_blocks) : undefined,
     category,
     order: Number.isFinite(order as number)
       ? (order as number)
@@ -73,7 +76,9 @@ export const PUT: APIRoute = async (context) => {
     const nextTitle = payload.title ?? current.title;
     const nextDescription = payload.description ?? current.description;
     const nextBody = payload.body_md ?? current.body_md;
-    if (!nextTitle || !nextDescription || !nextBody?.trim()) {
+    const nextBlocks = payload.content_blocks ?? current.content_blocks;
+    const hasBlocks = Array.isArray(nextBlocks) && nextBlocks.length > 0;
+    if (!nextTitle || !nextDescription || (!nextBody?.trim() && !hasBlocks)) {
       return new Response('Missing required fields for publish', { status: 400 });
     }
   }

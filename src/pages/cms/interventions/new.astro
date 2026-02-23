@@ -1,11 +1,11 @@
 ---
 import CmsLayout from '@/layouts/CmsLayout.astro';
 import { interventionCategories } from '@/lib/interventions';
-import { defaultInterventionMarkdownTemplate } from '@/lib/cms/interventionTemplate';
+import { defaultInterventionBlocks } from '@/lib/cms/interventionBlocks';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 
-const template = defaultInterventionMarkdownTemplate();
+const defaultBlocks = defaultInterventionBlocks();
 ---
 
 <CmsLayout title="Nouvelle intervention">
@@ -50,10 +50,38 @@ const template = defaultInterventionMarkdownTemplate();
           <textarea rows={2} class="cms-textarea" name="seo_description"></textarea>
         </label>
 
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Contenu (Markdown)</span>
-          <textarea rows={14} class="cms-textarea" name="body_md">{template}</textarea>
-        </label>
+        <input type="hidden" name="content_blocks" />
+
+        <div class="grid gap-2">
+          <div class="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <div class="text-sm font-semibold text-ink/80">Sections</div>
+              <div class="text-xs text-ink/50">Ajoutez des sections predefinies (FAQ, image, texte...).</div>
+            </div>
+            <div class="flex gap-2">
+              <select id="block-type" class="cms-select text-sm">
+                <option value="section">Section texte</option>
+                <option value="bullets">Liste (puces)</option>
+                <option value="faq">FAQ</option>
+                <option value="image">Image</option>
+                <option value="cta">Encart CTA</option>
+              </select>
+              <button type="button" id="block-add" class="btn btn-pill btn-sm btn-secondary">Ajouter</button>
+            </div>
+          </div>
+
+          <div id="blocks" class="grid gap-3"></div>
+
+          <details class="rounded-3xl border border-ink/10 bg-paper p-5">
+            <summary class="cursor-pointer text-sm font-semibold text-ink/80">Avance: contenu markdown (optionnel)</summary>
+            <div class="mt-4 grid gap-2 text-sm">
+              <span class="text-xs text-ink/50">
+                Ce champ est conserve pour compatibilite. Laissez vide si vous utilisez uniquement les sections.
+              </span>
+              <textarea rows={10} class="cms-textarea" name="body_md"></textarea>
+            </div>
+          </details>
+        </div>
       </form>
     </section>
 
@@ -99,12 +127,349 @@ const template = defaultInterventionMarkdownTemplate();
   </div>
 </CmsLayout>
 
-<script is:inline>
+<script is:inline define:vars={{ initialBlocks: defaultBlocks }}>
   (() => {
     const form = document.getElementById('intervention-form');
-    const status = document.getElementById('intervention-status');
-    const error = document.getElementById('intervention-error');
+    const statusEl = document.getElementById('intervention-status');
+    const errorEl = document.getElementById('intervention-error');
     if (!(form instanceof HTMLFormElement)) return;
+
+    const blocksRoot = document.getElementById('blocks');
+    const blocksInput = form.querySelector('input[name="content_blocks"]');
+    const addBtn = document.getElementById('block-add');
+    const typeSelect = document.getElementById('block-type');
+    if (!(blocksRoot instanceof HTMLElement)) return;
+    if (!(blocksInput instanceof HTMLInputElement)) return;
+
+    let blocks = Array.isArray(initialBlocks) ? initialBlocks : [];
+
+    const escapeHtml = (s) =>
+      String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+
+    const serialize = () => {
+      blocksInput.value = JSON.stringify(blocks);
+    };
+
+    const render = () => {
+      blocksRoot.innerHTML = '';
+      blocks.forEach((b, idx) => {
+        const card = document.createElement('div');
+        card.className = 'rounded-3xl border border-ink/10 bg-paper p-5 shadow-soft';
+        card.dataset.index = String(idx);
+
+        const header = document.createElement('div');
+        header.className = 'flex flex-wrap items-center justify-between gap-3';
+        header.innerHTML = `
+          <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">${escapeHtml(b.type)}</div>
+          <div class="flex gap-2">
+            <button type="button" data-up class="btn btn-pill btn-xs btn-secondary">↑</button>
+            <button type="button" data-down class="btn btn-pill btn-xs btn-secondary">↓</button>
+            <button type="button" data-remove class="btn btn-pill btn-xs btn-secondary">Supprimer</button>
+          </div>
+        `;
+        card.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'mt-4 grid gap-3';
+
+        const heading = document.createElement('label');
+        heading.className = 'grid gap-2 text-sm';
+        heading.innerHTML = `<span class="font-semibold text-ink/80">Titre de section</span>
+          <input class="cms-input" data-field="heading" value="${escapeHtml(b.heading || '')}" />`;
+        body.appendChild(heading);
+
+        if (b.type === 'section') {
+          const field = document.createElement('label');
+          field.className = 'grid gap-2 text-sm';
+          field.innerHTML = `<span class="font-semibold text-ink/80">Texte</span>
+            <textarea rows="6" class="cms-textarea" data-field="body">${escapeHtml(b.body || '')}</textarea>`;
+          body.appendChild(field);
+        }
+
+        if (b.type === 'bullets') {
+          const field = document.createElement('label');
+          field.className = 'grid gap-2 text-sm';
+          field.innerHTML = `<span class="font-semibold text-ink/80">Elements (1 par ligne)</span>
+            <textarea rows="6" class="cms-textarea" data-field="items">${escapeHtml((b.items || []).join('\n'))}</textarea>`;
+          body.appendChild(field);
+        }
+
+        if (b.type === 'faq') {
+          const field = document.createElement('div');
+          field.className = 'grid gap-2 text-sm';
+          const items = Array.isArray(b.items) ? b.items : [];
+          field.innerHTML = `
+            <div class="flex items-end justify-between gap-3">
+              <span class="font-semibold text-ink/80">FAQ (question + reponse)</span>
+              <button type="button" class="btn btn-pill btn-xs btn-secondary" data-faq-add>Ajouter</button>
+            </div>
+            <div class="grid gap-3" data-faq-list></div>
+          `;
+          body.appendChild(field);
+
+          const list = field.querySelector('[data-faq-list]');
+          const add = field.querySelector('[data-faq-add]');
+          const renderFaq = () => {
+            list.innerHTML = '';
+            items.forEach((it, j) => {
+              const row = document.createElement('div');
+              row.className = 'rounded-2xl border border-ink/10 bg-mist/30 p-4';
+              row.innerHTML = `
+                <label class="grid gap-2 text-sm">
+                  <span class="font-semibold text-ink/80">Question</span>
+                  <input class="cms-input" data-faq-q value="${escapeHtml(it.question || '')}" />
+                </label>
+                <label class="mt-3 grid gap-2 text-sm">
+                  <span class="font-semibold text-ink/80">Reponse</span>
+                  <textarea rows="4" class="cms-textarea" data-faq-a>${escapeHtml(it.answer || '')}</textarea>
+                </label>
+                <div class="mt-3 flex justify-end">
+                  <button type="button" class="btn btn-pill btn-xs btn-secondary" data-faq-remove>Supprimer</button>
+                </div>
+              `;
+              row.querySelector('[data-faq-remove]').addEventListener('click', () => {
+                items.splice(j, 1);
+                b.items = items;
+                blocks[idx] = b;
+                serialize();
+                renderFaq();
+              });
+              row.querySelector('[data-faq-q]').addEventListener('input', (e) => {
+                it.question = e.target.value;
+                serialize();
+              });
+              row.querySelector('[data-faq-a]').addEventListener('input', (e) => {
+                it.answer = e.target.value;
+                serialize();
+              });
+              list.appendChild(row);
+            });
+          };
+          if (add) {
+            add.addEventListener('click', () => {
+              items.push({ question: '', answer: '' });
+              b.items = items;
+              blocks[idx] = b;
+              serialize();
+              renderFaq();
+            });
+          }
+          renderFaq();
+        }
+
+        if (b.type === 'image') {
+          const field = document.createElement('div');
+          field.className = 'grid gap-2 text-sm';
+          field.innerHTML = `
+            <div class="grid gap-3 md:grid-cols-2">
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Image (URL)</span>
+                <input class="cms-input" data-img-url value="${escapeHtml(b.url || '')}" placeholder="https://..." />
+              </label>
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Texte alternatif (alt)</span>
+                <input class="cms-input" data-img-alt value="${escapeHtml(b.alt || '')}" />
+              </label>
+            </div>
+            <label class="grid gap-2 text-sm">
+              <span class="font-semibold text-ink/80">Legende (optionnel)</span>
+              <input class="cms-input" data-img-caption value="${escapeHtml(b.caption || '')}" />
+            </label>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Mise en page</span>
+                <select class="cms-select" data-img-layout>
+                  <option value="card">Card</option>
+                  <option value="full">Full</option>
+                  <option value="left">Left</option>
+                  <option value="right">Right</option>
+                </select>
+              </label>
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Upload (bucket Supabase)</span>
+                <input type="file" class="block text-sm" data-img-file accept="image/*" />
+              </label>
+            </div>
+            <div class="text-xs text-ink/50">L'upload utilise /api/cms/media/upload-url. Le bucket doit etre public (cms-media par defaut).</div>
+          `;
+          body.appendChild(field);
+
+          const layoutSelect = field.querySelector('[data-img-layout]');
+          if (layoutSelect instanceof HTMLSelectElement) {
+            layoutSelect.value = b.layout || 'card';
+            layoutSelect.addEventListener('change', () => {
+              b.layout = layoutSelect.value;
+              blocks[idx] = b;
+              serialize();
+            });
+          }
+          const urlInput = field.querySelector('[data-img-url]');
+          if (urlInput instanceof HTMLInputElement) {
+            urlInput.addEventListener('input', () => {
+              b.url = urlInput.value;
+              blocks[idx] = b;
+              serialize();
+            });
+          }
+          const altInput = field.querySelector('[data-img-alt]');
+          if (altInput instanceof HTMLInputElement) {
+            altInput.addEventListener('input', () => {
+              b.alt = altInput.value;
+              blocks[idx] = b;
+              serialize();
+            });
+          }
+          const captionInput = field.querySelector('[data-img-caption]');
+          if (captionInput instanceof HTMLInputElement) {
+            captionInput.addEventListener('input', () => {
+              b.caption = captionInput.value;
+              blocks[idx] = b;
+              serialize();
+            });
+          }
+          const fileInput = field.querySelector('[data-img-file]');
+          if (fileInput instanceof HTMLInputElement) {
+            fileInput.addEventListener('change', async () => {
+              const file = fileInput.files && fileInput.files[0];
+              if (!file) return;
+              if (statusEl) statusEl.textContent = 'Upload image...';
+              try {
+                const res = await fetch('/api/cms/media/upload-url', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ fileName: file.name })
+                });
+                if (!res.ok) throw new Error('upload-url');
+                const { signedUrl, publicUrl } = await res.json();
+                const up = await fetch(signedUrl, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': file.type || 'application/octet-stream' },
+                  body: file
+                });
+                if (!up.ok) throw new Error('upload');
+                b.url = publicUrl;
+                blocks[idx] = b;
+                if (urlInput instanceof HTMLInputElement) urlInput.value = publicUrl;
+                serialize();
+                if (statusEl) statusEl.textContent = 'Image uploadée.';
+              } catch {
+                if (errorEl) errorEl.textContent = "Erreur d'upload image.";
+                if (statusEl) statusEl.textContent = '';
+              }
+            });
+          }
+        }
+
+        if (b.type === 'cta') {
+          const field = document.createElement('div');
+          field.className = 'grid gap-3 md:grid-cols-2';
+          field.innerHTML = `
+            <label class="grid gap-2 text-sm md:col-span-2">
+              <span class="font-semibold text-ink/80">Texte</span>
+              <textarea rows="4" class="cms-textarea" data-cta-body>${escapeHtml(b.body || '')}</textarea>
+            </label>
+            <label class="grid gap-2 text-sm">
+              <span class="font-semibold text-ink/80">Label bouton</span>
+              <input class="cms-input" data-cta-label value="${escapeHtml(b.button_label || '')}" />
+            </label>
+            <label class="grid gap-2 text-sm">
+              <span class="font-semibold text-ink/80">Lien bouton</span>
+              <input class="cms-input" data-cta-href value="${escapeHtml(b.button_href || '')}" placeholder="/contact" />
+            </label>
+          `;
+          body.appendChild(field);
+
+          field.querySelector('[data-cta-body]').addEventListener('input', (e) => {
+            b.body = e.target.value;
+            blocks[idx] = b;
+            serialize();
+          });
+          field.querySelector('[data-cta-label]').addEventListener('input', (e) => {
+            b.button_label = e.target.value;
+            blocks[idx] = b;
+            serialize();
+          });
+          field.querySelector('[data-cta-href]').addEventListener('input', (e) => {
+            b.button_href = e.target.value;
+            blocks[idx] = b;
+            serialize();
+          });
+        }
+
+        card.appendChild(body);
+
+        const setField = (field, value) => {
+          if (b.type === 'bullets' && field === 'items') {
+            b.items = String(value)
+              .split('\n')
+              .map((x) => x.trim())
+              .filter(Boolean);
+          } else {
+            b[field] = value;
+          }
+          blocks[idx] = b;
+          serialize();
+        };
+
+        card.querySelector('[data-field="heading"]').addEventListener('input', (e) => {
+          setField('heading', e.target.value);
+        });
+        const bodyField = card.querySelector('[data-field="body"]');
+        if (bodyField) bodyField.addEventListener('input', (e) => setField('body', e.target.value));
+        const itemsField = card.querySelector('[data-field="items"]');
+        if (itemsField) itemsField.addEventListener('input', (e) => setField('items', e.target.value));
+
+        card.querySelector('[data-remove]').addEventListener('click', () => {
+          blocks.splice(idx, 1);
+          serialize();
+          render();
+        });
+        card.querySelector('[data-up]').addEventListener('click', () => {
+          if (idx === 0) return;
+          const tmp = blocks[idx - 1];
+          blocks[idx - 1] = blocks[idx];
+          blocks[idx] = tmp;
+          serialize();
+          render();
+        });
+        card.querySelector('[data-down]').addEventListener('click', () => {
+          if (idx >= blocks.length - 1) return;
+          const tmp = blocks[idx + 1];
+          blocks[idx + 1] = blocks[idx];
+          blocks[idx] = tmp;
+          serialize();
+          render();
+        });
+
+        blocksRoot.appendChild(card);
+      });
+      serialize();
+    };
+
+    const newBlock = (type) => {
+      if (type === 'section') return { type: 'section', heading: 'Nouvelle section', body: '' };
+      if (type === 'bullets') return { type: 'bullets', heading: 'Liste', items: [''] };
+      if (type === 'faq') return { type: 'faq', heading: 'Questions frequentes', items: [{ question: '', answer: '' }] };
+      if (type === 'image') return { type: 'image', heading: 'Image', url: '', alt: '', caption: '', layout: 'card' };
+      if (type === 'cta')
+        return { type: 'cta', heading: 'Prendre rendez-vous', body: '', button_label: 'Prendre rendez-vous', button_href: '/contact' };
+      return { type: 'section', heading: 'Section', body: '' };
+    };
+
+    if (addBtn instanceof HTMLButtonElement) {
+      addBtn.addEventListener('click', () => {
+        const type = typeSelect && typeSelect instanceof HTMLSelectElement ? typeSelect.value : 'section';
+        blocks.push(newBlock(type));
+        serialize();
+        render();
+      });
+    }
+
+    render();
 
     const slugify = (value) =>
       String(value || '')
@@ -133,8 +498,8 @@ const template = defaultInterventionMarkdownTemplate();
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      if (error) error.textContent = '';
-      if (status) status.textContent = 'Enregistrement...';
+      if (errorEl) errorEl.textContent = '';
+      if (statusEl) statusEl.textContent = 'Enregistrement...';
 
       const submitter = event.submitter;
       const intent = submitter && submitter instanceof HTMLButtonElement ? submitter.value : 'draft';
@@ -149,6 +514,13 @@ const template = defaultInterventionMarkdownTemplate();
         seo_title: String(formData.get('seo_title') ?? '').trim(),
         seo_description: String(formData.get('seo_description') ?? '').trim(),
         body_md: String(formData.get('body_md') ?? ''),
+        content_blocks: (() => {
+          try {
+            return JSON.parse(String(formData.get('content_blocks') ?? '[]'));
+          } catch {
+            return [];
+          }
+        })(),
         status: intent === 'publish' ? 'publie' : 'brouillon'
       };
 
@@ -165,12 +537,12 @@ const template = defaultInterventionMarkdownTemplate();
           throw new Error(text || 'save');
         }
         const data = await res.json();
-        if (status) status.textContent = 'Enregistré.';
+        if (statusEl) statusEl.textContent = 'Enregistré.';
         window.location.href = `/cms/interventions/${encodeURIComponent(data.slug)}`;
       } catch (err) {
         const msg = String(err && err.message ? err.message : 'Erreur');
-        if (error) error.textContent = msg === 'Slug already exists' ? 'Slug déjà utilisé.' : 'Erreur de sauvegarde.';
-        if (status) status.textContent = '';
+        if (errorEl) errorEl.textContent = msg === 'Slug already exists' ? 'Slug déjà utilisé.' : 'Erreur de sauvegarde.';
+        if (statusEl) statusEl.textContent = '';
       }
     });
   })();

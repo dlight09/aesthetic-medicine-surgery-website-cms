@@ -23,3 +23,7 @@ export function getSupabaseAdmin() {
 export function getAvantApresBucket() {
   return import.meta.env.SUPABASE_AVANT_APRES_BUCKET ?? 'avant-apres';
 }
+
+export function getCmsMediaBucket() {
+  return import.meta.env.SUPABASE_CMS_MEDIA_BUCKET ?? 'cms-media';
+}

@@ -5,6 +5,7 @@ import { interventionCategories } from '@/lib/interventions';
 import { listPublicAvantApresCases, type AvantApresCaseView } from '@/lib/cms/avantApres';
 import { getPublicInterventionBySlug } from '@/lib/cms/interventions';
 import { renderMarkdown } from '@/lib/markdown';
+import InterventionBlocks from '@/components/InterventionBlocks.astro';
 import { getCollection } from 'astro:content';
 import { interventionCategoryKeys, type InterventionCategoryKey } from '@/lib/interventions';
 
@@ -47,7 +48,8 @@ const description = dbItem?.seo_description || dbItem?.description || entry?.dat
 const pageTitle = dbItem?.title || entry?.data.title;
 const categoryThumb = interventionCategories.find((c) => c.key === category)?.thumbnailSrc;
 
-const contentHtml = dbItem ? renderMarkdown(dbItem.body_md) : null;
+const hasBlocks = Array.isArray(dbItem?.content_blocks) && (dbItem?.content_blocks?.length ?? 0) > 0;
+const contentHtml = dbItem && !hasBlocks ? renderMarkdown(dbItem.body_md) : null;
 const rendered = entry ? await entry.render() : null;
 const Content = rendered?.Content;
 type AvantApresCaseWithIntervention = AvantApresCaseView & {
@@ -96,7 +98,13 @@ relatedCases = relatedCases
     </div>
 
     <article class="prose-med mt-10 max-w-none">
-      {contentHtml ? <Fragment set:html={contentHtml} /> : Content ? <Content /> : null}
+      {dbItem && hasBlocks ? (
+        <InterventionBlocks blocks={dbItem.content_blocks ?? []} />
+      ) : contentHtml ? (
+        <Fragment set:html={contentHtml} />
+      ) : Content ? (
+        <Content />
+      ) : null}
     </article>
 
     {relatedCases.length ? (

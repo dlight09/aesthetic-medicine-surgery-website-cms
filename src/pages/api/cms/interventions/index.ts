@@ -3,6 +3,7 @@ import { requireCmsAuth } from '@/lib/cms/auth';
 import { interventionCategoryKeys, type InterventionCategoryKey } from '@/lib/interventions';
 import { createIntervention, listCmsInterventions } from '@/lib/cms/interventions';
 import { defaultInterventionMarkdownTemplate } from '@/lib/cms/interventionTemplate';
+import { coerceBlocks, defaultInterventionBlocks } from '@/lib/cms/interventionBlocks';
 
 function slugify(input: string) {
   return (input ?? '')
@@ -54,15 +55,18 @@ export const POST: APIRoute = async (context) => {
   const seo_title = typeof body.seo_title === 'string' ? body.seo_title.trim() || null : null;
   const seo_description =
     typeof body.seo_description === 'string' ? body.seo_description.trim() || null : null;
+  const content_blocks = coerceBlocks(body.content_blocks) ?? null;
   const body_md =
     typeof body.body_md === 'string' && body.body_md.trim()
       ? body.body_md
       : defaultInterventionMarkdownTemplate();
 
+  const finalBlocks = content_blocks ?? defaultInterventionBlocks();
+
   if (!slug || !category) return new Response('Missing required fields', { status: 400 });
 
   if (status === 'publie') {
-    if (!title || !description || !body_md.trim()) {
+    if (!title || !description || (!body_md.trim() && !finalBlocks.length)) {
       return new Response('Missing required fields for publish', { status: 400 });
     }
   }
@@ -74,6 +78,7 @@ export const POST: APIRoute = async (context) => {
       title: title || '(Sans titre)',
       description: description || '',
       body_md,
+      content_blocks: finalBlocks,
       order: Number.isFinite(order as number) ? (order as number) : null,
       status: status as 'brouillon' | 'publie',
       seo_title,
