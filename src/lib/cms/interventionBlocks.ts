@@ -2,14 +2,13 @@ export type InterventionContentBlock =
   | {
       type: 'section';
       heading: string;
-      body: string;
+      text: string;
+      points?: string[];
     }
   | {
       type: 'procedure';
       heading: string;
-      avant: string;
-      pendant: string;
-      apres: string;
+      cards: { subtitle: string; text: string; points: string[] }[];
     }
   | {
       type: 'bullets';
@@ -63,12 +62,12 @@ export function defaultInterventionBlocks(): InterventionContentBlock[] {
     {
       type: 'section',
       heading: 'Objectif',
-      body: "Decrire l'objectif en termes simples, sans promesse ni garantie, avec une approche naturelle et personnalisee.",
+      text: "Décrire l'objectif en termes simples, sans promesse ni garantie, avec une approche naturelle et personnalisée.",
     },
     {
       type: 'section',
       heading: 'Pour qui ?',
-      body: "L'indication depend de l'examen clinique, de l'anatomie, de la qualite cutanee et des attentes. Une consultation est indispensable a Tunis (Tunisie).",
+      text: "L'indication dépend de l'examen clinique, de l'anatomie, de la qualité cutanée et des attentes. Une consultation est indispensable à Tunis (Tunisie).",
     },
     {
       type: 'bullets',
@@ -83,29 +82,47 @@ export function defaultInterventionBlocks(): InterventionContentBlock[] {
     {
       type: 'procedure',
       heading: 'Déroulé',
-      avant: '- Analyse et plan de traitement\n- Informations et consignes',
-      pendant: '- Geste ciblé, progressif, quantités adaptées\n- Mesures de confort si besoin',
-      apres: '- Recommandations immédiates (sport, chaleur/hammam, maquillage, soins)',
+      cards: [
+        {
+          subtitle: 'Avant',
+          text: 'Analyse et plan de traitement.',
+          points: ['Informations et consignes personnalisées.'],
+        },
+        {
+          subtitle: 'Pendant',
+          text: 'Geste ciblé et progressif, quantités adaptées.',
+          points: ['Mesures de confort si besoin.'],
+        },
+        {
+          subtitle: 'Après',
+          text: 'Consignes post-acte et recommandations.',
+          points: ['Sport, chaleur/hammam, maquillage, soins: au cas par cas.'],
+        },
+      ],
     },
     {
       type: 'section',
       heading: 'Suites',
-      body: '- Frequent: rougeurs, oedeme, petits bleus possibles\n- Quand recontacter: douleur importante, signe inhabituel, evolution inquietante',
+      text: 'Suites habituelles et conduites a tenir apres la seance.',
+      points: [
+        'Fréquent: rougeurs, œdème, petits bleus possibles.',
+        'Quand recontacter: douleur importante, signe inhabituel, évolution inquiétante.',
+      ],
     },
     {
       type: 'section',
       heading: 'Risques / effets indesirables possibles',
-      body: 'Comme tout acte medical, des effets transitoires peuvent survenir. Des complications plus rares existent et sont expliquees en consultation.',
+      text: 'Comme tout acte médical, des effets transitoires peuvent survenir. Des complications plus rares existent et sont expliquées en consultation.',
     },
     {
       type: 'section',
       heading: 'Resultat et duree',
-      body: "Le resultat s'installe progressivement et reste variable selon les patients, les zones et le protocole.",
+      text: "Le résultat s'installe progressivement et reste variable selon les patients, les zones et le protocole.",
     },
     {
       type: 'section',
       heading: 'Alternatives',
-      body: "Selon l'objectif: options non injectables ou autres techniques (a discuter en consultation).",
+      text: "Selon l'objectif: options non injectables ou autres techniques (à discuter en consultation).",
     },
     {
       type: 'faq',
@@ -145,17 +162,62 @@ export function coerceBlocks(value: unknown): InterventionContentBlock[] | null 
     const type = (raw as any).type;
     if (type === 'section') {
       const heading = String((raw as any).heading ?? '').trim();
-      const body = String((raw as any).body ?? '');
+      const text = String((raw as any).text ?? (raw as any).body ?? '');
+      const points = Array.isArray((raw as any).points)
+        ? (raw as any).points.map((x: any) => String(x ?? '')).filter((x: string) => x.trim())
+        : undefined;
       if (!heading) continue;
-      out.push({ type, heading, body });
+      out.push({ type, heading, text, points });
       continue;
     }
     if (type === 'procedure') {
       const heading = String((raw as any).heading ?? '').trim() || 'Déroulé';
-      const avant = String((raw as any).avant ?? '');
-      const pendant = String((raw as any).pendant ?? '');
-      const apres = String((raw as any).apres ?? '');
-      out.push({ type, heading, avant, pendant, apres });
+      const rawCards = Array.isArray((raw as any).cards) ? (raw as any).cards : null;
+      if (rawCards) {
+        const cards = rawCards
+          .slice(0, 3)
+          .map((c: any) => ({
+            subtitle: String(c?.subtitle ?? '').trim(),
+            text: String(c?.text ?? ''),
+            points: Array.isArray(c?.points)
+              ? c.points.map((x: any) => String(x ?? '')).filter((x: string) => x.trim())
+              : [],
+          }))
+          .map((c: any, idx: number) => ({
+            subtitle: c.subtitle || `Carte ${idx + 1}`,
+            text: c.text,
+            points: c.points,
+          }));
+        out.push({ type, heading, cards });
+        continue;
+      }
+
+      // Back-compat: convert legacy fields (avant/pendant/apres) into cards.
+      const legacyAvant = String((raw as any).avant ?? '');
+      const legacyPendant = String((raw as any).pendant ?? '');
+      const legacyApres = String((raw as any).apres ?? '');
+      const legacyToCard = (subtitle: string, value: string) => {
+        const lines = String(value ?? '')
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean);
+        const points = lines
+          .filter((l) => l.startsWith('- '))
+          .map((l) => l.slice(2).trim())
+          .filter(Boolean);
+        const text = lines
+          .filter((l) => !l.startsWith('- '))
+          .join(' ')
+          .trim();
+        return { subtitle, text, points };
+      };
+
+      const cards = [
+        legacyToCard('Avant', legacyAvant),
+        legacyToCard('Pendant', legacyPendant),
+        legacyToCard('Après', legacyApres),
+      ];
+      out.push({ type, heading, cards });
       continue;
     }
     if (type === 'bullets') {

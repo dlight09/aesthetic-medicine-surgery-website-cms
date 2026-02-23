@@ -51,6 +51,7 @@ const defaultBlocks = defaultInterventionBlocks();
         </label>
 
         <input type="hidden" name="content_blocks" />
+        <input type="hidden" name="body_md" value="" />
 
         <div class="grid gap-2">
           <div class="flex flex-wrap items-end justify-between gap-3">
@@ -73,15 +74,9 @@ const defaultBlocks = defaultInterventionBlocks();
 
           <div id="blocks" class="grid gap-3"></div>
 
-          <details class="rounded-3xl border border-ink/10 bg-paper p-5">
-            <summary class="cursor-pointer text-sm font-semibold text-ink/80">Avance: contenu markdown (optionnel)</summary>
-            <div class="mt-4 grid gap-2 text-sm">
-              <span class="text-xs text-ink/50">
-                Ce champ est conserve pour compatibilite. Laissez vide si vous utilisez uniquement les sections.
-              </span>
-              <textarea rows={10} class="cms-textarea" name="body_md"></textarea>
-            </div>
-          </details>
+          <div class="rounded-3xl border border-ink/10 bg-mist/20 p-5 text-xs text-ink/60">
+            Le contenu est géré par sections (pas de Markdown).
+          </div>
         </div>
       </form>
     </section>
@@ -184,32 +179,54 @@ const defaultBlocks = defaultInterventionBlocks();
         body.appendChild(heading);
 
         if (b.type === 'section') {
-          const field = document.createElement('label');
+          const points = Array.isArray(b.points) ? b.points : [];
+          const field = document.createElement('div');
           field.className = 'grid gap-2 text-sm';
-          field.innerHTML = `<span class="font-semibold text-ink/80">Texte</span>
-            <textarea rows="6" class="cms-textarea" data-field="body">${escapeHtml(b.body || '')}</textarea>`;
+          field.innerHTML = `
+            <span class="font-semibold text-ink/80">Texte</span>
+            <textarea rows="5" class="cms-textarea" data-field="text">${escapeHtml(b.text || b.body || '')}</textarea>
+            <span class="mt-3 font-semibold text-ink/80">Points (1 par ligne, optionnel)</span>
+            <textarea rows="4" class="cms-textarea" data-field="points">${escapeHtml(points.join('\n'))}</textarea>
+          `;
           body.appendChild(field);
         }
 
         if (b.type === 'procedure') {
+          const cards = Array.isArray(b.cards) ? b.cards : [];
+          const ensured = cards.slice(0, 3);
+          while (ensured.length < 3) {
+            ensured.push({ subtitle: `Carte ${ensured.length + 1}`, text: '', points: [] });
+          }
+          b.cards = ensured;
+          blocks[idx] = b;
+
           const field = document.createElement('div');
           field.className = 'grid gap-3';
           field.innerHTML = `
             <div class="grid gap-3 sm:grid-cols-3">
-              <label class="grid gap-2 text-sm">
-                <span class="font-semibold text-ink/80">Avant</span>
-                <textarea rows="6" class="cms-textarea" data-proc-avant>${escapeHtml(b.avant || '')}</textarea>
-              </label>
-              <label class="grid gap-2 text-sm">
-                <span class="font-semibold text-ink/80">Pendant</span>
-                <textarea rows="6" class="cms-textarea" data-proc-pendant>${escapeHtml(b.pendant || '')}</textarea>
-              </label>
-              <label class="grid gap-2 text-sm">
-                <span class="font-semibold text-ink/80">Après</span>
-                <textarea rows="6" class="cms-textarea" data-proc-apres>${escapeHtml(b.apres || '')}</textarea>
-              </label>
+              ${ensured
+                .map(
+                  (c, i) => `
+                <div class="rounded-2xl border border-ink/10 bg-mist/30 p-4">
+                  <label class="grid gap-2 text-sm">
+                    <span class="font-semibold text-ink/80">Sous-titre (carte ${i + 1})</span>
+                    <input class="cms-input" data-proc-subtitle="${i}" value="${escapeHtml(c.subtitle || '')}" />
+                  </label>
+                  <label class="mt-3 grid gap-2 text-sm">
+                    <span class="font-semibold text-ink/80">Texte</span>
+                    <textarea rows="5" class="cms-textarea" data-proc-text="${i}">${escapeHtml(c.text || '')}</textarea>
+                  </label>
+                  <label class="mt-3 grid gap-2 text-sm">
+                    <span class="font-semibold text-ink/80">Points (1 par ligne, optionnel)</span>
+                    <textarea rows="4" class="cms-textarea" data-proc-points="${i}">${escapeHtml(
+                      (Array.isArray(c.points) ? c.points : []).join('\n'),
+                    )}</textarea>
+                  </label>
+                </div>
+              `,
+                )
+                .join('')}
             </div>
-            <div class="text-xs text-ink/50">Astuce: utilisez des puces (\"-\") pour une lecture plus claire.</div>
           `;
           body.appendChild(field);
         }
@@ -432,6 +449,11 @@ const defaultBlocks = defaultInterventionBlocks();
               .split('\n')
               .map((x) => x.trim())
               .filter(Boolean);
+          } else if (b.type === 'section' && field === 'points') {
+            b.points = String(value)
+              .split('\n')
+              .map((x) => x.trim())
+              .filter(Boolean);
           } else {
             b[field] = value;
           }
@@ -442,33 +464,41 @@ const defaultBlocks = defaultInterventionBlocks();
         card.querySelector('[data-field="heading"]').addEventListener('input', (e) => {
           setField('heading', e.target.value);
         });
-        const bodyField = card.querySelector('[data-field="body"]');
-        if (bodyField) bodyField.addEventListener('input', (e) => setField('body', e.target.value));
+        const textField = card.querySelector('[data-field="text"]');
+        if (textField) textField.addEventListener('input', (e) => setField('text', e.target.value));
+        const pointsField = card.querySelector('[data-field="points"]');
+        if (pointsField) pointsField.addEventListener('input', (e) => setField('points', e.target.value));
         const itemsField = card.querySelector('[data-field="items"]');
         if (itemsField) itemsField.addEventListener('input', (e) => setField('items', e.target.value));
 
-        const avantField = card.querySelector('[data-proc-avant]');
-        if (avantField) {
-          avantField.addEventListener('input', (e) => {
-            b.avant = e.target.value;
-            blocks[idx] = b;
-            serialize();
+        const wireProc = (attr, transform) => {
+          const nodes = card.querySelectorAll(`[${attr}]`);
+          nodes.forEach((node) => {
+            node.addEventListener('input', () => {
+              const i = Number(node.getAttribute(attr));
+              if (!Number.isFinite(i)) return;
+              const cards = Array.isArray(b.cards) ? b.cards : [];
+              if (!cards[i]) return;
+              transform(cards[i], node);
+              b.cards = cards;
+              blocks[idx] = b;
+              serialize();
+            });
           });
-        }
-        const pendantField = card.querySelector('[data-proc-pendant]');
-        if (pendantField) {
-          pendantField.addEventListener('input', (e) => {
-            b.pendant = e.target.value;
-            blocks[idx] = b;
-            serialize();
+        };
+
+        if (b.type === 'procedure') {
+          wireProc('data-proc-subtitle', (card, node) => {
+            card.subtitle = String(node.value || '');
           });
-        }
-        const apresField = card.querySelector('[data-proc-apres]');
-        if (apresField) {
-          apresField.addEventListener('input', (e) => {
-            b.apres = e.target.value;
-            blocks[idx] = b;
-            serialize();
+          wireProc('data-proc-text', (card, node) => {
+            card.text = String(node.value || '');
+          });
+          wireProc('data-proc-points', (card, node) => {
+            card.points = String(node.value || '')
+              .split('\n')
+              .map((x) => x.trim())
+              .filter(Boolean);
           });
         }
 
@@ -500,14 +530,23 @@ const defaultBlocks = defaultInterventionBlocks();
     };
 
     const newBlock = (type) => {
-      if (type === 'section') return { type: 'section', heading: 'Nouvelle section', body: '' };
-      if (type === 'procedure') return { type: 'procedure', heading: 'Déroulé', avant: '', pendant: '', apres: '' };
+      if (type === 'section') return { type: 'section', heading: 'Nouvelle section', text: '', points: [] };
+      if (type === 'procedure')
+        return {
+          type: 'procedure',
+          heading: 'Déroulé',
+          cards: [
+            { subtitle: 'Carte 1', text: '', points: [] },
+            { subtitle: 'Carte 2', text: '', points: [] },
+            { subtitle: 'Carte 3', text: '', points: [] },
+          ]
+        };
       if (type === 'bullets') return { type: 'bullets', heading: 'Liste', items: [''] };
       if (type === 'faq') return { type: 'faq', heading: 'Questions frequentes', items: [{ question: '', answer: '' }] };
       if (type === 'image') return { type: 'image', heading: 'Image', url: '', alt: '', caption: '', layout: 'card' };
       if (type === 'cta')
         return { type: 'cta', heading: 'Prendre rendez-vous', body: '', button_label: 'Prendre rendez-vous', button_href: '/contact' };
-      return { type: 'section', heading: 'Section', body: '' };
+      return { type: 'section', heading: 'Section', text: '', points: [] };
     };
 
     if (addBtn instanceof HTMLButtonElement) {

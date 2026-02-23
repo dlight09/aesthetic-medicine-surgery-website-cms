@@ -1,6 +1,5 @@
 ---
 import type { InterventionContentBlock } from '@/lib/cms/interventionBlocks';
-import { renderMarkdown } from '@/lib/markdown';
 
 type Props = {
   blocks: InterventionContentBlock[];
@@ -10,8 +9,70 @@ const { blocks } = Astro.props;
 
 const safeBlocks = Array.isArray(blocks) ? blocks : [];
 
+type ProcedureCardLoose = { subtitle?: string; text?: string; points?: string[] };
+type ProcedureCard = { subtitle: string; text: string; points: string[] };
+
+type PlainChunk =
+  | { type: 'p'; text: string }
+  | { type: 'ul'; items: string[] };
+
+function parsePlainText(input: string): PlainChunk[] {
+  const text = String(input ?? '');
+  const lines = text.split('\n');
+  const out: PlainChunk[] = [];
+  let paragraph: string[] = [];
+  let bullets: string[] = [];
+
+  const flushParagraph = () => {
+    const t = paragraph.join(' ').trim();
+    paragraph = [];
+    if (t) out.push({ type: 'p', text: t });
+  };
+  const flushBullets = () => {
+    const items = bullets.map((x) => x.trim()).filter(Boolean);
+    bullets = [];
+    if (items.length) out.push({ type: 'ul', items });
+  };
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) {
+      flushParagraph();
+      flushBullets();
+      continue;
+    }
+    if (line.startsWith('- ')) {
+      flushParagraph();
+      bullets.push(line.slice(2));
+      continue;
+    }
+    flushBullets();
+    paragraph.push(line);
+  }
+  flushParagraph();
+  flushBullets();
+  return out;
+}
+
+function renderPlain(input: string) {
+  const chunks = parsePlainText(input);
+  return chunks.map((c) => {
+    if (c.type === 'p') return <p class="mt-3 first:mt-0">{c.text}</p>;
+    return (
+      <ul class="mt-3 grid gap-2 pl-1">
+        {c.items.map((item) => (
+          <li class="flex gap-3">
+            <span aria-hidden="true" class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink/40"></span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  });
+}
+
 function normalizeMdLists(md: string) {
-  // Ensure markdown lists render after headings.
+  // Back-compat for old seeded content that used markdown.
   return String(md ?? '').replace(/^(###\s+[^\n]+)\n(-\s+)/gm, '$1\n\n$2');
 }
 
@@ -66,7 +127,8 @@ function isDerouleHeading(value: string) {
       }
 
       if (block.type === 'section') {
-        const procedure = isDerouleHeading(block.heading) ? parseProcedure(block.body) : null;
+        const rawText = (block as any).text ?? (block as any).body ?? '';
+        const procedure = isDerouleHeading(block.heading) ? parseProcedure(rawText) : null;
         return (
           <section>
             <h2 class="font-display text-2xl tracking-tight">{block.heading}</h2>
@@ -75,15 +137,23 @@ function isDerouleHeading(value: string) {
                 {procedure.map((item) => (
                   <div class="rounded-3xl border border-ink/10 bg-paper p-6 shadow-soft">
                     <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">{item.title}</div>
-                    <div class="prose-med mt-3 max-w-none text-ink/80">
-                      <Fragment set:html={renderMarkdown(item.body)} />
-                    </div>
+                    <div class="mt-3 text-ink/80">{renderPlain(item.body)}</div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div class="prose-med mt-4 max-w-none">
-                <Fragment set:html={renderMarkdown(normalizeMdLists(block.body))} />
+              <div class="mt-4 text-ink/80">
+                {renderPlain(rawText)}
+                {Array.isArray((block as any).points) && (block as any).points.length ? (
+                  <ul class="mt-4 grid gap-2 pl-1">
+                    {(block as any).points.map((p: string) => (
+                      <li class="flex gap-3">
+                        <span aria-hidden="true" class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink/40"></span>
+                        <span>{p}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
             )}
           </section>
@@ -91,23 +161,48 @@ function isDerouleHeading(value: string) {
       }
 
       if (block.type === 'procedure') {
-        const cards = [
-          { label: 'Avant', body: block.avant },
-          { label: 'Pendant', body: block.pendant },
-          { label: 'Après', body: block.apres },
-        ].filter((c) => String(c.body ?? '').trim());
+        const legacyCards = (Array.isArray((block as any).cards)
+          ? (block as any).cards
+          : [
+              { subtitle: 'Carte 1', text: (block as any).avant ?? '', points: [] },
+              { subtitle: 'Carte 2', text: (block as any).pendant ?? '', points: [] },
+              { subtitle: 'Carte 3', text: (block as any).apres ?? '', points: [] },
+            ]) as ProcedureCardLoose[];
 
-        if (!cards.length) return null;
+        const cards: ProcedureCard[] = legacyCards
+          .slice(0, 3)
+          .map((c: ProcedureCardLoose, idx: number) => ({
+            subtitle: String(c?.subtitle ?? `Carte ${idx + 1}`),
+            text: String(c?.text ?? ''),
+            points: Array.isArray(c?.points) ? c.points : [],
+          }));
+
+        const hasAny = cards.some(
+          (c: ProcedureCard) => String(c.text ?? '').trim() || (Array.isArray(c.points) && c.points.length),
+        );
+        if (!hasAny) return null;
 
         return (
           <section>
             <h2 class="font-display text-2xl tracking-tight">{block.heading || 'Déroulé'}</h2>
             <div class="mt-5 grid gap-4 sm:grid-cols-3">
-              {cards.map((item) => (
+              {cards.map((item, idx: number) => (
                 <div class="rounded-3xl border border-ink/10 bg-paper p-6 shadow-soft">
-                  <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">{item.label}</div>
-                  <div class="prose-med mt-3 max-w-none text-ink/80">
-                    <Fragment set:html={renderMarkdown(normalizeMdLists(item.body))} />
+                  <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">
+                    {item.subtitle || `Carte ${idx + 1}`}
+                  </div>
+                  <div class="mt-3 text-ink/80">
+                    {item.text ? renderPlain(item.text) : null}
+                    {Array.isArray(item.points) && item.points.length ? (
+                      <ul class="mt-3 grid gap-2 pl-1">
+                        {item.points.map((p: string) => (
+                          <li class="flex gap-3">
+                            <span aria-hidden="true" class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink/40"></span>
+                            <span>{p}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
                 </div>
               ))}
@@ -177,9 +272,7 @@ function isDerouleHeading(value: string) {
                       <span class="mt-1 text-ink/50 transition group-open:rotate-45">+</span>
                     </div>
                   </summary>
-                  <div class="prose-med mt-4 max-w-none text-ink/80">
-                    <Fragment set:html={renderMarkdown(item.answer)} />
-                  </div>
+                  <div class="mt-4 text-ink/80">{renderPlain(item.answer)}</div>
                 </details>
               ))}
             </div>
@@ -191,9 +284,7 @@ function isDerouleHeading(value: string) {
         return (
           <section class="rounded-3xl border border-ink/10 bg-mist/40 p-7 shadow-soft">
             <h2 class="font-display text-2xl tracking-tight">{block.heading}</h2>
-            <div class="prose-med mt-3 max-w-none text-ink/80">
-              <Fragment set:html={renderMarkdown(block.body)} />
-            </div>
+            <div class="mt-3 text-ink/80">{renderPlain(block.body)}</div>
             <div class="mt-5">
               <a href={block.button_href} class="btn btn-pill btn-md btn-primary">{block.button_label}</a>
             </div>
