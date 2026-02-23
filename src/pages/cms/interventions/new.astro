@@ -61,6 +61,7 @@ const defaultBlocks = defaultInterventionBlocks();
             <div class="flex gap-2">
               <select id="block-type" class="cms-select text-sm">
                 <option value="section">Section texte</option>
+                <option value="procedure">Déroulé (cartes)</option>
                 <option value="bullets">Liste (puces)</option>
                 <option value="faq">FAQ</option>
                 <option value="image">Image</option>
@@ -187,6 +188,29 @@ const defaultBlocks = defaultInterventionBlocks();
           field.className = 'grid gap-2 text-sm';
           field.innerHTML = `<span class="font-semibold text-ink/80">Texte</span>
             <textarea rows="6" class="cms-textarea" data-field="body">${escapeHtml(b.body || '')}</textarea>`;
+          body.appendChild(field);
+        }
+
+        if (b.type === 'procedure') {
+          const field = document.createElement('div');
+          field.className = 'grid gap-3';
+          field.innerHTML = `
+            <div class="grid gap-3 sm:grid-cols-3">
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Avant</span>
+                <textarea rows="6" class="cms-textarea" data-proc-avant>${escapeHtml(b.avant || '')}</textarea>
+              </label>
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Pendant</span>
+                <textarea rows="6" class="cms-textarea" data-proc-pendant>${escapeHtml(b.pendant || '')}</textarea>
+              </label>
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Après</span>
+                <textarea rows="6" class="cms-textarea" data-proc-apres>${escapeHtml(b.apres || '')}</textarea>
+              </label>
+            </div>
+            <div class="text-xs text-ink/50">Astuce: utilisez des puces (\"-\") pour une lecture plus claire.</div>
+          `;
           body.appendChild(field);
         }
 
@@ -423,6 +447,31 @@ const defaultBlocks = defaultInterventionBlocks();
         const itemsField = card.querySelector('[data-field="items"]');
         if (itemsField) itemsField.addEventListener('input', (e) => setField('items', e.target.value));
 
+        const avantField = card.querySelector('[data-proc-avant]');
+        if (avantField) {
+          avantField.addEventListener('input', (e) => {
+            b.avant = e.target.value;
+            blocks[idx] = b;
+            serialize();
+          });
+        }
+        const pendantField = card.querySelector('[data-proc-pendant]');
+        if (pendantField) {
+          pendantField.addEventListener('input', (e) => {
+            b.pendant = e.target.value;
+            blocks[idx] = b;
+            serialize();
+          });
+        }
+        const apresField = card.querySelector('[data-proc-apres]');
+        if (apresField) {
+          apresField.addEventListener('input', (e) => {
+            b.apres = e.target.value;
+            blocks[idx] = b;
+            serialize();
+          });
+        }
+
         card.querySelector('[data-remove]').addEventListener('click', () => {
           blocks.splice(idx, 1);
           serialize();
@@ -452,6 +501,7 @@ const defaultBlocks = defaultInterventionBlocks();
 
     const newBlock = (type) => {
       if (type === 'section') return { type: 'section', heading: 'Nouvelle section', body: '' };
+      if (type === 'procedure') return { type: 'procedure', heading: 'Déroulé', avant: '', pendant: '', apres: '' };
       if (type === 'bullets') return { type: 'bullets', heading: 'Liste', items: [''] };
       if (type === 'faq') return { type: 'faq', heading: 'Questions frequentes', items: [{ question: '', answer: '' }] };
       if (type === 'image') return { type: 'image', heading: 'Image', url: '', alt: '', caption: '', layout: 'card' };

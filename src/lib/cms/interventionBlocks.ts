@@ -5,6 +5,13 @@ export type InterventionContentBlock =
       body: string;
     }
   | {
+      type: 'procedure';
+      heading: string;
+      avant: string;
+      pendant: string;
+      apres: string;
+    }
+  | {
       type: 'bullets';
       heading: string;
       items: string[];
@@ -30,7 +37,14 @@ export type InterventionContentBlock =
       button_href: string;
     };
 
-export const interventionBlockTypes = ['section', 'bullets', 'faq', 'image', 'cta'] as const;
+export const interventionBlockTypes = [
+  'section',
+  'procedure',
+  'bullets',
+  'faq',
+  'image',
+  'cta',
+] as const;
 
 export function defaultInterventionBlocks(): InterventionContentBlock[] {
   return [
@@ -67,9 +81,11 @@ export function defaultInterventionBlocks(): InterventionContentBlock[] {
       ],
     },
     {
-      type: 'section',
-      heading: 'Deroule',
-      body: '### Avant\n- Analyse et plan de traitement\n- Informations et consignes\n\n### Pendant\n- Geste cible, progressif, quantites adaptees\n- Mesures de confort si besoin\n\n### Apres\n- Recommandations immediates (sport, chaleur/hammam, maquillage, soins)',
+      type: 'procedure',
+      heading: 'Déroulé',
+      avant: '- Analyse et plan de traitement\n- Informations et consignes',
+      pendant: '- Geste ciblé, progressif, quantités adaptées\n- Mesures de confort si besoin',
+      apres: '- Recommandations immédiates (sport, chaleur/hammam, maquillage, soins)',
     },
     {
       type: 'section',
@@ -132,6 +148,14 @@ export function coerceBlocks(value: unknown): InterventionContentBlock[] | null 
       const body = String((raw as any).body ?? '');
       if (!heading) continue;
       out.push({ type, heading, body });
+      continue;
+    }
+    if (type === 'procedure') {
+      const heading = String((raw as any).heading ?? '').trim() || 'Déroulé';
+      const avant = String((raw as any).avant ?? '');
+      const pendant = String((raw as any).pendant ?? '');
+      const apres = String((raw as any).apres ?? '');
+      out.push({ type, heading, avant, pendant, apres });
       continue;
     }
     if (type === 'bullets') {

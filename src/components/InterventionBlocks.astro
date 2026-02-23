@@ -90,6 +90,32 @@ function isDerouleHeading(value: string) {
         );
       }
 
+      if (block.type === 'procedure') {
+        const cards = [
+          { label: 'Avant', body: block.avant },
+          { label: 'Pendant', body: block.pendant },
+          { label: 'Après', body: block.apres },
+        ].filter((c) => String(c.body ?? '').trim());
+
+        if (!cards.length) return null;
+
+        return (
+          <section>
+            <h2 class="font-display text-2xl tracking-tight">{block.heading || 'Déroulé'}</h2>
+            <div class="mt-5 grid gap-4 sm:grid-cols-3">
+              {cards.map((item) => (
+                <div class="rounded-3xl border border-ink/10 bg-paper p-6 shadow-soft">
+                  <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">{item.label}</div>
+                  <div class="prose-med mt-3 max-w-none text-ink/80">
+                    <Fragment set:html={renderMarkdown(normalizeMdLists(item.body))} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      }
+
       if (block.type === 'image') {
         const layout = block.layout ?? 'card';
         const wrapClass =

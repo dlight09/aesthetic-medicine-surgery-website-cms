@@ -64,6 +64,7 @@ const fallbackBlocks = defaultInterventionBlocks();
             <div class="flex gap-2">
               <select id="block-type" class="cms-select text-sm">
                 <option value="section">Section texte</option>
+                <option value="procedure">Déroulé (cartes)</option>
                 <option value="bullets">Liste (puces)</option>
                 <option value="faq">FAQ</option>
                 <option value="image">Image</option>
@@ -187,6 +188,41 @@ const fallbackBlocks = defaultInterventionBlocks();
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
 
+    const normalizeHeading = (s) =>
+      String(s || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+
+    const isDeroule = (s) => {
+      const v = normalizeHeading(s);
+      return v === 'deroule' || v === 'deroulement';
+    };
+
+    const parseProcedureFromMd = (md) => {
+      const src = String(md || '');
+      const re = /^###\s+(.+)\s*$/gm;
+      const matches = [];
+      let m;
+      while ((m = re.exec(src))) {
+        matches.push({ title: String(m[1] || '').trim(), start: m.index, end: re.lastIndex });
+      }
+      if (!matches.length) return null;
+      const parts = { avant: '', pendant: '', apres: '' };
+      for (let i = 0; i < matches.length; i++) {
+        const cur = matches[i];
+        const next = matches[i + 1];
+        const body = src.slice(cur.end, next ? next.start : src.length).trim();
+        const key = normalizeHeading(cur.title);
+        if (key === 'avant') parts.avant = body;
+        if (key === 'pendant') parts.pendant = body;
+        if (key === 'apres' || key === 'apres ') parts.apres = body;
+      }
+      if (!parts.avant && !parts.pendant && !parts.apres) return null;
+      return parts;
+    };
+
     const serialize = () => {
       blocksInput.value = JSON.stringify(blocks);
     };
@@ -220,10 +256,61 @@ const fallbackBlocks = defaultInterventionBlocks();
         body.appendChild(heading);
 
         if (b.type === 'section') {
-          const field = document.createElement('label');
+          const field = document.createElement('div');
           field.className = 'grid gap-2 text-sm';
-          field.innerHTML = `<span class="font-semibold text-ink/80">Texte</span>
-            <textarea rows="6" class="cms-textarea" data-field="body">${escapeHtml(b.body || '')}</textarea>`;
+          const showConvert = isDeroule(b.heading) && String(b.body || '').includes('###');
+          field.innerHTML = `
+            <label class="grid gap-2 text-sm">
+              <span class="font-semibold text-ink/80">Texte</span>
+              <textarea rows="6" class="cms-textarea" data-field="body">${escapeHtml(b.body || '')}</textarea>
+            </label>
+            ${
+              showConvert
+                ? '<div class="flex justify-end"><button type="button" class="btn btn-pill btn-xs btn-secondary" data-convert-deroule>Convertir en Déroulé (cartes)</button></div>'
+                : ''
+            }
+          `;
+          body.appendChild(field);
+
+          const convert = field.querySelector('[data-convert-deroule]');
+          if (convert instanceof HTMLButtonElement) {
+            convert.addEventListener('click', () => {
+              const parsed = parseProcedureFromMd(b.body || '');
+              if (!parsed) return;
+              const next = {
+                type: 'procedure',
+                heading: b.heading || 'Déroulé',
+                avant: parsed.avant || '',
+                pendant: parsed.pendant || '',
+                apres: parsed.apres || '',
+              };
+              blocks[idx] = next;
+              serialize();
+              render();
+            });
+          }
+        }
+
+        if (b.type === 'procedure') {
+          const field = document.createElement('div');
+          field.className = 'grid gap-3';
+          field.innerHTML = `
+            <div class="grid gap-3 sm:grid-cols-3">
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Avant</span>
+                <textarea rows="6" class="cms-textarea" data-proc-avant>${escapeHtml(b.avant || '')}</textarea>
+              </label>
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Pendant</span>
+                <textarea rows="6" class="cms-textarea" data-proc-pendant>${escapeHtml(b.pendant || '')}</textarea>
+              </label>
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Après</span>
+                <textarea rows="6" class="cms-textarea" data-proc-apres>${escapeHtml(b.apres || '')}</textarea>
+              </label>
+            </div>
+            <div class="text-xs text-ink/50">Astuce: utilisez des puces (\"-\") pour une lecture plus claire.</div>
+          `;
           body.appendChild(field);
         }
 
@@ -460,6 +547,31 @@ const fallbackBlocks = defaultInterventionBlocks();
         const itemsField = card.querySelector('[data-field="items"]');
         if (itemsField) itemsField.addEventListener('input', (e) => setField('items', e.target.value));
 
+        const avantField = card.querySelector('[data-proc-avant]');
+        if (avantField) {
+          avantField.addEventListener('input', (e) => {
+            b.avant = e.target.value;
+            blocks[idx] = b;
+            serialize();
+          });
+        }
+        const pendantField = card.querySelector('[data-proc-pendant]');
+        if (pendantField) {
+          pendantField.addEventListener('input', (e) => {
+            b.pendant = e.target.value;
+            blocks[idx] = b;
+            serialize();
+          });
+        }
+        const apresField = card.querySelector('[data-proc-apres]');
+        if (apresField) {
+          apresField.addEventListener('input', (e) => {
+            b.apres = e.target.value;
+            blocks[idx] = b;
+            serialize();
+          });
+        }
+
         card.querySelector('[data-remove]').addEventListener('click', () => {
           blocks.splice(idx, 1);
           serialize();
@@ -489,6 +601,7 @@ const fallbackBlocks = defaultInterventionBlocks();
 
     const newBlock = (type) => {
       if (type === 'section') return { type: 'section', heading: 'Nouvelle section', body: '' };
+      if (type === 'procedure') return { type: 'procedure', heading: 'Déroulé', avant: '', pendant: '', apres: '' };
       if (type === 'bullets') return { type: 'bullets', heading: 'Liste', items: [''] };
       if (type === 'faq') return { type: 'faq', heading: 'Questions frequentes', items: [{ question: '', answer: '' }] };
       if (type === 'image') return { type: 'image', heading: 'Image', url: '', alt: '', caption: '', layout: 'card' };
