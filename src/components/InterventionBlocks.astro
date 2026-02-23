@@ -16,6 +16,15 @@ type PlainChunk =
   | { type: 'p'; text: string }
   | { type: 'ul'; items: string[] };
 
+function escapeHtml(value: string) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function parsePlainText(input: string): PlainChunk[] {
   const text = String(input ?? '');
   const lines = text.split('\n');
@@ -54,21 +63,24 @@ function parsePlainText(input: string): PlainChunk[] {
   return out;
 }
 
-function renderPlain(input: string) {
+function renderPlainHtml(input: string) {
   const chunks = parsePlainText(input);
-  return chunks.map((c) => {
-    if (c.type === 'p') return <p class="mt-3 first:mt-0">{c.text}</p>;
-    return (
-      <ul class="mt-3 grid gap-2 pl-1">
-        {c.items.map((item) => (
-          <li class="flex gap-3">
-            <span aria-hidden="true" class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink/40"></span>
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
-    );
-  });
+  return chunks
+    .map((c) => {
+      if (c.type === 'p') {
+        return `<p class="mt-3 first:mt-0">${escapeHtml(c.text)}</p>`;
+      }
+      const items = c.items
+        .map(
+          (item) =>
+            `<li class="flex gap-3"><span aria-hidden="true" class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink/40"></span><span>${escapeHtml(
+              item,
+            )}</span></li>`,
+        )
+        .join('');
+      return `<ul class="mt-3 grid gap-2 pl-1">${items}</ul>`;
+    })
+    .join('');
 }
 
 function normalizeMdLists(md: string) {
@@ -135,17 +147,17 @@ function isDerouleHeading(value: string) {
             {procedure ? (
               <div class="mt-5 grid gap-4 sm:grid-cols-3">
                 {procedure.map((item) => (
-                  <div class="rounded-3xl border border-ink/10 bg-paper p-6 shadow-soft">
-                    <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">{item.title}</div>
-                    <div class="mt-3 text-ink/80">{renderPlain(item.body)}</div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div class="mt-4 text-ink/80">
-                {renderPlain(rawText)}
-                {Array.isArray((block as any).points) && (block as any).points.length ? (
-                  <ul class="mt-4 grid gap-2 pl-1">
+                    <div class="rounded-3xl border border-ink/10 bg-paper p-6 shadow-soft">
+                      <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">{item.title}</div>
+                      <div class="mt-3 text-ink/80"><Fragment set:html={renderPlainHtml(item.body)} /></div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div class="mt-4 text-ink/80">
+                  <Fragment set:html={renderPlainHtml(rawText)} />
+                  {Array.isArray((block as any).points) && (block as any).points.length ? (
+                    <ul class="mt-4 grid gap-2 pl-1">
                     {(block as any).points.map((p: string) => (
                       <li class="flex gap-3">
                         <span aria-hidden="true" class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ink/40"></span>
@@ -192,7 +204,7 @@ function isDerouleHeading(value: string) {
                     {item.subtitle || `Carte ${idx + 1}`}
                   </div>
                   <div class="mt-3 text-ink/80">
-                    {item.text ? renderPlain(item.text) : null}
+                    {item.text ? <Fragment set:html={renderPlainHtml(item.text)} /> : null}
                     {Array.isArray(item.points) && item.points.length ? (
                       <ul class="mt-3 grid gap-2 pl-1">
                         {item.points.map((p: string) => (
@@ -272,7 +284,7 @@ function isDerouleHeading(value: string) {
                       <span class="mt-1 text-ink/50 transition group-open:rotate-45">+</span>
                     </div>
                   </summary>
-                  <div class="mt-4 text-ink/80">{renderPlain(item.answer)}</div>
+                  <div class="mt-4 text-ink/80"><Fragment set:html={renderPlainHtml(item.answer)} /></div>
                 </details>
               ))}
             </div>
@@ -284,7 +296,7 @@ function isDerouleHeading(value: string) {
         return (
           <section class="rounded-3xl border border-ink/10 bg-mist/40 p-7 shadow-soft">
             <h2 class="font-display text-2xl tracking-tight">{block.heading}</h2>
-            <div class="mt-3 text-ink/80">{renderPlain(block.body)}</div>
+            <div class="mt-3 text-ink/80"><Fragment set:html={renderPlainHtml(block.body)} /></div>
             <div class="mt-5">
               <a href={block.button_href} class="btn btn-pill btn-md btn-primary">{block.button_label}</a>
             </div>
