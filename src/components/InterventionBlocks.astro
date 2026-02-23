@@ -9,6 +9,41 @@ type Props = {
 const { blocks } = Astro.props;
 
 const safeBlocks = Array.isArray(blocks) ? blocks : [];
+
+function normalizeMdLists(md: string) {
+  // Ensure markdown lists render after headings.
+  return String(md ?? '').replace(/^(###\s+[^\n]+)\n(-\s+)/gm, '$1\n\n$2');
+}
+
+function parseProcedure(md: string) {
+  const src = normalizeMdLists(md);
+  const re = /^###\s+(.+)\s*$/gm;
+  const matches: { title: string; start: number; end: number }[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(src))) {
+    matches.push({ title: (m[1] ?? '').trim(), start: m.index, end: re.lastIndex });
+  }
+  if (matches.length < 2) return null;
+  const parts: { title: string; body: string }[] = [];
+  for (let i = 0; i < matches.length; i++) {
+    const cur = matches[i];
+    const next = matches[i + 1];
+    const bodyStart = cur.end;
+    const bodyEnd = next ? next.start : src.length;
+    const body = src.slice(bodyStart, bodyEnd).trim();
+    parts.push({ title: cur.title, body });
+  }
+  return parts;
+}
+
+function isDerouleHeading(value: string) {
+  const v = String(value ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .trim();
+  return v === 'deroule' || v === 'deroulement';
+}
 ---
 
 <div class="space-y-10">
@@ -31,12 +66,26 @@ const safeBlocks = Array.isArray(blocks) ? blocks : [];
       }
 
       if (block.type === 'section') {
+        const procedure = isDerouleHeading(block.heading) ? parseProcedure(block.body) : null;
         return (
           <section>
             <h2 class="font-display text-2xl tracking-tight">{block.heading}</h2>
-            <div class="prose-med mt-4 max-w-none">
-              <Fragment set:html={renderMarkdown(block.body)} />
-            </div>
+            {procedure ? (
+              <div class="mt-5 grid gap-4 sm:grid-cols-3">
+                {procedure.map((item) => (
+                  <div class="rounded-3xl border border-ink/10 bg-paper p-6 shadow-soft">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">{item.title}</div>
+                    <div class="prose-med mt-3 max-w-none text-ink/80">
+                      <Fragment set:html={renderMarkdown(item.body)} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div class="prose-med mt-4 max-w-none">
+                <Fragment set:html={renderMarkdown(normalizeMdLists(block.body))} />
+              </div>
+            )}
           </section>
         );
       }

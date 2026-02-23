@@ -97,15 +97,15 @@ relatedCases = relatedCases
       </div>
     </div>
 
-    <article class="prose-med mt-10 max-w-none">
-      {dbItem && hasBlocks ? (
+    {dbItem && hasBlocks ? (
+      <div class="mt-10">
         <InterventionBlocks blocks={dbItem.content_blocks ?? []} />
-      ) : contentHtml ? (
-        <Fragment set:html={contentHtml} />
-      ) : Content ? (
-        <Content />
-      ) : null}
-    </article>
+      </div>
+    ) : (
+      <article class="prose-med mt-10 max-w-none">
+        {contentHtml ? <Fragment set:html={contentHtml} /> : Content ? <Content /> : null}
+      </article>
+    )}
 
     {relatedCases.length ? (
       <section class="mt-12">
