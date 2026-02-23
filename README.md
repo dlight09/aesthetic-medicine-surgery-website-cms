@@ -22,7 +22,3 @@ This repository is intentionally set up to support an agentic, quality-first wor
 
 - The repo starts empty on purpose: we add the site scaffold only after content + compliance gates are defined.
 - Do not publish with placeholders (phone/address/hours). The placeholder check is designed to fail CI once we add CI.
-
-## Supabase MCP (optional)
-
-If you use an MCP-capable AI client, see `docs/mcp-supabase.md`.
