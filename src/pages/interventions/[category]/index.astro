@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
 import {
   interventionCategoryFallbackList,
   interventionCategories,
@@ -8,15 +7,45 @@ import {
   interventionCategoryMeta,
   type InterventionCategoryKey
 } from '@/lib/interventions';
+import { listPublicInterventions } from '@/lib/cms/interventions';
+import { getCollection } from 'astro:content';
 
-export async function getStaticPaths() {
-  return interventionCategoryKeys.map((category) => ({ params: { category } }));
+const rawCategory = String(Astro.params.category ?? '');
+const category = (interventionCategoryKeys as readonly string[]).includes(rawCategory)
+  ? (rawCategory as InterventionCategoryKey)
+  : null;
+
+if (!category) {
+  return Astro.redirect('/interventions');
 }
 
-const category = Astro.params.category as InterventionCategoryKey;
-const items = (await getCollection('interventions'))
-  .filter((i) => i.data.category === category)
-  .sort((a, b) => (a.data.order ?? 999) - (b.data.order ?? 999));
+type CardItem = { title: string; description: string; slug: string; category: InterventionCategoryKey; order?: number | null };
+
+let items: CardItem[] = [];
+try {
+  const rows = await listPublicInterventions(category);
+  items = rows
+    .map((r) => ({
+      title: r.title,
+      description: r.description,
+      slug: r.slug,
+      category: r.category,
+      order: r.order,
+    }))
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+} catch {
+  // Fallback to repo content collection if Supabase is not configured.
+  const entries = (await getCollection('interventions'))
+    .filter((i) => i.data.category === category)
+    .sort((a, b) => (a.data.order ?? 999) - (b.data.order ?? 999));
+  items = entries.map((entry) => ({
+    title: entry.data.title,
+    description: entry.data.description,
+    slug: entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug,
+    category: entry.data.category,
+    order: entry.data.order ?? null,
+  }));
+}
 
 function leafSlug(full: string) {
   const parts = full.split('/').filter(Boolean);
@@ -56,11 +85,11 @@ const thumbSrc = interventionCategories.find((c) => c.key === category)?.thumbna
       <div class="mt-10 grid gap-4 sm:grid-cols-2">
         {items.map((i) => (
           <a
-            href={`/interventions/${i.data.category}/${leafSlug(i.slug)}`}
+            href={`/interventions/${i.category}/${leafSlug(i.slug)}`}
             class="rounded-3xl border border-ink/10 bg-mist p-7 shadow-soft transition hover:shadow-lift"
           >
-            <div class="font-display text-2xl tracking-tight">{i.data.title}</div>
-            <div class="mt-2 text-ink/70">{i.data.description}</div>
+            <div class="font-display text-2xl tracking-tight">{i.title}</div>
+            <div class="mt-2 text-ink/70">{i.description}</div>
             <div class="mt-5 text-sm font-semibold">Lire la fiche →</div>
           </a>
         ))}

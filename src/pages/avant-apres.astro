@@ -3,6 +3,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import { listPublicAvantApresCases, type AvantApresCaseView } from '@/lib/cms/avantApres';
 import { interventionCategories } from '@/lib/interventions';
+import { listPublicInterventions } from '@/lib/cms/interventions';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 const interventionCategory = Astro.url.searchParams.get('intervention_category');
@@ -24,40 +25,48 @@ if (interventionCategory || interventionSlug) {
   cases = cases.sort((a, b) => (a.case_number ?? 999) - (b.case_number ?? 999));
 }
 
-const interventions = await getCollection('interventions');
+type InterventionLite = { title: string; category: string; slug: string; order?: number | null };
+
+let interventions: InterventionLite[] = [];
+try {
+  const rows = await listPublicInterventions();
+  interventions = rows.map((r) => ({ title: r.title, category: r.category, slug: r.slug, order: r.order }));
+} catch {
+  const entries = await getCollection('interventions');
+  interventions = entries.map((entry) => ({
+    title: entry.data.title,
+    category: entry.data.category,
+    slug: entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug,
+    order: entry.data.order ?? null,
+  }));
+}
+
 const interventionsByCategory = interventionCategories.map((category) => {
   const entries = interventions
-    .filter((entry) => entry.data.category === category.key)
-    .sort((a, b) => (a.data.order ?? 999) - (b.data.order ?? 999))
+    .filter((entry) => entry.category === category.key)
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
     .map((entry) => ({
-      title: entry.data.title,
-      slug: entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug,
-      category: entry.data.category,
+      title: entry.title,
+      slug: entry.slug,
+      category: entry.category,
     }));
   return { ...category, entries };
 });
+
 const interventionMetaByRef = new Map(
-  interventions.map((entry) => {
-    const slug = entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug;
-    return [
-      `${entry.data.category}::${slug}`,
-      {
-        title: entry.data.title,
-        href: `/interventions/${entry.data.category}/${slug}`,
-      },
-    ];
-  }),
+  interventions.map((entry) => [
+    `${entry.category}::${entry.slug}`,
+    { title: entry.title, href: `/interventions/${entry.category}/${entry.slug}` },
+  ]),
 );
+
 const matchingIntervention =
   interventionCategory && interventionSlug
-    ? interventions.find((entry) => {
-        const slug = entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug;
-        return entry.data.category === interventionCategory && slug === interventionSlug;
-      })
+    ? interventions.find((entry) => entry.category === interventionCategory && entry.slug === interventionSlug)
     : null;
-const interventionTitle = matchingIntervention?.data.title;
+const interventionTitle = matchingIntervention?.title;
 const interventionHref = matchingIntervention
-  ? `/interventions/${matchingIntervention.data.category}/${interventionSlug}`
+  ? `/interventions/${matchingIntervention.category}/${interventionSlug}`
   : null;
 const getInterventionMeta = (item: AvantApresCaseWithIntervention) => {
   if (!item.intervention_category || !item.intervention_slug) return null;

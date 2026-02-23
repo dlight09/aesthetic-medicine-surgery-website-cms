@@ -21,7 +21,9 @@ export const POST: APIRoute = async (context) => {
 
   const supabase = getSupabaseAdmin();
   const bucket = getAvantApresBucket();
-  const { data, error } = await supabase.storage.from(bucket).createSignedUploadUrl(path, 60);
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUploadUrl(path, { upsert: false });
 
   if (error || !data?.signedUrl) {
     return new Response('Upload URL error', { status: 500 });

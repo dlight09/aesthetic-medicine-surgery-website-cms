@@ -7,6 +7,7 @@ import {
   interventionCategoryHref,
   type InterventionCategoryKey
 } from '@/lib/interventions';
+import { listPublicInterventions } from '@/lib/cms/interventions';
 
 const pathname = (() => {
   const p = Astro.url?.pathname || '/';
@@ -34,15 +35,35 @@ function leafSlug(full: string) {
   return parts[parts.length - 1] ?? full;
 }
 
-const interventionEntries = await getCollection('interventions');
+type NavEntry = { title: string; category: InterventionCategoryKey; order?: number | null; slug: string };
+
+let interventionEntries: NavEntry[] = [];
+try {
+  const rows = await listPublicInterventions();
+  interventionEntries = rows.map((r) => ({
+    title: r.title,
+    category: r.category,
+    order: r.order,
+    slug: r.slug,
+  }));
+} catch {
+  const entries = await getCollection('interventions');
+  interventionEntries = entries.map((entry) => ({
+    title: entry.data.title,
+    category: entry.data.category,
+    order: entry.data.order ?? null,
+    slug: entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug,
+  }));
+}
+
 const megaInterventions = interventionCategories.map((c) => {
   const entries = interventionEntries
-    .filter((i) => i.data.category === c.key)
-    .sort((a, b) => (a.data.order ?? 999) - (b.data.order ?? 999))
+    .filter((i) => i.category === c.key)
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
     .slice(0, 4)
     .map((i) => ({
-      label: i.data.title,
-      href: `/interventions/${i.data.category}/${leafSlug(i.slug)}`
+      label: i.title,
+      href: `/interventions/${i.category}/${leafSlug(i.slug)}`
     }));
 
   const fallback = (interventionCategoryFallbackList[c.key as InterventionCategoryKey] ?? []).slice(0, 4);

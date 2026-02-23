@@ -13,12 +13,16 @@ This repository is intentionally set up to support an agentic, quality-first wor
 
 ## Quick start (workflow)
 
-1) Read `docs/agentic-workflow.md`.
-2) Put project facts (phone, WhatsApp, address, legal details) into the content source of truth (to be added when the site scaffold exists).
-3) Use `scripts/model_router.py` to route work to Codex (code) or GPT-5.2 (copy/SEO/compliance).
-4) Before pushing/releasing, run `scripts/verify_placeholders.sh`.
+1. Read `docs/agentic-workflow.md`.
+2. Put project facts (phone, WhatsApp, address, legal details) into the content source of truth (to be added when the site scaffold exists).
+3. Use `scripts/model_router.py` to route work to Codex (code) or GPT-5.2 (copy/SEO/compliance).
+4. Before pushing/releasing, run `scripts/verify_placeholders.sh`.
 
 ## Notes
 
 - The repo starts empty on purpose: we add the site scaffold only after content + compliance gates are defined.
 - Do not publish with placeholders (phone/address/hours). The placeholder check is designed to fail CI once we add CI.
+
+## Supabase MCP (optional)
+
+If you use an MCP-capable AI client, see `docs/mcp-supabase.md`.

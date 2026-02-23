@@ -1,13 +1,17 @@
 ---
 import CmsLayout from '@/layouts/CmsLayout.astro';
-import { cmsInterventions } from '@/lib/cms/mock';
+import { getCmsInterventionBySlug } from '@/lib/cms/interventions';
+import { interventionCategories } from '@/lib/interventions';
 
-export async function getStaticPaths() {
-  return cmsInterventions.map((i) => ({ params: { slug: i.slug } }));
-}
+Astro.response.headers.set('Cache-Control', 'no-store');
 
 const { slug } = Astro.params;
-const item = cmsInterventions.find((i) => i.slug === slug) ?? cmsInterventions[0];
+const item = slug ? await getCmsInterventionBySlug(slug) : null;
+if (!item) {
+  return Astro.redirect('/cms/interventions');
+}
+
+const categoryOptions = interventionCategories.map((c) => c.key);
 ---
 
 <CmsLayout title="Edition intervention">
@@ -16,42 +20,42 @@ const item = cmsInterventions.find((i) => i.slug === slug) ?? cmsInterventions[0
       <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Intervention</div>
       <h1 class="mt-2 font-display text-3xl tracking-tight">{item.title}</h1>
 
-      <div class="mt-8 grid gap-5">
+      <form id="intervention-form" class="mt-8 grid gap-5" data-slug={item.slug}>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Titre</span>
-          <input class="cms-input" value={item.title} />
+          <input class="cms-input" name="title" value={item.title} />
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Description courte</span>
-          <textarea rows={3} class="cms-textarea">
-            Description a completer.
-          </textarea>
+          <textarea rows={3} class="cms-textarea" name="description">{item.description ?? ''}</textarea>
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Categorie</span>
-          <select class="cms-select">
-            <option selected={item.category === 'Medecine esthetique'}>medecine-esthetique</option>
-            <option selected={item.category === 'Visage'}>visage</option>
-            <option selected={item.category === 'Silhouette'}>silhouette</option>
-            <option selected={item.category === 'Seins'}>seins</option>
-            <option selected={item.category === 'Chirurgie reparatrice'}>chirurgie-reparatrice</option>
-            <option selected={item.category === 'Chirurgie de la main'}>chirurgie-de-la-main</option>
-            <option selected={item.category === 'Intime'}>intime</option>
+          <select class="cms-select" name="category">
+            {categoryOptions.map((key) => (
+              <option value={key} selected={item.category === key}>{key}</option>
+            ))}
           </select>
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Ordre</span>
-          <input class="cms-input" value={item.order} />
+          <input class="cms-input" name="order" value={item.order ?? ''} />
+        </label>
+
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">SEO Title (optionnel)</span>
+          <input class="cms-input" name="seo_title" value={item.seo_title ?? ''} />
         </label>
         <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Contenu (Markdown)</span>
-          <textarea rows={10} class="cms-textarea">
-            ## Indications
-
-            Contenu exemple a remplacer.
-          </textarea>
+          <span class="font-semibold text-ink/80">SEO Description (optionnel)</span>
+          <textarea rows={2} class="cms-textarea" name="seo_description">{item.seo_description ?? ''}</textarea>
         </label>
-      </div>
+
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Contenu (Markdown)</span>
+          <textarea rows={16} class="cms-textarea" name="body_md">{item.body_md ?? ''}</textarea>
+        </label>
+      </form>
     </section>
 
     <aside class="cms-panel p-6">
@@ -59,24 +63,151 @@ const item = cmsInterventions.find((i) => i.slug === slug) ?? cmsInterventions[0
       <div class="mt-4 grid gap-3">
         <label class="flex items-center justify-between rounded-2xl border border-ink/10 bg-paper px-4 py-3 text-sm">
           <span>Statut</span>
-          <select class="bg-transparent text-sm">
-            <option selected={item.status === 'Brouillon'}>Brouillon</option>
-            <option selected={item.status === 'Publie'}>Publie</option>
+          <select class="bg-transparent text-sm" name="status" form="intervention-form">
+            <option value="brouillon" selected={item.status === 'brouillon'}>Brouillon</option>
+            <option value="publie" selected={item.status === 'publie'}>Publié</option>
           </select>
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Slug</span>
-          <input class="cms-input" value={item.slug} />
+          <input class="cms-input" value={item.slug} readonly />
         </label>
       </div>
 
       <div class="mt-6 space-y-3">
-        <button type="button" class="btn btn-pill btn-md btn-primary w-full">Enregistrer</button>
-        <a href={`/interventions/${item.category.toLowerCase().replace(/\s/g, '-')}/${item.slug}`} class="btn btn-pill btn-md btn-secondary w-full">
-          Apercu public
+        <button
+          type="submit"
+          value="draft"
+          name="intent"
+          form="intervention-form"
+          data-submit
+          class="btn btn-pill btn-md btn-primary w-full"
+        >
+          Enregistrer
+        </button>
+        <button
+          type="submit"
+          value="publish"
+          name="intent"
+          form="intervention-form"
+          data-submit
+          class="btn btn-pill btn-md btn-secondary w-full"
+        >
+          Publier
+        </button>
+        <a
+          href={`/interventions/${item.category}/${item.slug}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-pill btn-md btn-secondary w-full"
+        >
+          Aperçu public
         </a>
+        <button
+          type="button"
+          data-delete
+          class="btn btn-pill btn-md w-full border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+        >
+          Supprimer la fiche
+        </button>
       </div>
-      <div class="mt-4 text-xs text-ink/60">UI uniquement — sauvegarde activee apres integration.</div>
+      <div id="intervention-status" class="mt-4 text-xs text-ink/60"></div>
+      <div id="intervention-error" class="mt-2 text-xs text-rose-600"></div>
     </aside>
   </div>
 </CmsLayout>
+
+<dialog id="intervention-confirm" class="cms-drawer">
+  <div class="cms-card-elevated mx-auto mt-28 w-[min(92vw,420px)] p-6">
+    <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Suppression</div>
+    <div class="mt-2 font-display text-2xl tracking-tight">Supprimer cette fiche ?</div>
+    <p class="mt-3 text-sm text-ink/70">Cette action est définitive.</p>
+    <div class="mt-6 flex flex-wrap justify-end gap-3">
+      <button type="button" data-cancel class="btn btn-pill btn-sm btn-secondary">Annuler</button>
+      <button type="button" data-confirm class="btn btn-pill btn-sm btn-primary">Supprimer</button>
+    </div>
+  </div>
+</dialog>
+
+<script is:inline>
+  (() => {
+    const form = document.getElementById('intervention-form');
+    const status = document.getElementById('intervention-status');
+    const error = document.getElementById('intervention-error');
+    const deleteBtn = document.querySelector('[data-delete]');
+    const confirmDialog = document.getElementById('intervention-confirm');
+    const confirmBtn = confirmDialog?.querySelector('[data-confirm]');
+    const cancelBtn = confirmDialog?.querySelector('[data-cancel]');
+    if (!(form instanceof HTMLFormElement)) return;
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (error) error.textContent = '';
+      if (status) status.textContent = 'Enregistrement...';
+
+      const submitter = event.submitter;
+      const intent = submitter && submitter instanceof HTMLButtonElement ? submitter.value : 'draft';
+      const formData = new FormData(form);
+      const payload = {
+        title: String(formData.get('title') ?? '').trim(),
+        description: String(formData.get('description') ?? '').trim(),
+        category: String(formData.get('category') ?? '').trim(),
+        order: String(formData.get('order') ?? '').trim(),
+        seo_title: String(formData.get('seo_title') ?? '').trim(),
+        seo_description: String(formData.get('seo_description') ?? '').trim(),
+        body_md: String(formData.get('body_md') ?? ''),
+        status: intent === 'publish' ? 'publie' : String(formData.get('status') ?? 'brouillon')
+      };
+
+      try {
+        const slug = form.dataset.slug || '';
+        const res = await fetch(`/api/cms/interventions/${encodeURIComponent(slug)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          throw new Error(text || 'save');
+        }
+        if (status) status.textContent = 'Enregistré.';
+      } catch (err) {
+        if (error) error.textContent = 'Erreur de sauvegarde.';
+        if (status) status.textContent = '';
+      }
+    });
+
+    if (deleteBtn instanceof HTMLButtonElement) {
+      deleteBtn.addEventListener('click', () => {
+        if (confirmDialog instanceof HTMLDialogElement) confirmDialog.showModal();
+      });
+    }
+
+    if (confirmDialog instanceof HTMLDialogElement) {
+      const close = () => confirmDialog.close();
+      if (cancelBtn instanceof HTMLElement) cancelBtn.addEventListener('click', close);
+      confirmDialog.addEventListener('click', (event) => {
+        if (event.target === confirmDialog) close();
+      });
+    }
+
+    if (confirmBtn instanceof HTMLButtonElement) {
+      confirmBtn.addEventListener('click', async () => {
+        const slug = form.dataset.slug || '';
+        if (!slug) return;
+        if (error) error.textContent = '';
+        if (status) status.textContent = 'Suppression...';
+        try {
+          const res = await fetch(`/api/cms/interventions/${encodeURIComponent(slug)}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error('delete');
+          window.location.href = '/cms/interventions?deleted=1';
+        } catch (err) {
+          if (error) error.textContent = 'Erreur de suppression.';
+          if (status) status.textContent = '';
+        } finally {
+          if (confirmDialog instanceof HTMLDialogElement) confirmDialog.close();
+        }
+      });
+    }
+  })();
+</script>

@@ -1,8 +1,9 @@
 ---
 import CmsLayout from '@/layouts/CmsLayout.astro';
 import { listCmsAvantApresCases, type AvantApresCaseView } from '@/lib/cms/avantApres';
-import { getCollection } from 'astro:content';
 import { interventionCategories } from '@/lib/interventions';
+import { listCmsInterventions } from '@/lib/cms/interventions';
+import { getCollection } from 'astro:content';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 const statusClass = (status: 'publie' | 'brouillon') =>
@@ -15,23 +16,40 @@ type AvantApresCaseWithIntervention = AvantApresCaseView & {
   case_number?: number | null;
 };
 const items = (await listCmsAvantApresCases()) as AvantApresCaseWithIntervention[];
-const interventions = await getCollection('interventions');
+type InterventionLite = { title: string; slug: string; category: string; order?: number | null };
+
+let interventions: InterventionLite[] = [];
+try {
+  const rows = await listCmsInterventions();
+  interventions = rows.map((r) => ({
+    title: r.title,
+    slug: r.slug,
+    category: r.category,
+    order: r.order,
+  }));
+} catch {
+  const entries = await getCollection('interventions');
+  interventions = entries.map((entry) => ({
+    title: entry.data.title,
+    slug: entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug,
+    category: entry.data.category,
+    order: entry.data.order ?? null,
+  }));
+}
+
 const interventionsByCategory = interventionCategories.map((category) => {
   const entries = interventions
-    .filter((entry) => entry.data.category === category.key)
-    .sort((a, b) => (a.data.order ?? 999) - (b.data.order ?? 999))
+    .filter((entry) => entry.category === category.key)
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
     .map((entry) => ({
-      title: entry.data.title,
-      slug: entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug,
-      category: entry.data.category,
+      title: entry.title,
+      slug: entry.slug,
+      category: entry.category,
     }));
   return { ...category, entries };
 });
 const interventionTitleByRef = new Map(
-  interventions.map((entry) => {
-    const slug = entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug;
-    return [`${entry.data.category}::${slug}`, entry.data.title];
-  }),
+  interventions.map((entry) => [`${entry.category}::${entry.slug}`, entry.title]),
 );
 const formatDate = (value: string) =>
   new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
