@@ -6,6 +6,7 @@ import { listPublicAvantApresCases, type AvantApresCaseView } from '@/lib/cms/av
 import { getPublicInterventionBySlug } from '@/lib/cms/interventions';
 import { renderMarkdown } from '@/lib/markdown';
 import InterventionBlocks from '@/components/InterventionBlocks.astro';
+import { listLinkedBlogSlugsForIntervention, listPublicBlogPosts } from '@/lib/cms/blog';
 import { getCollection } from 'astro:content';
 import { interventionCategoryKeys, type InterventionCategoryKey } from '@/lib/interventions';
 
@@ -65,6 +66,23 @@ relatedCases = relatedCases.filter(
 relatedCases = relatedCases
   .sort((a, b) => (a.case_number ?? 999) - (b.case_number ?? 999))
   .slice(0, 4);
+
+let relatedArticles: { title: string; description: string; href: string }[] = [];
+if (dbItem) {
+  try {
+    const slugs = await listLinkedBlogSlugsForIntervention(dbItem.slug);
+    if (slugs.length) {
+      const posts = await listPublicBlogPosts();
+      const map = new Map(posts.map((p) => [p.slug, p]));
+      relatedArticles = slugs
+        .map((s) => map.get(s))
+        .filter(Boolean)
+        .map((p) => ({ title: p!.title, description: p!.description, href: `/blog/${p!.slug}` }));
+    }
+  } catch {
+    relatedArticles = [];
+  }
+}
 ---
 
 <BaseLayout title={title} description={description} noindex={dbItem?.status === 'brouillon' && cmsAuthed}>
@@ -147,6 +165,24 @@ relatedCases = relatedCases
                 </div>
               </a>
             ))}
+        </div>
+      </section>
+    ) : null}
+
+    {relatedArticles.length ? (
+      <section class="mt-14">
+        <div class="flex items-end justify-between gap-3">
+          <h2 class="font-display text-2xl tracking-tight">À lire aussi</h2>
+          <a href="/blog" class="link text-sm">Tous les articles →</a>
+        </div>
+        <div class="mt-6 grid gap-4 sm:grid-cols-2">
+          {relatedArticles.slice(0, 4).map((a) => (
+            <a href={a.href} class="rounded-3xl border border-ink/10 bg-paper p-6 shadow-soft transition hover:shadow-lift">
+              <div class="font-display text-xl tracking-tight">{a.title}</div>
+              <div class="mt-2 text-sm text-ink/70">{a.description}</div>
+              <div class="mt-4 text-sm font-semibold">Lire →</div>
+            </a>
+          ))}
         </div>
       </section>
     ) : null}

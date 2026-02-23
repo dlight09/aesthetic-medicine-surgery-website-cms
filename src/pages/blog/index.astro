@@ -1,10 +1,30 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
+import { listPublicBlogPosts } from '@/lib/cms/blog';
 
-const posts = (await getCollection('blog'))
-  .filter((p) => !p.data.draft)
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+type CardPost = { slug: string; title: string; description: string; dateLabel: string };
+
+let posts: CardPost[] = [];
+try {
+  const rows = await listPublicBlogPosts();
+  posts = rows.map((p) => ({
+    slug: p.slug,
+    title: p.title,
+    description: p.description,
+    dateLabel: p.published_at ? new Date(p.published_at).toLocaleDateString('fr-FR') : '',
+  }));
+} catch {
+  const entries = (await getCollection('blog'))
+    .filter((p) => !p.data.draft)
+    .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+  posts = entries.map((p) => ({
+    slug: p.slug,
+    title: p.data.title,
+    description: p.data.description,
+    dateLabel: p.data.date.toLocaleDateString('fr-FR'),
+  }));
+}
 ---
 
 <BaseLayout title="Blog" description="Articles d’information medicale: preparation, suites, questions frequentes.">
@@ -18,10 +38,10 @@ const posts = (await getCollection('blog'))
       {posts.map((p) => (
         <a href={`/blog/${p.slug}`} class="rounded-3xl border border-ink/10 bg-paper p-7 shadow-soft transition hover:shadow-lift">
           <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">
-            {p.data.date.toLocaleDateString('fr-FR')}
+            {p.dateLabel || '—'}
           </div>
-          <div class="mt-2 font-display text-2xl tracking-tight">{p.data.title}</div>
-          <div class="mt-2 text-ink/70">{p.data.description}</div>
+          <div class="mt-2 font-display text-2xl tracking-tight">{p.title}</div>
+          <div class="mt-2 text-ink/70">{p.description}</div>
           <div class="mt-5 text-sm font-semibold">Lire →</div>
         </a>
       ))}

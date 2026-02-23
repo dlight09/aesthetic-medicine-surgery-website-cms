@@ -1,13 +1,41 @@
 ---
 import CmsLayout from '@/layouts/CmsLayout.astro';
-import { cmsBlogPosts } from '@/lib/cms/mock';
+import { getCmsBlogPostBySlug, listLinkedInterventionSlugsForBlog } from '@/lib/cms/blog';
+import { listCmsInterventions } from '@/lib/cms/interventions';
+import { defaultBlogBlocks } from '@/lib/cms/blogBlocks';
+import { interventionCategoryMeta, interventionCategoryKeys, type InterventionCategoryKey } from '@/lib/interventions';
 
-export async function getStaticPaths() {
-  return cmsBlogPosts.map((p) => ({ params: { slug: p.slug } }));
-}
+Astro.response.headers.set('Cache-Control', 'no-store');
 
 const { slug } = Astro.params;
-const post = cmsBlogPosts.find((p) => p.slug === slug) ?? cmsBlogPosts[0];
+const post = slug ? await getCmsBlogPostBySlug(slug) : null;
+if (!post) {
+  return Astro.redirect('/cms/blog');
+}
+
+const linked = await listLinkedInterventionSlugsForBlog(post.slug);
+const interventions = await listCmsInterventions();
+
+const byCategory = (interventionCategoryKeys as readonly InterventionCategoryKey[]).map((key) => ({
+  key,
+  title: interventionCategoryMeta[key]?.title ?? key,
+  items: interventions
+    .filter((i) => i.category === key)
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || a.title.localeCompare(b.title, 'fr')),
+}));
+
+const fallbackBlocks = defaultBlogBlocks();
+
+const dateValue = (() => {
+  if (!post.published_at) return '';
+  const d = new Date(post.published_at);
+  if (Number.isNaN(d.getTime())) return '';
+  // YYYY-MM-DD
+  const yyyy = String(d.getUTCFullYear());
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+})();
 ---
 
 <CmsLayout title="Edition article">
@@ -16,30 +44,78 @@ const post = cmsBlogPosts.find((p) => p.slug === slug) ?? cmsBlogPosts[0];
       <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Blog</div>
       <h1 class="mt-2 font-display text-3xl tracking-tight">{post.title}</h1>
 
-      <div class="mt-8 grid gap-5">
+      <form id="blog-form" class="mt-8 grid gap-5" data-slug={post.slug}>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Titre</span>
-          <input class="cms-input" value={post.title} />
+          <input class="cms-input" name="title" value={post.title} />
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Description courte</span>
-          <textarea rows={3} class="cms-textarea">
-            {post.description}
-          </textarea>
+          <textarea rows={3} class="cms-textarea" name="description">{post.description ?? ''}</textarea>
         </label>
         <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Date</span>
-          <input class="cms-input" value={post.date} />
+          <span class="font-semibold text-ink/80">Date (optionnel)</span>
+          <input class="cms-input" type="date" name="published_at" value={dateValue} />
         </label>
         <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Contenu (Markdown)</span>
-          <textarea rows={10} class="cms-textarea">
-            ## Introduction
+          <span class="font-semibold text-ink/80">SEO Title (optionnel)</span>
+          <input class="cms-input" name="seo_title" value={post.seo_title ?? ''} />
+        </label>
 
-            Contenu exemple a remplacer lors de l’integration.
-          </textarea>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">SEO Description (optionnel)</span>
+          <textarea rows={2} class="cms-textarea" name="seo_description">{post.seo_description ?? ''}</textarea>
         </label>
-      </div>
+
+        <input type="hidden" name="content_blocks" />
+        <input type="hidden" name="linked_intervention_slugs" />
+
+        <div class="grid gap-2">
+          <div class="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <div class="text-sm font-semibold text-ink/80">Blocs</div>
+              <div class="text-xs text-ink/50">Rédaction guidée (pas de Markdown).</div>
+            </div>
+            <div class="flex gap-2">
+              <select id="block-type" class="cms-select text-sm">
+                <option value="section">Section</option>
+                <option value="bullets">Liste</option>
+                <option value="callout">Encadré conseil</option>
+                <option value="faq">FAQ</option>
+                <option value="image">Image</option>
+                <option value="sources">Références</option>
+                <option value="cta">CTA</option>
+              </select>
+              <button type="button" id="block-add" class="btn btn-pill btn-sm btn-secondary">Ajouter</button>
+            </div>
+          </div>
+
+          <div id="blocks" class="grid gap-3"></div>
+        </div>
+
+        <details class="rounded-3xl border border-ink/10 bg-paper p-5">
+          <summary class="cursor-pointer text-sm font-semibold text-ink/80">Interventions liées (recommandé)</summary>
+          <div class="mt-4 grid gap-4">
+            {byCategory.map((group) => (
+              <div class="rounded-2xl border border-ink/10 bg-mist/20 p-4">
+                <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">{group.title}</div>
+                <div class="mt-3 grid gap-2">
+                  {group.items.length ? (
+                    group.items.map((i) => (
+                      <label class="flex items-center justify-between gap-3 text-sm">
+                        <span class="text-ink/80">{i.title}</span>
+                        <input type="checkbox" data-link-intervention value={i.slug} checked={linked.includes(i.slug)} />
+                      </label>
+                    ))
+                  ) : (
+                    <div class="text-sm text-ink/60">Aucune intervention.</div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </details>
+      </form>
     </section>
 
     <aside class="cms-panel p-6">
@@ -47,22 +123,592 @@ const post = cmsBlogPosts.find((p) => p.slug === slug) ?? cmsBlogPosts[0];
       <div class="mt-4 grid gap-3">
         <label class="flex items-center justify-between rounded-2xl border border-ink/10 bg-paper px-4 py-3 text-sm">
           <span>Statut</span>
-          <select class="bg-transparent text-sm">
-            <option selected={post.status === 'Brouillon'}>Brouillon</option>
-            <option selected={post.status === 'Publie'}>Publie</option>
+          <select class="bg-transparent text-sm" name="status" form="blog-form">
+            <option value="brouillon" selected={post.status === 'brouillon'}>Brouillon</option>
+            <option value="publie" selected={post.status === 'publie'}>Publié</option>
           </select>
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Slug</span>
-          <input class="cms-input" value={post.slug} />
+          <input class="cms-input" value={post.slug} readonly />
         </label>
       </div>
 
       <div class="mt-6 space-y-3">
-        <button type="button" class="btn btn-pill btn-md btn-primary w-full">Enregistrer</button>
-        <a href={`/blog/${post.slug}`} class="btn btn-pill btn-md btn-secondary w-full">Apercu public</a>
+        <button type="submit" value="draft" name="intent" form="blog-form" class="btn btn-pill btn-md btn-primary w-full">
+          Enregistrer
+        </button>
+        <button type="submit" value="publish" name="intent" form="blog-form" class="btn btn-pill btn-md btn-secondary w-full">
+          Publier
+        </button>
+        <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer" class="btn btn-pill btn-md btn-secondary w-full">Aperçu public</a>
+        <button
+          type="button"
+          data-delete
+          class="btn btn-pill btn-md w-full border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+        >
+          Supprimer l’article
+        </button>
       </div>
-      <div class="mt-4 text-xs text-ink/60">UI uniquement — sauvegarde activee apres integration.</div>
+      <div id="blog-status" class="mt-4 text-xs text-ink/60"></div>
+      <div id="blog-error" class="mt-2 text-xs text-rose-600"></div>
     </aside>
   </div>
 </CmsLayout>
+
+<dialog id="blog-confirm" class="cms-drawer">
+  <div class="cms-card-elevated mx-auto mt-28 w-[min(92vw,420px)] p-6">
+    <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Suppression</div>
+    <div class="mt-2 font-display text-2xl tracking-tight">Supprimer cet article ?</div>
+    <p class="mt-3 text-sm text-ink/70">Cette action est définitive.</p>
+    <div class="mt-6 flex flex-wrap justify-end gap-3">
+      <button type="button" data-cancel class="btn btn-pill btn-sm btn-secondary">Annuler</button>
+      <button type="button" data-confirm class="btn btn-pill btn-sm btn-primary">Supprimer</button>
+    </div>
+  </div>
+</dialog>
+
+<script is:inline define:vars={{ initialBlocks: post.content_blocks, fallbackBlocks }}>
+  (() => {
+    const form = document.getElementById('blog-form');
+    const statusEl = document.getElementById('blog-status');
+    const errorEl = document.getElementById('blog-error');
+    const deleteBtn = document.querySelector('[data-delete]');
+    const confirmDialog = document.getElementById('blog-confirm');
+    const confirmBtn = confirmDialog?.querySelector('[data-confirm]');
+    const cancelBtn = confirmDialog?.querySelector('[data-cancel]');
+    if (!(form instanceof HTMLFormElement)) return;
+
+    const blocksRoot = document.getElementById('blocks');
+    const blocksInput = form.querySelector('input[name="content_blocks"]');
+    const linksInput = form.querySelector('input[name="linked_intervention_slugs"]');
+    const addBtn = document.getElementById('block-add');
+    const typeSelect = document.getElementById('block-type');
+    if (!(blocksRoot instanceof HTMLElement)) return;
+    if (!(blocksInput instanceof HTMLInputElement)) return;
+    if (!(linksInput instanceof HTMLInputElement)) return;
+
+    let blocks = (Array.isArray(initialBlocks) && initialBlocks.length ? initialBlocks : fallbackBlocks) || [];
+
+    const escapeHtml = (s) =>
+      String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+
+    const serialize = () => {
+      blocksInput.value = JSON.stringify(blocks);
+      const checked = Array.from(document.querySelectorAll('input[data-link-intervention]:checked')).map((n) => n.value);
+      linksInput.value = JSON.stringify(checked);
+    };
+
+    const render = () => {
+      blocksRoot.innerHTML = '';
+      blocks.forEach((b, idx) => {
+        const card = document.createElement('div');
+        card.className = 'rounded-3xl border border-ink/10 bg-paper p-5 shadow-soft';
+
+        const header = document.createElement('div');
+        header.className = 'flex flex-wrap items-center justify-between gap-3';
+        header.innerHTML = `
+          <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">${escapeHtml(b.type)}</div>
+          <div class="flex gap-2">
+            <button type="button" data-up class="btn btn-pill btn-xs btn-secondary">↑</button>
+            <button type="button" data-down class="btn btn-pill btn-xs btn-secondary">↓</button>
+            <button type="button" data-remove class="btn btn-pill btn-xs btn-secondary">Supprimer</button>
+          </div>
+        `;
+        card.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'mt-4 grid gap-3';
+
+        const heading = document.createElement('label');
+        heading.className = 'grid gap-2 text-sm';
+        heading.innerHTML = `<span class="font-semibold text-ink/80">Titre</span>
+          <input class="cms-input" data-field="heading" value="${escapeHtml(b.heading || '')}" />`;
+
+        if (b.type === 'section' || b.type === 'bullets' || b.type === 'faq' || b.type === 'sources' || b.type === 'cta') {
+          body.appendChild(heading);
+        }
+
+        if (b.type === 'section') {
+          const points = Array.isArray(b.points) ? b.points : [];
+          const field = document.createElement('div');
+          field.className = 'grid gap-2 text-sm';
+          field.innerHTML = `
+            <span class="font-semibold text-ink/80">Texte</span>
+            <textarea rows="5" class="cms-textarea" data-field="text">${escapeHtml(b.text || b.body || '')}</textarea>
+            <span class="mt-3 font-semibold text-ink/80">Points (1 par ligne, optionnel)</span>
+            <textarea rows="4" class="cms-textarea" data-field="points">${escapeHtml(points.join('\n'))}</textarea>
+          `;
+          body.appendChild(field);
+        }
+
+        if (b.type === 'bullets') {
+          const field = document.createElement('label');
+          field.className = 'grid gap-2 text-sm';
+          field.innerHTML = `<span class="font-semibold text-ink/80">Elements (1 par ligne)</span>
+            <textarea rows="6" class="cms-textarea" data-field="items">${escapeHtml((b.items || []).join('\n'))}</textarea>`;
+          body.appendChild(field);
+        }
+
+        if (b.type === 'callout') {
+          const points = Array.isArray(b.points) ? b.points : [];
+          const field = document.createElement('div');
+          field.className = 'grid gap-2 text-sm';
+          field.innerHTML = `
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Type</span>
+                <select class="cms-select" data-field="tone">
+                  <option value="conseil">Conseil</option>
+                  <option value="securite">Sécurité</option>
+                  <option value="a-retenir">À retenir</option>
+                  <option value="mythe-vrai">Mythe/Vrai</option>
+                </select>
+              </label>
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Titre (optionnel)</span>
+                <input class="cms-input" data-field="title" value="${escapeHtml(b.title || '')}" />
+              </label>
+            </div>
+            <span class="font-semibold text-ink/80">Texte</span>
+            <textarea rows="5" class="cms-textarea" data-field="text">${escapeHtml(b.text || '')}</textarea>
+            <span class="mt-3 font-semibold text-ink/80">Points (1 par ligne, optionnel)</span>
+            <textarea rows="4" class="cms-textarea" data-field="points">${escapeHtml(points.join('\n'))}</textarea>
+          `;
+          body.appendChild(field);
+          const toneSelect = field.querySelector('select[data-field="tone"]');
+          if (toneSelect instanceof HTMLSelectElement) toneSelect.value = b.tone || 'conseil';
+        }
+
+        if (b.type === 'faq') {
+          const field = document.createElement('div');
+          field.className = 'grid gap-2 text-sm';
+          const items = Array.isArray(b.items) ? b.items : [];
+          field.innerHTML = `
+            <div class="flex items-end justify-between gap-3">
+              <span class="font-semibold text-ink/80">FAQ</span>
+              <button type="button" class="btn btn-pill btn-xs btn-secondary" data-faq-add>Ajouter</button>
+            </div>
+            <div class="grid gap-3" data-faq-list></div>
+          `;
+          body.appendChild(field);
+          const list = field.querySelector('[data-faq-list]');
+          const add = field.querySelector('[data-faq-add]');
+          const renderFaq = () => {
+            list.innerHTML = '';
+            items.forEach((it, j) => {
+              const row = document.createElement('div');
+              row.className = 'rounded-2xl border border-ink/10 bg-mist/30 p-4';
+              row.innerHTML = `
+                <label class="grid gap-2 text-sm">
+                  <span class="font-semibold text-ink/80">Question</span>
+                  <input class="cms-input" data-faq-q value="${escapeHtml(it.question || '')}" />
+                </label>
+                <label class="mt-3 grid gap-2 text-sm">
+                  <span class="font-semibold text-ink/80">Réponse</span>
+                  <textarea rows="4" class="cms-textarea" data-faq-a>${escapeHtml(it.answer || '')}</textarea>
+                </label>
+                <div class="mt-3 flex justify-end">
+                  <button type="button" class="btn btn-pill btn-xs btn-secondary" data-faq-remove>Supprimer</button>
+                </div>
+              `;
+              row.querySelector('[data-faq-remove]').addEventListener('click', () => {
+                items.splice(j, 1);
+                b.items = items;
+                blocks[idx] = b;
+                serialize();
+                renderFaq();
+              });
+              row.querySelector('[data-faq-q]').addEventListener('input', (e) => {
+                it.question = e.target.value;
+                serialize();
+              });
+              row.querySelector('[data-faq-a]').addEventListener('input', (e) => {
+                it.answer = e.target.value;
+                serialize();
+              });
+              list.appendChild(row);
+            });
+          };
+          if (add) {
+            add.addEventListener('click', () => {
+              items.push({ question: '', answer: '' });
+              b.items = items;
+              blocks[idx] = b;
+              serialize();
+              renderFaq();
+            });
+          }
+          renderFaq();
+        }
+
+        if (b.type === 'sources') {
+          const field = document.createElement('div');
+          field.className = 'grid gap-2 text-sm';
+          const items = Array.isArray(b.items) ? b.items : [];
+          field.innerHTML = `
+            <div class="flex items-end justify-between gap-3">
+              <span class="font-semibold text-ink/80">Références</span>
+              <button type="button" class="btn btn-pill btn-xs btn-secondary" data-src-add>Ajouter</button>
+            </div>
+            <div class="grid gap-3" data-src-list></div>
+          `;
+          body.appendChild(field);
+          const list = field.querySelector('[data-src-list]');
+          const add = field.querySelector('[data-src-add]');
+          const renderSources = () => {
+            list.innerHTML = '';
+            items.forEach((it, j) => {
+              const row = document.createElement('div');
+              row.className = 'rounded-2xl border border-ink/10 bg-mist/30 p-4';
+              row.innerHTML = `
+                <label class="grid gap-2 text-sm">
+                  <span class="font-semibold text-ink/80">Titre</span>
+                  <input class="cms-input" data-src-title value="${escapeHtml(it.title || '')}" />
+                </label>
+                <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                  <label class="grid gap-2 text-sm">
+                    <span class="font-semibold text-ink/80">Éditeur (optionnel)</span>
+                    <input class="cms-input" data-src-publisher value="${escapeHtml(it.publisher || '')}" />
+                  </label>
+                  <label class="grid gap-2 text-sm">
+                    <span class="font-semibold text-ink/80">Année (optionnel)</span>
+                    <input class="cms-input" data-src-year value="${escapeHtml(it.year || '')}" />
+                  </label>
+                </div>
+                <label class="mt-3 grid gap-2 text-sm">
+                  <span class="font-semibold text-ink/80">URL</span>
+                  <input class="cms-input" data-src-url value="${escapeHtml(it.url || '')}" />
+                </label>
+                <div class="mt-3 flex justify-end">
+                  <button type="button" class="btn btn-pill btn-xs btn-secondary" data-src-remove>Supprimer</button>
+                </div>
+              `;
+              row.querySelector('[data-src-remove]').addEventListener('click', () => {
+                items.splice(j, 1);
+                b.items = items;
+                blocks[idx] = b;
+                serialize();
+                renderSources();
+              });
+              row.querySelector('[data-src-title]').addEventListener('input', (e) => {
+                it.title = e.target.value;
+                serialize();
+              });
+              row.querySelector('[data-src-publisher]').addEventListener('input', (e) => {
+                it.publisher = e.target.value;
+                serialize();
+              });
+              row.querySelector('[data-src-year]').addEventListener('input', (e) => {
+                it.year = e.target.value;
+                serialize();
+              });
+              row.querySelector('[data-src-url]').addEventListener('input', (e) => {
+                it.url = e.target.value;
+                serialize();
+              });
+              list.appendChild(row);
+            });
+          };
+          if (add) {
+            add.addEventListener('click', () => {
+              items.push({ title: '', url: '', publisher: '', year: '' });
+              b.items = items;
+              blocks[idx] = b;
+              serialize();
+              renderSources();
+            });
+          }
+          renderSources();
+        }
+
+        if (b.type === 'image') {
+          const field = document.createElement('div');
+          field.className = 'grid gap-2 text-sm';
+          field.innerHTML = `
+            <div class="grid gap-3 md:grid-cols-2">
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Image (URL)</span>
+                <input class="cms-input" data-img-url value="${escapeHtml(b.url || '')}" placeholder="https://..." />
+              </label>
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Texte alternatif (alt)</span>
+                <input class="cms-input" data-img-alt value="${escapeHtml(b.alt || '')}" />
+              </label>
+            </div>
+            <label class="grid gap-2 text-sm">
+              <span class="font-semibold text-ink/80">Légende (optionnel)</span>
+              <input class="cms-input" data-img-caption value="${escapeHtml(b.caption || '')}" />
+            </label>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Mise en page</span>
+                <select class="cms-select" data-img-layout>
+                  <option value="card">Card</option>
+                  <option value="full">Full</option>
+                  <option value="left">Left</option>
+                  <option value="right">Right</option>
+                </select>
+              </label>
+              <label class="grid gap-2 text-sm">
+                <span class="font-semibold text-ink/80">Upload</span>
+                <input type="file" class="block text-sm" data-img-file accept="image/*" />
+              </label>
+            </div>
+          `;
+          body.appendChild(field);
+          const layoutSelect = field.querySelector('[data-img-layout]');
+          if (layoutSelect instanceof HTMLSelectElement) {
+            layoutSelect.value = b.layout || 'card';
+            layoutSelect.addEventListener('change', () => {
+              b.layout = layoutSelect.value;
+              blocks[idx] = b;
+              serialize();
+            });
+          }
+          const urlInput = field.querySelector('[data-img-url]');
+          if (urlInput instanceof HTMLInputElement) {
+            urlInput.addEventListener('input', () => {
+              b.url = urlInput.value;
+              blocks[idx] = b;
+              serialize();
+            });
+          }
+          const altInput = field.querySelector('[data-img-alt]');
+          if (altInput instanceof HTMLInputElement) {
+            altInput.addEventListener('input', () => {
+              b.alt = altInput.value;
+              blocks[idx] = b;
+              serialize();
+            });
+          }
+          const capInput = field.querySelector('[data-img-caption]');
+          if (capInput instanceof HTMLInputElement) {
+            capInput.addEventListener('input', () => {
+              b.caption = capInput.value;
+              blocks[idx] = b;
+              serialize();
+            });
+          }
+          const fileInput = field.querySelector('[data-img-file]');
+          if (fileInput instanceof HTMLInputElement) {
+            fileInput.addEventListener('change', async () => {
+              const file = fileInput.files && fileInput.files[0];
+              if (!file) return;
+              if (statusEl) statusEl.textContent = 'Upload image...';
+              try {
+                const res = await fetch('/api/cms/media/upload-url', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ fileName: file.name })
+                });
+                if (!res.ok) throw new Error('upload-url');
+                const { signedUrl, publicUrl } = await res.json();
+                const up = await fetch(signedUrl, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': file.type || 'application/octet-stream' },
+                  body: file
+                });
+                if (!up.ok) throw new Error('upload');
+                b.url = publicUrl;
+                blocks[idx] = b;
+                if (urlInput instanceof HTMLInputElement) urlInput.value = publicUrl;
+                serialize();
+                if (statusEl) statusEl.textContent = 'Image uploadée.';
+              } catch {
+                if (errorEl) errorEl.textContent = "Erreur d'upload image.";
+                if (statusEl) statusEl.textContent = '';
+              }
+            });
+          }
+        }
+
+        if (b.type === 'cta') {
+          const field = document.createElement('div');
+          field.className = 'grid gap-3 md:grid-cols-2';
+          field.innerHTML = `
+            <label class="grid gap-2 text-sm md:col-span-2">
+              <span class="font-semibold text-ink/80">Texte</span>
+              <textarea rows="4" class="cms-textarea" data-field="text">${escapeHtml(b.text || b.body || '')}</textarea>
+            </label>
+            <label class="grid gap-2 text-sm">
+              <span class="font-semibold text-ink/80">Label bouton</span>
+              <input class="cms-input" data-field="button_label" value="${escapeHtml(b.button_label || '')}" />
+            </label>
+            <label class="grid gap-2 text-sm">
+              <span class="font-semibold text-ink/80">Lien bouton</span>
+              <input class="cms-input" data-field="button_href" value="${escapeHtml(b.button_href || '')}" placeholder="/contact" />
+            </label>
+          `;
+          body.appendChild(field);
+        }
+
+        card.appendChild(body);
+
+        const setField = (field, value) => {
+          if (b.type === 'bullets' && field === 'items') {
+            b.items = String(value)
+              .split('\n')
+              .map((x) => x.trim())
+              .filter(Boolean);
+          } else if ((b.type === 'section' || b.type === 'callout') && field === 'points') {
+            b.points = String(value)
+              .split('\n')
+              .map((x) => x.trim())
+              .filter(Boolean);
+          } else {
+            b[field] = value;
+          }
+          blocks[idx] = b;
+          serialize();
+        };
+
+        const headingInput = card.querySelector('[data-field="heading"]');
+        if (headingInput) headingInput.addEventListener('input', (e) => setField('heading', e.target.value));
+        ['text', 'items', 'points', 'tone', 'title', 'button_label', 'button_href'].forEach((k) => {
+          const node = card.querySelector(`[data-field="${k}"]`);
+          if (!node) return;
+          node.addEventListener('input', (e) => setField(k, e.target.value));
+          node.addEventListener('change', (e) => setField(k, e.target.value));
+        });
+
+        card.querySelector('[data-remove]').addEventListener('click', () => {
+          blocks.splice(idx, 1);
+          serialize();
+          render();
+        });
+        card.querySelector('[data-up]').addEventListener('click', () => {
+          if (idx === 0) return;
+          const tmp = blocks[idx - 1];
+          blocks[idx - 1] = blocks[idx];
+          blocks[idx] = tmp;
+          serialize();
+          render();
+        });
+        card.querySelector('[data-down]').addEventListener('click', () => {
+          if (idx >= blocks.length - 1) return;
+          const tmp = blocks[idx + 1];
+          blocks[idx + 1] = blocks[idx];
+          blocks[idx] = tmp;
+          serialize();
+          render();
+        });
+
+        blocksRoot.appendChild(card);
+      });
+      serialize();
+    };
+
+    const newBlock = (type) => {
+      if (type === 'section') return { type: 'section', heading: 'Section', text: '', points: [] };
+      if (type === 'bullets') return { type: 'bullets', heading: 'En bref', items: [''] };
+      if (type === 'callout') return { type: 'callout', tone: 'conseil', title: '', text: '', points: [] };
+      if (type === 'faq') return { type: 'faq', heading: 'Questions fréquentes', items: [{ question: '', answer: '' }] };
+      if (type === 'image') return { type: 'image', url: '', alt: '', caption: '', layout: 'card' };
+      if (type === 'sources') return { type: 'sources', heading: 'Références', items: [] };
+      if (type === 'cta')
+        return { type: 'cta', heading: 'Prendre rendez-vous', text: '', button_label: 'Prendre rendez-vous', button_href: '/contact' };
+      return { type: 'section', heading: 'Section', text: '', points: [] };
+    };
+
+    if (addBtn instanceof HTMLButtonElement) {
+      addBtn.addEventListener('click', () => {
+        const type = typeSelect && typeSelect instanceof HTMLSelectElement ? typeSelect.value : 'section';
+        blocks.push(newBlock(type));
+        serialize();
+        render();
+      });
+    }
+
+    document.querySelectorAll('input[data-link-intervention]').forEach((node) => {
+      node.addEventListener('change', serialize);
+    });
+
+    render();
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (errorEl) errorEl.textContent = '';
+      if (statusEl) statusEl.textContent = 'Enregistrement...';
+
+      const submitter = event.submitter;
+      const intent = submitter && submitter instanceof HTMLButtonElement ? submitter.value : 'draft';
+      const formData = new FormData(form);
+
+      const payload = {
+        title: String(formData.get('title') ?? '').trim(),
+        description: String(formData.get('description') ?? '').trim(),
+        published_at: String(formData.get('published_at') ?? '').trim(),
+        seo_title: String(formData.get('seo_title') ?? '').trim(),
+        seo_description: String(formData.get('seo_description') ?? '').trim(),
+        content_blocks: (() => {
+          try {
+            return JSON.parse(String(formData.get('content_blocks') ?? '[]'));
+          } catch {
+            return [];
+          }
+        })(),
+        linked_intervention_slugs: (() => {
+          try {
+            return JSON.parse(String(formData.get('linked_intervention_slugs') ?? '[]'));
+          } catch {
+            return [];
+          }
+        })(),
+        status: intent === 'publish' ? 'publie' : String(formData.get('status') ?? 'brouillon')
+      };
+
+      try {
+        const slug = form.dataset.slug || '';
+        const res = await fetch(`/api/cms/blog/${encodeURIComponent(slug)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          throw new Error(text || 'save');
+        }
+        if (statusEl) statusEl.textContent = 'Enregistré.';
+      } catch {
+        if (errorEl) errorEl.textContent = 'Erreur de sauvegarde.';
+        if (statusEl) statusEl.textContent = '';
+      }
+    });
+
+    if (deleteBtn instanceof HTMLButtonElement) {
+      deleteBtn.addEventListener('click', () => {
+        if (confirmDialog instanceof HTMLDialogElement) confirmDialog.showModal();
+      });
+    }
+    if (confirmDialog instanceof HTMLDialogElement) {
+      const close = () => confirmDialog.close();
+      if (cancelBtn instanceof HTMLElement) cancelBtn.addEventListener('click', close);
+      confirmDialog.addEventListener('click', (event) => {
+        if (event.target === confirmDialog) close();
+      });
+    }
+    if (confirmBtn instanceof HTMLButtonElement) {
+      confirmBtn.addEventListener('click', async () => {
+        const slug = form.dataset.slug || '';
+        if (!slug) return;
+        if (errorEl) errorEl.textContent = '';
+        if (statusEl) statusEl.textContent = 'Suppression...';
+        try {
+          const res = await fetch(`/api/cms/blog/${encodeURIComponent(slug)}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error('delete');
+          window.location.href = '/cms/blog?deleted=1';
+        } catch {
+          if (errorEl) errorEl.textContent = 'Erreur de suppression.';
+          if (statusEl) statusEl.textContent = '';
+        } finally {
+          if (confirmDialog instanceof HTMLDialogElement) confirmDialog.close();
+        }
+      });
+    }
+  })();
+</script>

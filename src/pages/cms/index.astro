@@ -1,13 +1,15 @@
 ---
 import CmsLayout from '@/layouts/CmsLayout.astro';
-import { cmsBlogPosts, cmsBookings } from '@/lib/cms/mock';
+import { cmsBookings } from '@/lib/cms/mock';
 import { listCmsAvantApresCases } from '@/lib/cms/avantApres';
+import { listCmsBlogPosts } from '@/lib/cms/blog';
 
 const latestBookings = cmsBookings.slice(0, 3);
 const latestAvantApres = await listCmsAvantApresCases();
+const latestBlog = await listCmsBlogPosts();
 const latestContent = [
   { type: 'Avant/Après', title: latestAvantApres[0]?.title, href: `/cms/avant-apres/${latestAvantApres[0]?.id}` },
-  { type: 'Blog', title: cmsBlogPosts[0]?.title, href: `/cms/blog/${cmsBlogPosts[0]?.slug}` }
+  { type: 'Blog', title: latestBlog[0]?.title, href: `/cms/blog/${latestBlog[0]?.slug}` }
 ].filter((x) => x.title);
 ---
 
