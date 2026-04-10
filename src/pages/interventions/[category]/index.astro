@@ -54,9 +54,19 @@ function leafSlug(full: string) {
 
 const title = interventionCategoryMeta[category]?.title ?? 'Interventions';
 const thumbSrc = interventionCategories.find((c) => c.key === category)?.thumbnailSrc;
+const pageDescriptionByCategory: Partial<Record<InterventionCategoryKey, string>> = {
+  'medecine-esthetique':
+    "Medecine esthetique a Tunis: injections et soins de la peau, indications, deroule, suites et questions frequentes.",
+};
+const introByCategory: Partial<Record<InterventionCategoryKey, string>> = {
+  'medecine-esthetique':
+    "La medecine esthetique regroupe des gestes non chirurgicaux qui visent une amelioration progressive et naturelle. En consultation, l'indication est personnalisee selon votre peau, vos priorites et vos antecedents.",
+};
+const pageDescription = pageDescriptionByCategory[category] ?? `Interventions - ${title}.`;
+const categoryIntro = introByCategory[category] ?? null;
 ---
 
-<BaseLayout title={title} description={`Interventions - ${title}.`}> 
+<BaseLayout title={title} description={pageDescription}>
   <section class="mx-auto max-w-6xl px-4 py-14">
     <a href="/interventions" class="text-sm font-semibold text-ink/70 hover:text-ink">← Toutes les categories</a>
     <h1 class="mt-3 font-display text-4xl tracking-tight">{title}</h1>
@@ -74,10 +84,9 @@ const thumbSrc = interventionCategories.find((c) => c.key === category)?.thumbna
       </div>
     ) : null}
 
-    {category === 'visage' ? (
+    {categoryIntro ? (
       <p class="mt-4 max-w-2xl text-ink/75">
-        Aider le patient a identifier l’intervention adaptee. En consultation, nous discutons des attentes, de l’examen
-        clinique, des options possibles et des suites.
+        {categoryIntro}
       </p>
     ) : null}
 
