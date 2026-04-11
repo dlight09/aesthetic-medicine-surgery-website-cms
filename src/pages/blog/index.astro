@@ -1,50 +1,202 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
-import { listPublicBlogPosts } from '@/lib/cms/blog';
+import { listLinkedInterventionSlugsForBlog, listPublicBlogPosts } from '@/lib/cms/blog';
+import { interventionCategories } from '@/lib/interventions';
+import { listPublicInterventions } from '@/lib/cms/interventions';
 
-type CardPost = { slug: string; title: string; description: string; dateLabel: string };
+type BlogTheme = 'Journal' | 'Médecine esthétique' | 'Conseils skin' | 'Actualités' | 'Bien-être';
+
+type CardPost = {
+  slug: string;
+  title: string;
+  description: string;
+  dateLabel: string;
+  theme: BlogTheme;
+  coverImage: string;
+  readMinutes: number;
+};
+
+const imageFallbacks = [
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuDhRYHRdCQpEf87Z3HGF1xgQQidQ10_7kzg0wSs1w6_dQgLSCGLZ2vOn3kDhsnKczUG2Ceyu4EYGUGxyu1S86fQoSck2lkhfouk4iZObM1D7rJFreHC_dzjcQZgN57rwV1pKrFUQns6Z7kQY3BXQtaAdfZNDxsM2cwqG8LL8EouWRc9XjWz1sM0BIN6wb_CuasDTzMf-eIRunmVE5iTDe6iqW5WyUR4e8AyQmdQ2Am-lNFH5l3DfiBeuDYz6_TVpx3b9tivhKNYV6tK',
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuD6a1mmjP_VatbsxWcjeUe9XRZeIS2G1Ftocmxh7b_wSujbOVMEN-b0yfJD1X8MyNWk2DwUXwxMLZSOzb1imAoh1Aji9MicYl17AJZIU-vGOtT12B1CLiZnkzP-YKxpceBazUU8JiWWGuenyX5jsApCQi7nLtUGRMFgQsAjatJhrIx65UDTwuGTkUzTR6SP00f9G_OfLU4VPGThL2Mcj8UsjVYflYcQJAPIhGi--ENxoriHvNRpXaZkFDcxItFlXdQeaTKJMwK14ScT',
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuAZbsogzAwkJwfqjgpQfnJDeJXsUy43c13rVl5QRt1JJNfwcJNZWkxrKOvIQPXTv0-frDXr2F4oNZRUk7-WLdyT5A6rB77VHnWOykLsDBrvjzw-baV7Yx8nXSbDMsInPHk69a06AwxdHHQAzs8WQRUvJ3hIgbNNmiisqXF_xBhu_peyKZnShwNaMHErAs66Af_zi0GkESkHmqN0OWEj_m6pNYhbRKjDUzDIMhhBJUGFDwxzRqaYmqjMeNTPFFis7iBk-XfU93qIuHxz',
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuCn6dceebeeO8vhTJ6aFaGKmxJF88kkykJvqk4qqGhmv01n4IVmxvlEKDB7UNWoApRdd7lCRdcEc42W-kuXCAZ_D5Rshvsjr5ZxpnNHT0Tn6afUjTNwD3Wvs9fge-5aV2_DRRQ-yYa7Jp_Qcazuf3ot1NStwWk8TV29IkZPSnIC0EpIa48pGc0SfPXyiS_9ule7VYzSksuwzguZxw6FpmEVIbpRbK8HKaT6Q1PuVv4zHhHjrHswM-F-lLe65iP7NarCMIBbpvTHyADH',
+];
+
+function inferThemeFromText(input: string): BlogTheme {
+  const text = input.toLowerCase();
+  if (/(actualité|nouveau|mise à jour|news|annonce|ouverture)/.test(text)) return 'Actualités';
+  if (/(bien-?être|sommeil|routine|stress|nutrition)/.test(text)) return 'Bien-être';
+  if (/(skin|peau|actif|serum|sérum|hydratation|teint)/.test(text)) return 'Conseils skin';
+  if (/(injection|toxine|hyaluronique|médecine esthétique|esthétique)/.test(text)) return 'Médecine esthétique';
+  return 'Journal';
+}
+
+function estimateReadTime(...parts: string[]) {
+  const words = parts
+    .join(' ')
+    .split(/\s+/)
+    .map((w) => w.trim())
+    .filter(Boolean).length;
+  return Math.max(2, Math.round(words / 180));
+}
+
+const selectedTheme = String(Astro.url.searchParams.get('theme') ?? '').trim();
 
 let posts: CardPost[] = [];
 try {
   const rows = await listPublicBlogPosts();
-  posts = rows.map((p) => ({
-    slug: p.slug,
-    title: p.title,
-    description: p.description,
-    dateLabel: p.published_at ? new Date(p.published_at).toLocaleDateString('fr-FR') : '',
-  }));
+  let interventionThemeByBlogSlug = new Map<string, BlogTheme>();
+
+  try {
+    const interventions = await listPublicInterventions();
+    const interventionBySlug = new Map(interventions.map((i) => [i.slug, i]));
+    const links = await Promise.all(
+      rows.map(async (post) => ({
+        blogSlug: post.slug,
+        interventionSlugs: await listLinkedInterventionSlugsForBlog(post.slug),
+      })),
+    );
+
+    interventionThemeByBlogSlug = new Map(
+      links.map((entry) => {
+        const linked = entry.interventionSlugs.map((slug) => interventionBySlug.get(slug)).filter(Boolean);
+        const first = linked[0];
+        if (!first) return [entry.blogSlug, 'Journal' as BlogTheme];
+        const categoryTitle = interventionCategories.find((c) => c.key === first.category)?.title;
+        const theme = categoryTitle === 'Médecine esthétique' ? 'Médecine esthétique' : 'Journal';
+        return [entry.blogSlug, theme as BlogTheme];
+      }),
+    );
+  } catch {
+    interventionThemeByBlogSlug = new Map<string, BlogTheme>();
+  }
+
+  posts = rows.map((p, idx) => {
+    const coverBlock = (Array.isArray(p.content_blocks) ? p.content_blocks : []).find(
+      (block: any) => block?.type === 'image' && typeof block?.url === 'string' && block.url.trim(),
+    ) as { url?: string } | undefined;
+    const inferred = inferThemeFromText(`${p.title} ${p.description}`);
+    const theme = interventionThemeByBlogSlug.get(p.slug) ?? inferred;
+    return {
+      slug: p.slug,
+      title: p.title,
+      description: p.description,
+      dateLabel: p.published_at ? new Date(p.published_at).toLocaleDateString('fr-FR') : '',
+      theme,
+      coverImage: coverBlock?.url?.trim() || imageFallbacks[idx % imageFallbacks.length],
+      readMinutes: estimateReadTime(p.title, p.description),
+    };
+  });
 } catch {
   const entries = (await getCollection('blog'))
     .filter((p) => !p.data.draft)
     .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-  posts = entries.map((p) => ({
-    slug: p.slug,
-    title: p.data.title,
-    description: p.data.description,
-    dateLabel: p.data.date.toLocaleDateString('fr-FR'),
-  }));
+  posts = entries.map((p, idx) => {
+    const inferred = inferThemeFromText(`${p.data.title} ${p.data.description}`);
+    return {
+      slug: p.slug,
+      title: p.data.title,
+      description: p.data.description,
+      dateLabel: p.data.date.toLocaleDateString('fr-FR'),
+      theme: inferred,
+      coverImage: imageFallbacks[idx % imageFallbacks.length],
+      readMinutes: estimateReadTime(p.data.title, p.data.description),
+    };
+  });
 }
+
+const themes = Array.from(new Set(posts.map((p) => p.theme)));
+const filteredPosts = selectedTheme ? posts.filter((p) => p.theme === selectedTheme) : posts;
+const featured = filteredPosts[0] ?? null;
+const cards = featured ? filteredPosts.slice(1) : filteredPosts;
 ---
 
-<BaseLayout title="Blog" description="Articles d’information medicale: preparation, suites, questions frequentes.">
-  <section class="mx-auto max-w-6xl px-4 py-14">
-    <h1 class="font-display text-4xl tracking-tight">Blog</h1>
-    <p class="mt-4 max-w-2xl text-ink/75">
-      Articles d’information (generale) - ils ne remplacent pas une consultation.
-    </p>
-
-    <div class="mt-10 grid gap-4 sm:grid-cols-2">
-      {posts.map((p) => (
-        <a href={`/blog/${p.slug}`} class="rounded-3xl border border-ink/10 bg-paper p-7 shadow-soft transition hover:shadow-lift">
-          <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">
-            {p.dateLabel || '—'}
+<BaseLayout title="Blog" description="Articles d'information médicale : préparation, suites et questions fréquentes.">
+  <section class="mx-auto max-w-6xl px-4 pb-20 pt-14">
+    {featured ? (
+      <header class="mb-20 grid items-center gap-8 border-b border-ink/10 pb-12 lg:grid-cols-12">
+        <a href={`/blog/${featured.slug}`} class="group block overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft lg:col-span-7">
+          <div class="aspect-[4/5] overflow-hidden bg-mist">
+            <img src={featured.coverImage} alt={featured.title} class="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]" loading="eager" />
           </div>
-          <div class="mt-2 font-display text-2xl tracking-tight">{p.title}</div>
-          <div class="mt-2 text-ink/70">{p.description}</div>
-          <div class="mt-5 text-sm font-semibold">Lire →</div>
         </a>
-      ))}
-    </div>
+        <div class="lg:col-span-5 lg:-ml-10 lg:bg-paper/70 lg:p-8 lg:backdrop-blur-sm">
+          <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-ink/55">Édition de saison</div>
+          <h1 class="mt-5 font-display text-5xl leading-tight tracking-tight italic sm:text-6xl">{featured.title}</h1>
+          <p class="mt-6 max-w-md text-base leading-relaxed text-ink/75">{featured.description}</p>
+          <a href={`/blog/${featured.slug}`} class="mt-8 inline-flex items-center gap-3 border-b border-ink pb-1 text-[11px] font-semibold uppercase tracking-[0.22em] transition hover:opacity-70">
+            Lire l'article
+            <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" aria-hidden="true">
+              <path d="M8 16 16 8M9 8h7v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </a>
+        </div>
+      </header>
+    ) : null}
+
+    <section class="mb-14 border-y border-ink/10 py-8">
+      <div class="flex flex-wrap justify-center gap-8 text-[11px] font-semibold uppercase tracking-[0.2em]">
+        <a href="/blog" class:list={[!selectedTheme ? 'text-ink' : 'text-ink/55 hover:text-ink', 'transition']}>Tout voir</a>
+        {themes.map((theme) => (
+          <a
+            href={`/blog?theme=${encodeURIComponent(theme)}`}
+            class:list={[
+              selectedTheme === theme ? 'text-ink' : 'text-ink/55 hover:text-ink',
+              'transition',
+            ]}
+          >
+            {theme}
+          </a>
+        ))}
+      </div>
+    </section>
+
+    {cards.length ? (
+      <section class="grid grid-cols-1 gap-x-8 gap-y-14 md:grid-cols-2 lg:grid-cols-3 lg:gap-x-10 lg:gap-y-20">
+        {cards.map((p, idx) => (
+          <article class:list={['group', idx % 3 === 1 && 'lg:translate-y-8']}>
+            <a href={`/blog/${p.slug}`} class="block">
+              <div class="mb-6 overflow-hidden rounded-2xl border border-ink/10 bg-paper shadow-soft">
+                <div class="aspect-[3/4] overflow-hidden bg-mist">
+                  <img src={p.coverImage} alt={p.title} class="h-full w-full object-cover grayscale-[20%] transition duration-700 group-hover:scale-105 group-hover:grayscale-0" loading="lazy" />
+                </div>
+              </div>
+              <div class="space-y-3">
+                <div class="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink/55">{p.theme}</div>
+                <h2 class="font-display text-3xl leading-tight tracking-tight transition group-hover:opacity-75">{p.title}</h2>
+                <p class="text-sm leading-relaxed text-ink/70">{p.description}</p>
+                <div class="flex items-center justify-between border-t border-ink/10 pt-3 text-[10px] uppercase tracking-[0.18em] text-ink/50">
+                  <span>{p.dateLabel || '—'}</span>
+                  <span>{p.readMinutes} min</span>
+                </div>
+              </div>
+            </a>
+          </article>
+        ))}
+      </section>
+    ) : (
+      <section class="rounded-3xl border border-ink/10 bg-mist p-10 text-center text-ink/70">
+        Aucun article ne correspond à ce filtre pour le moment.
+      </section>
+    )}
+
+    <section class="mt-24 rounded-3xl border border-ink/10 bg-mist/60 px-6 py-14 text-center sm:px-10">
+      <div class="text-[11px] font-semibold uppercase tracking-[0.24em] text-ink/55">Newsletter</div>
+      <h2 class="mt-4 font-display text-4xl tracking-tight sm:text-5xl">Lettre d'information</h2>
+      <p class="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-ink/70">
+        Rejoignez notre communauté pour recevoir des contenus sur la médecine esthétique, la préparation des actes et les suites post-procédure.
+      </p>
+      <form class="mx-auto mt-8 flex max-w-xl flex-col gap-3 sm:flex-row" onsubmit="return false">
+        <input
+          type="email"
+          required
+          placeholder="Votre adresse email"
+          class="w-full rounded-full border border-ink/15 bg-paper px-5 py-3 text-sm text-ink placeholder:text-ink/45 focus:border-ink/30 focus:ring-0"
+        />
+        <button type="submit" class="btn btn-pill btn-md btn-primary">S'inscrire</button>
+      </form>
+    </section>
   </section>
 </BaseLayout>

@@ -1,65 +1,65 @@
 ---
 title: Mesotherapie
-description: 'Mesotherapie en medecine esthetique: definition, indications, protocole, suites et limites a connaitre.'
+description: 'Mésothérapie en médecine esthétique : définition, indications, protocole, suites et limites à connaître.'
 category: medecine-esthetique
 order: 4
 ---
 
 ## En bref
 
-- Objectif: soutenir la qualite de peau par micro-injections superficielles.
-- Indication: definie selon l'etat cutane et les objectifs.
-- Protocole: souvent en plusieurs seances avec suivi.
-- Suites habituelles: rougeurs ponctuelles, sensibilite locale possible.
-- Resultat: progressif et variable selon les patients.
+- Objectif : soutenir la qualité de peau par micro-injections superficielles.
+- Indication : définie selon l'état cutané et les objectifs.
+- Protocole : souvent en plusieurs séances avec suivi.
+- Suites habituelles : rougeurs ponctuelles, sensibilité locale possible.
+- Résultat : progressif et variable selon les patients.
 
 ## Objectif
 
-La mesotherapie correspond a des micro-injections superficielles realisees selon un protocole personnalise. Elle peut contribuer a ameliorer certains parametres de peau lorsque l'indication est appropriee.
+La mésothérapie correspond à des micro-injections superficielles réalisées selon un protocole personnalisé. Elle peut contribuer à améliorer certains paramètres de peau lorsque l'indication est appropriée.
 
 ## Pour qui ?
 
-Cette technique peut etre discutee pour des patients souhaitant une approche progressive de la qualite cutanee. L'indication repose sur l'examen clinique, les antecedents et les attentes.
+Cette technique peut être discutée pour des patients souhaitant une approche progressive de la qualité cutanée. L'indication repose sur l'examen clinique, les antécédents et les attentes.
 
-## Contre-indications et precautions
+## Contre-indications et précautions
 
-- Infection ou inflammation de la zone: geste reporte.
-- Grossesse/allaitement: decision medicale individualisee.
-- Allergies, traitements en cours, maladies chroniques: informations a partager en consultation.
-- Les peaux sensibles necessitent des precautions specifiques.
+- Infection ou inflammation de la zone : geste reporté.
+- Grossesse/allaitement : décision médicale individualisée.
+- Allergies, traitements en cours, maladies chroniques : informations à partager en consultation.
+- Les peaux sensibles nécessitent des précautions spécifiques.
 
-## Deroule
+## Déroulé
 
 1. Consultation et confirmation de l'indication.
-2. Definition des zones et du protocole.
-3. Realisation de la seance puis consignes adaptees.
+2. Définition des zones et du protocole.
+3. Réalisation de la séance puis consignes adaptées.
 
 ## Suites
 
-De petites rougeurs, une sensibilite locale ou de discrets bleus peuvent etre observes. Les suites varient selon la zone et la reactivite individuelle.
+De petites rougeurs, une sensibilité locale ou de discrets bleus peuvent être observés. Les suites varient selon la zone et la réactivité individuelle.
 
-## Risques / effets indesirables possibles
+## Risques / effets indésirables possibles
 
-Comme pour tout acte medical, des effets secondaires transitoires peuvent survenir. Les complications plus rares et les signes d'alerte sont expliques avant le geste.
+Comme pour tout acte médical, des effets secondaires transitoires peuvent survenir. Les complications plus rares et les signes d'alerte sont expliqués avant le geste.
 
-## Resultat et duree
+## Résultat et durée
 
-Le resultat est progressif et non instantane. La duree de l'effet depend du protocole, du terrain cutane et des habitudes de vie.
+Le résultat est progressif et non instantané. La durée de l'effet dépend du protocole, du terrain cutané et des habitudes de vie.
 
 ## Alternatives
 
-Selon l'objectif clinique, d'autres options peuvent etre discutees: soins topiques, autres techniques de medecine esthetique, ou abstention therapeutique.
+Selon l'objectif clinique, d'autres options peuvent être discutées : soins topiques, autres techniques de médecine esthétique, ou abstention thérapeutique.
 
-## Questions frequentes
+## Questions fréquentes
 
-### Quelle difference avec un skinbooster ?
+### Quelle différence avec un skinbooster ?
 
-Ces approches ne poursuivent pas exactement les memes objectifs ni les memes protocoles. Le choix depend de l'examen clinique.
+Ces approches ne poursuivent pas exactement les mêmes objectifs ni les mêmes protocoles. Le choix dépend de l'examen clinique.
 
 ### Est-ce douloureux ?
 
-La sensibilite est variable. Des mesures de confort peuvent etre proposees selon la zone et votre tolerance.
+La sensibilité est variable. Des mesures de confort peuvent être proposées selon la zone et votre tolérance.
 
 ### Quand voit-on les effets ?
 
-L'evolution est progressive et se juge avec le recul des seances, selon votre reponse individuelle.
+L'évolution est progressive et se juge avec le recul des séances, selon votre réponse individuelle.

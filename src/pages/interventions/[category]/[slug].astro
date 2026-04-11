@@ -6,9 +6,11 @@ import { listPublicAvantApresCases, type AvantApresCaseView } from '@/lib/cms/av
 import { getPublicInterventionBySlug } from '@/lib/cms/interventions';
 import { renderMarkdown } from '@/lib/markdown';
 import InterventionBlocks from '@/components/InterventionBlocks.astro';
+import PremiumInterventionPage from '@/components/interventions/PremiumInterventionPage.astro';
 import { listLinkedBlogSlugsForIntervention, listPublicBlogPosts } from '@/lib/cms/blog';
 import { getCollection } from 'astro:content';
 import { interventionCategoryKeys, type InterventionCategoryKey } from '@/lib/interventions';
+import { premiumInterventionPages } from '@/lib/interventions/premiumPages';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 
@@ -53,19 +55,25 @@ const hasBlocks = Array.isArray(dbItem?.content_blocks) && (dbItem?.content_bloc
 const contentHtml = dbItem && !hasBlocks ? renderMarkdown(dbItem.body_md) : null;
 const rendered = entry ? await entry.render() : null;
 const Content = rendered?.Content;
+const premiumPageData = category === 'medecine-esthetique' ? premiumInterventionPages[slug] : null;
 type AvantApresCaseWithIntervention = AvantApresCaseView & {
   intervention_category?: string | null;
   intervention_slug?: string | null;
   case_number?: number | null;
   description?: string | null;
 };
-let relatedCases = (await listPublicAvantApresCases()) as AvantApresCaseWithIntervention[];
-relatedCases = relatedCases.filter(
-  (item) => item.intervention_category === category && item.intervention_slug === slug,
-);
-relatedCases = relatedCases
-  .sort((a, b) => (a.case_number ?? 999) - (b.case_number ?? 999))
-  .slice(0, 4);
+let relatedCases: AvantApresCaseWithIntervention[] = [];
+try {
+  relatedCases = (await listPublicAvantApresCases()) as AvantApresCaseWithIntervention[];
+  relatedCases = relatedCases.filter(
+    (item) => item.intervention_category === category && item.intervention_slug === slug,
+  );
+  relatedCases = relatedCases
+    .sort((a, b) => (a.case_number ?? 999) - (b.case_number ?? 999))
+    .slice(0, 4);
+} catch {
+  relatedCases = [];
+}
 
 let relatedArticles: { title: string; description: string; href: string }[] = [];
 if (dbItem) {
@@ -86,9 +94,33 @@ if (dbItem) {
 ---
 
 <BaseLayout title={title} description={description} noindex={dbItem?.status === 'brouillon' && cmsAuthed}>
+  {premiumPageData ? (
+    <PremiumInterventionPage
+      categoryLabel={premiumPageData.categoryLabel}
+      titleStart={premiumPageData.titleStart}
+      titleEmphasis={premiumPageData.titleEmphasis}
+      heroDescription={premiumPageData.heroDescription}
+      heroImageSrc={premiumPageData.heroImageSrc}
+      heroImageAlt={premiumPageData.heroImageAlt}
+      quickFacts={premiumPageData.quickFacts}
+      objectiveParagraphs={premiumPageData.objectiveParagraphs}
+      forWho={premiumPageData.forWho}
+      processParagraphs={premiumPageData.processParagraphs}
+      contraindicationIntro={premiumPageData.contraindicationIntro}
+      contraindications={premiumPageData.contraindications}
+      risksText={premiumPageData.risksText}
+      faq={premiumPageData.faq}
+      ctaTitle={premiumPageData.ctaTitle}
+      ctaEmphasis={premiumPageData.ctaEmphasis}
+      ctaBody={premiumPageData.ctaBody}
+      phoneDisplay={site.contact.phoneDisplay}
+      telHref={site.links.tel}
+      whatsappHref={site.links.whatsapp}
+    />
+  ) : (
   <section class="mx-auto max-w-3xl px-4 py-14">
     <a href={`/interventions/${category}`} class="text-sm font-semibold text-ink/70 hover:text-ink">
-      ← Retour a la categorie
+      ← Retour à la catégorie
     </a>
     <h1 class="mt-3 font-display text-4xl tracking-tight">{pageTitle}</h1>
     <p class="mt-4 text-lg text-ink/75">{description}</p>
@@ -106,13 +138,14 @@ if (dbItem) {
       </div>
     ) : null}
 
-    <div class="mt-8 rounded-3xl border border-ink/10 bg-mist p-6 text-sm text-ink/75">
+    <div class="mt-8 rounded-3xl border border-ink/10 bg-mist/70 p-6 text-sm text-ink/75 shadow-soft">
       <div class="font-semibold text-ink">Prendre rendez-vous</div>
-      <div class="mt-2">Telephone: {site.contact.phoneDisplay}</div>
+      <div class="mt-2">Téléphone : {site.contact.phoneDisplay}</div>
       <div class="mt-4 flex flex-col gap-3 sm:flex-row">
         <a href={site.links.tel} class="rounded-full bg-ink px-5 py-2.5 text-center font-semibold text-paper">Appeler</a>
         <a href={site.links.whatsapp} class="rounded-full border border-ink/15 bg-paper px-5 py-2.5 text-center font-semibold text-ink">WhatsApp</a>
       </div>
+      <div class="mt-4 text-xs text-ink/65">Réponse selon disponibilités.</div>
     </div>
 
     {dbItem && hasBlocks ? (
@@ -191,4 +224,5 @@ if (dbItem) {
       Information générale - ne remplace pas une consultation. Les résultats et les suites varient selon chaque patient.
     </div>
   </section>
+  )}
 </BaseLayout>

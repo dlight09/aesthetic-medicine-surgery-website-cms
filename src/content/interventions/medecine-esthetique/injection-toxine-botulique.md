@@ -1,65 +1,65 @@
 ---
 title: 'Injection de toxine botulique'
-description: "Rides d'expression: indications, deroule, suites, effets possibles et questions frequentes en consultation."
+description: "Rides d'expression : indications, déroulé, suites, effets possibles et questions fréquentes en consultation."
 category: medecine-esthetique
 order: 1
 ---
 
 ## En bref
 
-- Objectif: attenuer certaines rides d'expression sans figer le visage.
-- Zones frequentes: front, glabelle, patte d'oie (selon examen clinique).
-- Duree de seance: en general courte, variable selon les zones.
-- Suites habituelles: rougeur ponctuelle, sensibilite locale, petits bleus possibles.
-- Resultat: progressif, variable selon les patients.
+- Objectif : atténuer certaines rides d'expression sans figer le visage.
+- Zones fréquentes : front, glabelle, patte d'oie (selon examen clinique).
+- Durée de séance : en général courte, variable selon les zones.
+- Suites habituelles : rougeur ponctuelle, sensibilité locale, petits bleus possibles.
+- Résultat : progressif, variable selon les patients.
 
 ## Objectif
 
-La toxine botulique est utilisee pour diminuer l'hypercontraction de certains muscles responsables des rides d'expression. L'objectif est un resultat harmonieux, adapte a votre dynamique du visage.
+La toxine botulique est utilisée pour diminuer l'hypercontraction de certains muscles responsables des rides d'expression. L'objectif est un résultat harmonieux, adapté à votre dynamique du visage.
 
 ## Pour qui ?
 
-L'indication depend de l'examen clinique, de la qualite de peau, de la mobilite musculaire et des attentes. Une consultation est necessaire pour verifier que ce geste est adapte a votre situation.
+L'indication dépend de l'examen clinique, de la qualité de peau, de la mobilité musculaire et des attentes. Une consultation est nécessaire pour vérifier que ce geste est adapté à votre situation.
 
-## Contre-indications et precautions
+## Contre-indications et précautions
 
-- Infection ou irritation cutanee sur la zone a traiter: geste reporte.
-- Grossesse et allaitement: indication discutee au cas par cas.
-- Certaines pathologies neuromusculaires ou traitements en cours: a signaler.
-- Antecedents medicaux, allergies et traitements anticoagulants: toujours preciser en consultation.
+- Infection ou irritation cutanée sur la zone à traiter : geste reporté.
+- Grossesse et allaitement : indication discutée au cas par cas.
+- Certaines pathologies neuromusculaires ou traitements en cours : à signaler.
+- Antécédents médicaux, allergies et traitements anticoagulants : toujours préciser en consultation.
 
-## Deroule
+## Déroulé
 
 1. Consultation et analyse des zones d'expression.
-2. Plan de traitement avec doses et points d'injection adaptes.
-3. Injections ciblees, puis consignes post-acte personnalisees.
+2. Plan de traitement avec doses et points d'injection adaptés.
+3. Injections ciblées, puis consignes post-acte personnalisées.
 
 ## Suites
 
-Les suites sont le plus souvent simples: rougeurs discretes, sensibilite locale ou petits hematomes possibles. Le resultat apparait progressivement et n'est pas immediat.
+Les suites sont le plus souvent simples : rougeurs discrètes, sensibilité locale ou petits hématomes possibles. Le résultat apparaît progressivement et n'est pas immédiat.
 
-## Risques / effets indesirables possibles
+## Risques / effets indésirables possibles
 
-Comme pour tout acte medical, des effets transitoires peuvent survenir. Des effets moins frequents existent et sont expliques en consultation, avec conduite a tenir en cas de symptome inhabituel.
+Comme pour tout acte médical, des effets transitoires peuvent survenir. Des effets moins fréquents existent et sont expliqués en consultation, avec conduite à tenir en cas de symptôme inhabituel.
 
-## Resultat et duree
+## Résultat et durée
 
-Le resultat est temporaire et varie selon les patients, la zone traitee, les doses utilisees et la reactivite musculaire. Le rythme d'entretien est defini au cas par cas.
+Le résultat est temporaire et varie selon les patients, la zone traitée, les doses utilisées et la réactivité musculaire. Le rythme d'entretien est défini au cas par cas.
 
 ## Alternatives
 
-Selon l'indication, des alternatives peuvent etre discutees: mesures de prevention, soins de peau, autres techniques medicales ou absence d'indication d'acte.
+Selon l'indication, des alternatives peuvent être discutées : mesures de prévention, soins de peau, autres techniques médicales ou absence d'indication d'acte.
 
-## Questions frequentes
+## Questions fréquentes
 
 ### Est-ce que le visage est fige ?
 
-L'objectif est de conserver l'expression du visage tout en reduisant certaines rides d'expression. Le plan est personnalise pour eviter un rendu artificiel.
+L'objectif est de conserver l'expression du visage tout en réduisant certaines rides d'expression. Le plan est personnalisé pour éviter un rendu artificiel.
 
 ### Combien de temps cela dure ?
 
-La duree est variable selon les patients et les zones. Cette question est reprise en detail pendant la consultation pour definir un suivi adapte.
+La durée est variable selon les patients et les zones. Cette question est reprise en détail pendant la consultation pour définir un suivi adapté.
 
-### Peut-on reprendre ses activites rapidement ?
+### Peut-on reprendre ses activités rapidement ?
 
-Dans de nombreux cas, la reprise est rapide. Les consignes post-acte sont adaptees a votre situation et a votre quotidien.
+Dans de nombreux cas, la reprise est rapide. Les consignes post-acte sont adaptées à votre situation et à votre quotidien.
