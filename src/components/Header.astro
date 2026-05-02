@@ -58,6 +58,23 @@ try {
 }
 
 const megaInterventions = interventionCategories.map((c) => {
+  const normalize = (value: string) =>
+    String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+
+  const seoCategoryAliases: Record<InterventionCategoryKey, string[]> = {
+    'medecine-esthetique': ['medecine esthetique'],
+    visage: ['visage'],
+    silhouette: ['silhouette'],
+    seins: ['seins'],
+    'chirurgie-reparatrice': ['chirurgie reparatrice'],
+    'chirurgie-de-la-main': ['chirurgie de la main'],
+    intime: ['intime'],
+  };
+
   const cmsEntries = interventionEntries
     .filter((i) => i.category === c.key)
     .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
@@ -69,13 +86,8 @@ const megaInterventions = interventionCategories.map((c) => {
 
   const seoEntries = Object.entries(seoInterventionPages)
     .filter(([, p]) => {
-      const label = p.categoryLabel.toLowerCase();
-      return (
-        (c.key === 'visage' && label === 'visage') ||
-        (c.key === 'silhouette' && label === 'silhouette') ||
-        (c.key === 'seins' && label === 'seins') ||
-        (c.key === 'intime' && label === 'intime')
-      );
+      const label = normalize(p.categoryLabel);
+      return seoCategoryAliases[c.key as InterventionCategoryKey].includes(label);
     })
     .map(([slug, p]) => ({
       slug,
@@ -83,7 +95,7 @@ const megaInterventions = interventionCategories.map((c) => {
       href: `/interventions/${c.key}/${slug}`,
     }));
 
-  const prefersSeo = c.key === 'visage' || c.key === 'silhouette' || c.key === 'seins' || c.key === 'intime';
+  const prefersSeo = true;
   const merged = prefersSeo ? [...seoEntries, ...cmsEntries] : [...cmsEntries, ...seoEntries];
   const seen = new Set<string>();
   const entries = merged
