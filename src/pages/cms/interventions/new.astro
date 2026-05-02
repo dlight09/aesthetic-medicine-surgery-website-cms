@@ -26,7 +26,6 @@ const sectionLabels = [
       <input type="hidden" name="content_blocks" value="[]" />
       <input type="hidden" name="body_md" value="" />
       <input type="hidden" name="category" value={interventionCategories[0]?.key ?? 'visage'} />
-      <input type="hidden" name="order" value="" />
       <input type="hidden" name="seo_title" value="" />
       <input type="hidden" name="seo_description" value="" />
       <input type="hidden" name="status" value="brouillon" />
@@ -187,7 +186,7 @@ const sectionLabels = [
         title,
         description: String(formData.get('description') ?? '').trim() || String(formData.get('seo_intro') ?? '').trim(),
         category,
-        order: String(formData.get('order') ?? '').trim(),
+        order: '',
         slug: String(formData.get('slug') ?? '').trim(),
         seo_title: String(formData.get('seo_title') ?? '').trim(),
         seo_description: String(formData.get('seo_description') ?? '').trim(),

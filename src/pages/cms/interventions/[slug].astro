@@ -52,7 +52,6 @@ function getSection(key: string) {
       <input type="hidden" name="content_blocks" value="[]" />
       <input type="hidden" name="body_md" value="" />
       <input type="hidden" name="category" value={item.category} />
-      <input type="hidden" name="order" value={item.order ?? ''} />
       <input type="hidden" name="seo_title" value={item.seo_title ?? ''} />
       <input type="hidden" name="seo_description" value={item.seo_description ?? ''} />
       <input type="hidden" name="status" value={item.status} />
@@ -120,6 +119,15 @@ function getSection(key: string) {
       <div class="mt-5 grid gap-2">
         <button type="submit" value="draft" name="intent" form="intervention-form" class="btn btn-pill btn-md btn-primary">Enregistrer</button>
         <button type="submit" value="publish" name="intent" form="intervention-form" class="btn btn-pill btn-md btn-secondary">Publier</button>
+        <a
+          id="public-preview-link"
+          href={`/interventions/${item.category}/${item.slug}`}
+          target="_blank"
+          rel="noreferrer"
+          class="btn btn-pill btn-md btn-secondary"
+        >
+          Voir la page publique
+        </a>
       </div>
       <div id="intervention-status" class="mt-3 text-xs text-ink/60"></div>
       <div id="intervention-error" class="mt-2 text-xs text-rose-600"></div>
@@ -204,7 +212,7 @@ function getSection(key: string) {
         title,
         description: String(formData.get('description') ?? '').trim(),
         category,
-        order: String(formData.get('order') ?? '').trim(),
+        order: item.order ?? '',
         seo_title: String(formData.get('seo_title') ?? '').trim(),
         seo_description: String(formData.get('seo_description') ?? '').trim(),
         template_kind: 'seo_v2',
@@ -220,6 +228,10 @@ function getSection(key: string) {
         const res = await fetch(`/api/cms/interventions/${encodeURIComponent(slug)}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!res.ok) throw new Error(await res.text().catch(() => 'save'));
         if (statusEl) statusEl.textContent = 'Enregistre.';
+        const link = document.getElementById('public-preview-link');
+        if (link instanceof HTMLAnchorElement) {
+          link.href = `/interventions/${category}/${slug}`;
+        }
       } catch {
         if (errorEl) errorEl.textContent = 'Erreur de sauvegarde.';
         if (statusEl) statusEl.textContent = '';
