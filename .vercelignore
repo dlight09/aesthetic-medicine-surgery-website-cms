@@ -3,3 +3,14 @@ dist
 .astro
 public/preview/avant-apres/pdf-extract/raw
 Dr_Sirine_Soussi_Parcours.pdf
+.git
+.github
+clientcontent
+docs
+*.log
+.env*
+public/preview/avant-apres/pdf-extract
+public/preview/avant-apres/curated
+*.ppm
+*.pbm
+*~
