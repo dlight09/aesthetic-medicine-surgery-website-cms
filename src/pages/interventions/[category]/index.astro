@@ -9,6 +9,7 @@ import {
 } from '@/lib/interventions';
 import { listPublicInterventions } from '@/lib/cms/interventions';
 import { getCollection } from 'astro:content';
+import { seoInterventionPages } from '@/lib/interventions/seoPages';
 
 const rawCategory = String(Astro.params.category ?? '');
 const category = (interventionCategoryKeys as readonly string[]).includes(rawCategory)
@@ -64,6 +65,31 @@ const introByCategory: Partial<Record<InterventionCategoryKey, string>> = {
 };
 const pageDescription = pageDescriptionByCategory[category] ?? `Interventions - ${title}.`;
 const categoryIntro = introByCategory[category] ?? null;
+
+const seoFallbackItems = Object.entries(seoInterventionPages)
+  .filter(([, p]) => {
+    const label = p.categoryLabel.toLowerCase();
+    return (
+      (category === 'visage' && label === 'visage') ||
+      (category === 'silhouette' && label === 'silhouette') ||
+      (category === 'seins' && label === 'seins') ||
+      (category === 'intime' && label === 'intime')
+    );
+  })
+  .map(([slug, p]) => {
+    const title = p.breadcrumb.split('›').pop()?.trim() || p.h1;
+    return {
+      title,
+      description: p.intro,
+      slug,
+      category,
+      order: null,
+    };
+  });
+
+if (!items.length && seoFallbackItems.length) {
+  items = seoFallbackItems;
+}
 ---
 
 <BaseLayout title={title} description={pageDescription}>

@@ -2,267 +2,228 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { site } from '@/lib/site';
 import { interventionCategories, interventionCategoryHref } from '@/lib/interventions';
+import type { InterventionCategoryKey } from '@/lib/interventions';
+
+const proofChips = [
+  'Diplômée Faculté de Médecine de Tunis',
+  'Fellowship Paris 2016–2019',
+  'Ancienne AHU · Institut Kassab',
+  'Ordre des Médecins n° 22356',
+];
+
+const metrics = [
+  {
+    value: '10+',
+    label: 'Années de formation et de pratique chirurgicale',
+  },
+  {
+    value: '4',
+    label: 'Cliniques parisiennes de référence — fellowships 2016–2019',
+  },
+  {
+    value: '3',
+    label: "Années d'assistanat à l'Institut Kassab",
+  },
+  {
+    value: '100%',
+    label: 'Des interventions réalisées en clinique agréée, Tunis',
+  },
+];
+
+const interventions: Array<{ key: InterventionCategoryKey; title: string; text: string }> = [
+  {
+    key: 'visage',
+    title: 'Chirurgie du visage',
+    text: 'Rhinoplastie, blépharoplastie, otoplastie, lifting, lipofilling',
+  },
+  {
+    key: 'seins',
+    title: 'Chirurgie des seins',
+    text: 'Augmentation, réduction, lifting, lipofilling mammaire',
+  },
+  {
+    key: 'silhouette',
+    title: 'Chirurgie de la silhouette',
+    text: 'Liposuccion, abdominoplastie, lifting des bras et cuisses',
+  },
+  {
+    key: 'chirurgie-de-la-main',
+    title: 'Chirurgie de la main',
+    text: 'Canal carpien, tendons, malformations, microchirurgie',
+  },
+  {
+    key: 'medecine-esthetique',
+    title: 'Médecine esthétique',
+    text: 'Injections, acide hyaluronique, toxine botulique',
+  },
+];
+
+const interventionVisuals = Object.fromEntries(
+  interventionCategories.map((item) => [item.key, item.thumbnailSrc]),
+) as Record<InterventionCategoryKey, string>;
+
+const philosophyCards = [
+  {
+    title: "L'art du détail",
+    text: "Une passion pour les formes et les proportions qui guide chaque intervention, du plan opératoire au dernier geste.",
+  },
+  {
+    title: 'Sécurité absolue',
+    text: "La sécurité du patient prime sur tout. Je ne pratique que les interventions pour lesquelles l'indication est juste.",
+  },
+  {
+    title: 'Résultats naturels',
+    text: "Sublimer sans transformer. Respecter l'identité de chaque corps, comme un sculpteur respecte la matière.",
+  },
+];
+
+const testimonials = [
+  {
+    stars: '★★★★★',
+    title: 'Cynthia Gamber',
+    meta: 'Rhinoplastie secondaire · il y a 12 semaines',
+    quote:
+      "Elle a sauvé mon visage. J'avais effectué une rhinoplastie en Turquie qui avait été un désastre — elle a su tout reprendre et faire le nez que je désirais depuis toujours. Aucune cicatrice visible. Elle a des mains en or. J'espère qu'un jour elle sera très connue dans le monde. Allez-y les yeux fermés !",
+  },
+  {
+    stars: '★★★★★',
+    title: 'Ju · Local Guide',
+    meta: 'Liposuccion + lipofilling · il y a 6 semaines',
+    quote:
+      "Je recommande le Dr Soussi les yeux fermés. Elle a sublimé ma silhouette. Très à l'écoute, professionnelle et rassurante. Elle m'a clairement expliqué ce qui était possible ou non selon mon corps, sans jamais promettre l'impossible.",
+  },
+  {
+    stars: '★★★★★',
+    title: 'Steph Pyares',
+    meta: 'Abdominoplastie · il y a 6 semaines',
+    quote:
+      "Cette femme a des mains de fée. On voit qu'elle aime la perfection et que tout soit carré, autant en salle d'opération que dans la chambre. Le fait de passer directement par elle sur WhatsApp est bien meilleur. Un grand merci.",
+  },
+  {
+    stars: '★★★★★',
+    title: 'Cécile D.',
+    meta: 'Chirurgie esthétique',
+    quote:
+      "Mon intervention s'est déroulée dans une clinique avec un personnel accueillant, bienveillant, avec le Dr Soussi, merveilleuse chirurgienne, qui a fait un travail remarquable.",
+  },
+];
 ---
 
 <BaseLayout title="Accueil" description={site.description}>
-  <section class="grain relative overflow-hidden">
-    <div class="absolute inset-0 bg-[radial-gradient(900px_circle_at_20%_20%,rgba(185,111,84,0.20),transparent_55%),radial-gradient(900px_circle_at_80%_30%,rgba(231,219,200,0.55),transparent_60%)]"></div>
-    <div class="relative mx-auto max-w-6xl px-4 py-14 sm:py-20">
-      <div class="grid items-center gap-10 sm:grid-cols-12">
-        <div class="sm:col-span-6">
-          <div class="max-w-2xl">
-            <p class="text-sm font-semibold text-ink/70">
-              Chirurgie plastique, esthétique et reconstructrice — chirurgie de la main
-            </p>
-            <h1 class="mt-3 font-display text-4xl tracking-tight sm:text-5xl">
-              Une approche précise, naturelle et personnalisée à {site.contact.city}.
-            </h1>
-            <p class="mt-5 text-lg text-ink/75">
-              Médecine esthétique, visage, silhouette, seins, chirurgie réparatrice et chirurgie de la main.
-              Information claire et rendez-vous par téléphone ou WhatsApp.
-            </p>
+  <section class="relative overflow-hidden bg-paper">
+    <div class="absolute inset-0 bg-[radial-gradient(70rem_35rem_at_14%_10%,rgba(231,219,200,0.45),transparent_62%),radial-gradient(60rem_32rem_at_88%_18%,rgba(185,111,84,0.12),transparent_62%)]"></div>
+    <div class="relative mx-auto grid max-w-6xl gap-8 px-4 py-14 lg:grid-cols-[1.03fr_0.97fr] lg:items-center lg:py-20" data-reveal-group="hero">
+      <div class="space-y-7">
+        <div class="section-label reveal text-ink/55" data-reveal>CHIRURGIENNE PLASTICIENNE · TUNIS, LES BERGES DU LAC</div>
+        <h1 class="home-name reveal" data-reveal>Dr Sirine Soussi</h1>
+        <p class="reveal text-xl leading-relaxed text-ink/82" data-reveal>
+          Spécialiste en chirurgie plastique, esthétique, reconstructrice & chirurgie de la main
+        </p>
+        <p class="reveal max-w-2xl text-base leading-8 text-ink/76 sm:text-lg" data-reveal>
+          Une chirurgie juste, précise et sûre — pensée pour chaque patient, jamais pour l'excès. Je vous reçois en consultation à
+          Tunis pour vous accompagner vers la meilleure décision pour vous.
+        </p>
 
-            <div class="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <a href="/contact" class="btn btn-pill btn-lg btn-primary home-cta-primary">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                    class="-ml-1"
-                  >
-                    <path
-                      d="M19 10.5C19 6.91 16.09 4 12.5 4h-1C7.91 4 5 6.91 5 10.5v3C5 17.09 7.91 20 11.5 20h1"
-                      stroke="currentColor"
-                      stroke-width="1.6"
-                      stroke-linecap="round"
-                    />
-                    <path
-                      d="M14.5 16.5 16 18l3-3"
-                      stroke="currentColor"
-                      stroke-width="1.6"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                  Prendre rendez-vous
-                </a>
-                <a href={site.links.tel} class="btn btn-pill btn-lg btn-secondary">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                    class="-ml-1"
-                  >
-                    <path
-                      d="M8.5 3.75 6.75 6.5c-.3.5-.2 1.14.2 1.56l1.28 1.29a1.5 1.5 0 0 1 .26 1.74c-.57 1.14.57 3.14 1.6 4.17 1.03 1.03 3.03 2.17 4.17 1.6a1.5 1.5 0 0 1 1.74.26l1.29 1.28c.42.4 1.06.5 1.56.2l2.75-1.75"
-                      stroke="currentColor"
-                      stroke-width="1.6"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                  Appeler
-                </a>
-              </div>
-              <a href={site.links.whatsapp} class="link inline-flex items-center gap-1.5 text-sm">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M12 20c-1.5 0-2.9-.4-4.1-1.1l-2.5.8.8-2.4A7.4 7.4 0 0 1 4.6 12 7.4 7.4 0 1 1 12 19.4Z"
-                    stroke="currentColor"
-                    stroke-width="1.4"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M9.75 9.5c0-.25.3-.6.55-.6h.4c.1 0 .2.05.25.15l.5 1c.05.1.05.25-.05.35l-.35.35a.2.2 0 0 0 0 .3c.35.35 1.3 1.05 1.9 1.25.15.05.25 0 .35-.1l.5-.6c.1-.1.2-.1.3-.05l1.05.35c.1.05.15.15.15.25v.45c0 .2-.2.55-.45.7-.45.25-1.1.35-1.85.15-.95-.25-2.05-.9-2.95-1.8-.9-.9-1.5-1.95-1.8-2.9-.2-.75-.1-1.4.15-1.85.15-.25.5-.45.7-.45Z"
-                    fill="currentColor"
-                  />
-                </svg>
-                WhatsApp
-              </a>
+        <div class="grid gap-3 sm:grid-cols-2" data-reveal-group="chips">
+          {proofChips.map((item) => (
+            <div class="chip-proof reveal fx-chip rounded-2xl border border-ink/10 bg-paper/88 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-ink/72 shadow-soft" data-reveal>
+              {item}
             </div>
-
-            <div class="mt-2 text-xs text-ink/60">Réponse selon disponibilités.</div>
-
-            <div class="mt-8 grid gap-3 text-sm text-ink/70 sm:grid-cols-3">
-              <div class="rounded-2xl border border-ink/10 bg-paper/70 p-4">Consultation et indication adaptée</div>
-              <div class="rounded-2xl border border-ink/10 bg-paper/70 p-4">Résultat naturel et harmonieux</div>
-              <div class="rounded-2xl border border-ink/10 bg-paper/70 p-4">Suivi et information claire</div>
-            </div>
-          </div>
+          ))}
         </div>
 
-        <div class="sm:col-span-6">
-          <div class="fx-frame fx-glow fx-lift relative overflow-hidden rounded-3xl bg-paper">
-            <div class="hero-slider relative h-[18rem] overflow-hidden sm:h-[24rem]">
-              <img
-                src="/images/placeholders/hero-clinic-01.webp"
-                width="1536"
-                height="1024"
-                alt="Cabinet médical, ambiance lumineuse et apaisante"
-                loading="eager"
-                fetchpriority="high"
-                class="hero-slide hero-slide--1 h-full w-full object-cover"
-              />
-              <img
-                src="/images/placeholders/clinic.webp"
-                width="1536"
-                height="1024"
-                alt="Cabinet médical, espace de consultation"
-                loading="lazy"
-                class="hero-slide hero-slide--2 h-full w-full object-cover"
-              />
-              <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_circle_at_30%_20%,rgba(248,245,240,0.15),transparent_55%),linear-gradient(to_top,rgba(248,245,240,0.35),transparent_55%)]"></div>
-            </div>
-          </div>
-          <div class="mt-3 flex items-center justify-between text-xs text-ink/60">
-            <span>Cabinet - {site.contact.city}</span>
-            <a href="/contact" class="link">Rendez-vous →</a>
-          </div>
+        <div class="reveal flex flex-wrap gap-3" data-reveal>
+          <a href="/contact" class="btn btn-pill btn-lg btn-primary fx-cta-sheen">Prendre rendez-vous</a>
+          <a href={site.links.whatsapp} class="btn btn-pill btn-lg btn-secondary fx-cta-secondary">Appel & WhatsApp</a>
+        </div>
+      </div>
+
+      <div class="reveal fx-image-pan overflow-hidden rounded-[2rem] border border-ink/10 bg-paper shadow-lift" data-reveal>
+        <img
+          src="/images/doctor/dr-sirine-soussi-01.png"
+          width="1200"
+          height="1500"
+          alt="Portrait du Dr Sirine Soussi"
+          loading="eager"
+          fetchpriority="high"
+          class="h-[32rem] w-full object-cover sm:h-[40rem]"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-paper py-16">
+    <div class="mx-auto max-w-6xl px-4" data-reveal-group="mots">
+      <div class="section-label reveal text-ink/50" data-reveal>EN QUELQUES MOTS</div>
+      <div class="mt-5 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+        <div class="space-y-5 text-base leading-8 text-ink/78 sm:text-lg">
+          <p>
+            Formée à Tunis puis à Paris — au sein des plus grandes cliniques de la capitale française — je suis revenue en Tunisie avec
+            une conviction : que l'excellence chirurgicale n'a pas de frontières, et que chaque patient mérite une prise en charge
+            rigoureuse, personnalisée et honnête.
+          </p>
+          <p>
+            Ce qui me guide dans chaque consultation, c'est l'écoute. Comprendre ce que vous ressentez, évaluer ce qui est réalisable,
+            vous proposer la meilleure indication selon votre cas — et rien de plus. La chirurgie esthétique, telle que je la conçois,
+            doit sublimer sans dénaturer.
+          </p>
+          <a href="/dr-sirine-soussi" class="reveal inline-flex border-b border-ink/35 pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-ink/80 transition hover:border-ink hover:text-ink" data-reveal>
+            → Lire mon parcours complet
+          </a>
+        </div>
+        <div class="reveal fx-image-pan overflow-hidden rounded-[2rem] border border-ink/10 bg-paper shadow-soft" data-reveal>
+          <img
+            src="/images/about/Hopital-paris.jpg"
+            width="1200"
+            height="900"
+            alt="Hôpital Saint-Louis à Paris"
+            loading="lazy"
+            class="h-full min-h-[21rem] w-full object-cover"
+          />
         </div>
       </div>
     </div>
   </section>
 
-  <section class="mx-auto max-w-6xl px-4 py-14">
-    <div class="grid gap-10 sm:grid-cols-12">
-      <div class="sm:col-span-5">
-        <h2 class="font-display text-3xl tracking-tight">Tout savoir sur le docteur</h2>
-        <p class="mt-4 text-ink/75">
-          Je suis la Dr Sirine Soussi, chirurgienne spécialisée en chirurgie plastique, esthétique et
-          reconstructrice, avec une expertise en chirurgie de la main. Formée à la Faculté de Médecine
-          de Tunis, j’ai complété mon internat puis mon résidanat (2012-2016) en Tunisie, avec une
-          expérience hospitalière à Paris (Hôpital Saint-Louis).
-        </p>
-        <p class="mt-4 text-ink/75">
-          En 2016, j’ai soutenu une thèse sur la prise en charge du dermatofibrosarcome protubérant,
-          distinguée (hauts honneurs, félicitations du jury). Mon activité s’articule autour de la
-          chirurgie de la main et du poignet, de la reconstruction, des séquelles de brûlures et de
-          certaines pathologies cutanées.
-        </p>
-      </div>
-      <div class="sm:col-span-7">
-        <div class="fx-frame fx-glow fx-lift rounded-3xl bg-mist p-8 shadow-soft">
-          <div class="mb-5 flex items-center gap-5">
-            <img
-              src="/images/doctor/dr-sirine-soussi-01.png"
-              width="400"
-              height="500"
-              alt="Portrait du Dr Sirine Soussi"
-              loading="lazy"
-              class="h-20 w-20 shrink-0 rounded-2xl border border-ink/10 object-cover"
-            />
-            <div class="min-w-0">
-              <div class="font-display text-2xl tracking-tight">Dr Sirine Soussi</div>
-               <div class="mt-1 text-sm text-ink/70">Chirurgie plastique, esthétique, reconstructrice - chirurgie de la main</div>
-                <a href="/dr-sirine-soussi" class="link mt-2 inline-flex text-sm">
-                  En savoir plus →
-                </a>
-            </div>
-          </div>
-
-          <div class="mt-3 grid gap-4 sm:grid-cols-2">
-            <div class="rounded-2xl border border-ink/10 bg-paper/70 p-4 text-sm text-ink/75">
-              <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">En bref</div>
-              <ul class="mt-2 space-y-1">
-                <li>Spécialités: esthétique, reconstructrice, main</li>
-                <li>Expérience hospitalière: Hôpital Saint-Louis (Paris)</li>
-                <li>Faculté de Médecine de Tunis</li>
-              </ul>
-            </div>
-            <div class="rounded-2xl border border-ink/10 bg-paper/70 p-4 text-sm text-ink/75">
-              <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">Consultation</div>
-              <ul class="mt-2 space-y-1">
-                <li>Indication personnalisée</li>
-                <li>Information claire et consentement</li>
-                <li>Suivi et accompagnement</li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="mt-6 grid gap-6 sm:grid-cols-2">
-            <div>
-              <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">Spécialités</div>
-              <ul class="mt-2 space-y-1 text-sm text-ink/75">
-                <li>Chirurgie plastique, esthétique, reconstructrice</li>
-                <li>Chirurgie de la main</li>
-              </ul>
-            </div>
-            <div>
-              <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">Parcours</div>
-              <ul class="mt-2 space-y-1 text-sm text-ink/75">
-                <li>Faculté de Médecine de Tunis</li>
-                <li>Résidanat 2012-2016 (Tunisie)</li>
-                <li>Expérience: Hôpital Saint-Louis (Paris)</li>
-              </ul>
-            </div>
-            <div>
-              <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">Thèse (2016)</div>
-              <p class="mt-2 text-sm text-ink/75">
-                The Role of Plastic Surgery in the Management of Dermatofibrosarcoma Protuberans.
-              </p>
-            </div>
-            <div>
-              <div class="text-xs font-semibold uppercase tracking-wide text-ink/60">Contact</div>
-              <p class="mt-2 text-sm text-ink/75">{site.contact.phoneDisplay}</p>
-              <p class="text-sm text-ink/75">{site.contact.addressLines.join(' - ')}</p>
-            </div>
-          </div>
-
-          <div class="mt-7 flex flex-col gap-3 sm:flex-row">
-            <a href="/contact#consultation" class="btn btn-pill btn-lg btn-primary">Comprendre la consultation</a>
-            <a href="/interventions" class="btn btn-pill btn-lg btn-secondary">Voir les interventions</a>
-          </div>
-        </div>
+  <section class="bg-[#f4efe8] py-16">
+    <div class="mx-auto max-w-6xl px-4" data-reveal-group="chiffres">
+      <div class="section-label reveal text-ink/50" data-reveal>EN CHIFFRES</div>
+      <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {metrics.map((item) => (
+          <article class="reveal fx-lift-soft rounded-[1.6rem] border border-ink/10 bg-paper p-5 shadow-soft" data-reveal>
+            <div class="metric-value font-display text-5xl tracking-tight text-copper">{item.value}</div>
+            <p class="mt-3 text-sm leading-7 text-ink/74">{item.label}</p>
+          </article>
+        ))}
       </div>
     </div>
   </section>
 
-  <section class="mx-auto max-w-6xl px-4 pb-14">
-    <div class="rounded-3xl border border-ink/10 bg-paper p-8 shadow-soft">
-      <div class="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-        <div>
-          <h2 class="font-display text-2xl tracking-tight">Interventions</h2>
-          <p class="mt-2 text-ink/70">Explorer les catégories et trouver l’information adaptée.</p>
-        </div>
-         <a href="/interventions" class="btn btn-pill btn-md btn-accent">Accéder aux interventions</a>
-      </div>
-
-      <div class="mt-8 grid gap-4 sm:grid-cols-3">
-        {interventionCategories.slice(0, 6).map((c) => (
-            <a
-              href={interventionCategoryHref(c.key)}
-              class="group card-focus fx-frame fx-lift overflow-hidden rounded-2xl bg-mist"
-            >
-            <div class="relative aspect-[4/3] w-full">
+  <section class="bg-paper py-16">
+    <div class="mx-auto max-w-6xl px-4" data-reveal-group="interventions">
+      <div class="section-label reveal text-ink/50" data-reveal>MES INTERVENTIONS</div>
+      <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {interventions.map((item) => (
+          <a
+            href={interventionCategoryHref(item.key)}
+            class="reveal group fx-lift-soft fx-card-edge overflow-hidden rounded-[1.5rem] border border-ink/10 bg-mist/55 shadow-soft card-focus"
+            data-reveal
+          >
+            <div class="relative aspect-[16/10] w-full overflow-hidden">
               <img
-                src={c.thumbnailSrc}
+                src={interventionVisuals[item.key]}
                 width="1200"
                 height="900"
-                alt={c.title}
+                alt={item.title}
                 loading="lazy"
-                class="h-full w-full object-cover"
+                class="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]"
               />
-              <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,19,0.35),transparent_60%)]"></div>
+              <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,19,0.45),transparent_62%)]"></div>
             </div>
-            <div class="p-5">
-              <div class="font-display text-lg tracking-tight">{c.title}</div>
-              <div class="mt-2 text-sm text-ink/70">{c.description}</div>
-              <div class="mt-4 text-sm font-semibold text-ink/80 transition group-hover:text-ink">Découvrir →</div>
+            <div class="p-6">
+              <h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-copper">{item.title}</h2>
+              <p class="mt-3 text-sm leading-7 text-ink/76">{item.text}</p>
+              <div class="mt-4 text-sm font-semibold text-ink/78 transition group-hover:text-ink">Découvrir →</div>
             </div>
           </a>
         ))}
@@ -270,126 +231,255 @@ import { interventionCategories, interventionCategoryHref } from '@/lib/interven
     </div>
   </section>
 
-  <section class="mx-auto max-w-6xl px-4 pb-16">
-    <div class="rounded-3xl border border-ink/10 bg-paper p-8 shadow-soft">
-      <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 class="font-display text-2xl tracking-tight">Témoignages</h2>
-          <p class="mt-2 text-ink/70">Avis recueillis à la suite de consultations et interventions.</p>
-        </div>
-        <a href="/contact" class="btn btn-pill btn-md btn-secondary">Prendre rendez-vous</a>
+  <section class="bg-mist/35 py-16">
+    <div class="mx-auto max-w-6xl px-4" data-reveal-group="philo">
+      <div class="section-label reveal text-ink/50" data-reveal>MA PHILOSOPHIE</div>
+      <div class="mt-5 space-y-5 text-base leading-8 text-ink/78 sm:text-lg">
+        <p>
+          J'ai grandi dans une famille où la médecine était une vocation transmise, une présence quotidienne qui m'a appris très tôt
+          que soigner relevait avant tout d'une exigence morale — envers soi-même autant qu'envers l'autre. Mais ce qui m'a conduite
+          vers la chirurgie esthétique en particulier, c'est quelque chose de plus intime — une sensibilité aux formes, aux
+          proportions, à la beauté des choses bien faites.
+        </p>
+        <p>
+          Depuis toujours, je suis attirée par les arts plastiques, la sculpture, tout ce qui relève de la création précise et
+          réfléchie. La chirurgie plastique est, pour moi, le lieu exact où ces deux univers se rejoignent : la rigueur de la science,
+          la dextérité du geste, et le sens esthétique qui guide chaque décision.
+        </p>
+        <p>
+          Opérer, c'est sculpter. Avec la même exigence qu'un artiste qui ne pose son outil que lorsque chaque détail est juste — ni
+          trop, ni insuffisant. Cette méticulosité, je l'ai depuis l'enfance. Elle n'est pas une contrainte, c'est ce qui me définit et
+          ce qui, je crois, fait la différence dans mon travail.
+        </p>
       </div>
 
-      <div class="mt-6 grid gap-4 sm:grid-cols-3">
-        <figure class="rounded-2xl border border-ink/10 bg-mist p-5">
-          <blockquote class="text-sm text-ink/75">
-            “Écoute attentive, explications claires et suivi rassurant. Je me suis sentie en confiance.”
-          </blockquote>
-          <figcaption class="mt-4 text-xs font-semibold uppercase tracking-wide text-ink/60">
-            Consultation esthétique
-          </figcaption>
-          <a href="/avant-apres" class="link mt-4 inline-flex text-sm">Voir le résultat →</a>
-        </figure>
-        <figure class="rounded-2xl border border-ink/10 bg-mist p-5">
-          <blockquote class="text-sm text-ink/75">
-            “Prise en charge sérieuse et résultat naturel. Le suivi post-opératoire était excellent.”
-          </blockquote>
-          <figcaption class="mt-4 text-xs font-semibold uppercase tracking-wide text-ink/60">
-            Chirurgie du visage
-          </figcaption>
-          <a href="/avant-apres" class="link mt-4 inline-flex text-sm">Voir le résultat →</a>
-        </figure>
-        <figure class="rounded-2xl border border-ink/10 bg-mist p-5">
-          <blockquote class="text-sm text-ink/75">
-            “Équipe disponible, délais respectés, explications claires. Je recommande.”
-          </blockquote>
-          <figcaption class="mt-4 text-xs font-semibold uppercase tracking-wide text-ink/60">
-            Chirurgie de la main
-          </figcaption>
-          <a href="/avant-apres" class="link mt-4 inline-flex text-sm">Voir le résultat →</a>
-        </figure>
+      <div class="mt-7 grid gap-4 md:grid-cols-3">
+        {philosophyCards.map((item) => (
+          <article class="reveal fx-lift-soft fx-card-edge rounded-[1.5rem] border border-ink/10 bg-paper p-6 shadow-soft" data-reveal>
+            <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-copper">{item.title}</h3>
+            <p class="mt-3 text-sm leading-7 text-ink/76">{item.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-paper py-16">
+    <div class="mx-auto max-w-6xl px-4" data-reveal-group="avis">
+      <div class="section-label reveal text-ink/50" data-reveal>CE QU'ILS DISENT</div>
+      <div class="reveal mt-3 text-sm uppercase tracking-[0.2em] text-ink/56" data-reveal>Avis Google vérifiés</div>
+      <div class="mt-6 grid gap-4 md:grid-cols-2">
+        {testimonials.map((item) => (
+          <article class="reveal fx-lift-soft rounded-[1.5rem] border border-ink/10 bg-mist/45 p-6 shadow-soft" data-reveal>
+            <div class="text-sm font-semibold tracking-[0.18em] text-copper">{item.stars}</div>
+            <div class="mt-2 text-sm font-semibold uppercase tracking-[0.18em] text-ink/72">{item.title}</div>
+            <div class="mt-1 text-xs uppercase tracking-[0.16em] text-ink/54">{item.meta}</div>
+            <p class="mt-4 text-sm leading-7 text-ink/76">« {item.quote} »</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-ink py-16 text-paper">
+    <div class="mx-auto max-w-6xl px-4" data-reveal-group="cta-final">
+      <div class="section-label reveal text-paper/70" data-reveal>Prendre rendez-vous</div>
+      <div class="mt-4 grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+        <div>
+          <p class="reveal text-3xl italic leading-tight text-paper sm:text-4xl" data-reveal>
+            Je vous reçois en consultation aux Berges du Lac, Tunis.
+          </p>
+          <p class="reveal mt-4 max-w-2xl text-base leading-8 text-paper/82 sm:text-lg" data-reveal>
+            La première consultation est dédiée à votre projet et à vos questions — sans engagement.
+          </p>
+          <div class="reveal mt-7 flex flex-wrap gap-3" data-reveal>
+            <a href="/contact" class="btn btn-pill btn-lg bg-paper text-ink hover:bg-paper/90 fx-cta-sheen">Prendre rendez-vous</a>
+            <a href={site.links.whatsapp} class="btn btn-pill btn-lg border border-paper/35 bg-transparent text-paper hover:bg-paper/10 fx-cta-secondary">Appel & WhatsApp</a>
+          </div>
+        </div>
+
+        <div class="reveal" data-reveal>
+          <div class="fx-image-pan overflow-hidden rounded-[1.5rem] border border-paper/20 bg-paper/5 shadow-soft">
+            <img
+              src="/images/placeholders/clinic.webp"
+              width="1536"
+              height="1024"
+              alt="Cabinet de consultation aux Berges du Lac"
+              loading="lazy"
+              class="h-[17rem] w-full object-cover sm:h-[19rem]"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="reveal mt-8 text-xs leading-relaxed text-paper/62" data-reveal>
+        Dr Sirine Soussi · Immeuble Ben Cheikh, 1er étage · Rue du Lac Turkana, Les Berges du Lac 1, Tunis · +216 52 233 333
       </div>
     </div>
   </section>
 </BaseLayout>
 
 <style>
-  .fx-frame {
-    border: 1px solid transparent;
+  .section-label {
+    font-size: 0.93rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  .home-name {
+    font-family: 'Cormorant Garamond', 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 0.98;
+    font-size: clamp(2.6rem, 6vw, 4.8rem);
+  }
+
+  .chip-proof {
     background:
-      linear-gradient(rgb(var(--c-paper))) padding-box,
-      linear-gradient(135deg, rgba(var(--c-sand) / 0.4), rgba(var(--c-copper) / 0.35), transparent) border-box;
-    box-shadow: 0 14px 38px rgba(17, 24, 39, 0.04);
-    transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease;
+      linear-gradient(rgba(var(--c-paper) / 0.96), rgba(var(--c-paper) / 0.96)) padding-box,
+      linear-gradient(135deg, rgba(var(--c-sand) / 0.42), rgba(var(--c-copper) / 0.12), transparent) border-box;
+    border: 1px solid transparent;
   }
 
-  .fx-glow:hover,
-  .fx-glow:focus-visible,
-  .fx-glow:focus-within {
-    box-shadow:
-      0 20px 50px rgba(17, 24, 39, 0.08),
-      0 0 0 1px rgba(var(--c-copper) / 0.25),
-      0 18px 60px rgba(var(--c-copper) / 0.18);
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 560ms ease,
+      transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .fx-lift:hover {
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .fx-chip,
+  .fx-lift-soft {
+    transition:
+      transform 220ms ease,
+      box-shadow 220ms ease,
+      border-color 220ms ease,
+      background-color 220ms ease;
+  }
+
+  .fx-chip:hover,
+  .fx-lift-soft:hover {
     transform: translateY(-2px);
-    box-shadow:
-      0 18px 48px rgba(17, 24, 39, 0.09),
-      0 0 0 1px rgba(var(--c-copper) / 0.18);
+    border-color: rgba(var(--c-copper) / 0.28);
+    box-shadow: 0 18px 38px rgba(17, 24, 39, 0.08);
   }
 
-  .home-cta-primary {
-    box-shadow:
-      0 14px 38px rgba(17, 24, 39, 0.1),
-      0 0 0 0px rgba(var(--c-copper) / 0.0);
-    transition: box-shadow 200ms ease, transform 200ms ease;
+  .fx-card-edge {
+    position: relative;
+    overflow: hidden;
   }
 
-  .home-cta-primary:hover,
-  .home-cta-primary:focus-visible {
-    box-shadow:
-      0 20px 56px rgba(17, 24, 39, 0.16),
-      0 0 0 2px rgba(var(--c-copper) / 0.32);
+  .fx-card-edge::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(to right, rgba(var(--c-copper) / 0.68), rgba(var(--c-sand) / 0.24));
+    transform: scaleX(0.2);
+    transform-origin: left center;
+    transition: transform 240ms ease;
+  }
+
+  .fx-card-edge:hover::before {
+    transform: scaleX(1);
+  }
+
+  .fx-image-pan img {
+    transition: transform 860ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .fx-image-pan:hover img {
+    transform: scale(1.03) translateY(-1px);
+  }
+
+  .metric-value {
+    transition: transform 240ms ease, text-shadow 240ms ease;
+  }
+
+  .fx-lift-soft:hover .metric-value {
+    transform: translateY(-1px);
+    text-shadow: 0 0 18px rgba(var(--c-copper) / 0.16);
+  }
+
+  .fx-cta-sheen {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .fx-cta-sheen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, 0.26) 48%, transparent 74%);
+    transform: translateX(-145%);
+    transition: transform 440ms ease;
+  }
+
+  .fx-cta-sheen:hover::after,
+  .fx-cta-sheen:focus-visible::after {
+    transform: translateX(140%);
+  }
+
+  .fx-cta-secondary {
+    transition: background-color 220ms ease, border-color 220ms ease, transform 220ms ease;
+  }
+
+  .fx-cta-secondary:hover {
     transform: translateY(-1px);
   }
 
-  .hero-slider {
-    position: relative;
-  }
-
-  .hero-slide {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    animation: heroFade 10s infinite ease-in-out;
-  }
-
-  .hero-slide--1 {
-    animation-delay: 0s;
-  }
-
-  .hero-slide--2 {
-    animation-delay: 5s;
-  }
-
-  @keyframes heroFade {
-    0%,
-    45% {
-      opacity: 1;
-    }
-    50%,
-    100% {
-      opacity: 0;
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .hero-slide {
-      position: static;
-      animation: none;
+    .reveal,
+    .reveal.is-visible,
+    .fx-chip,
+    .fx-lift-soft,
+    .fx-card-edge::before,
+    .fx-image-pan img,
+    .metric-value,
+    .fx-cta-sheen::after,
+    .fx-cta-secondary {
+      transition: none;
+      transform: none;
       opacity: 1;
     }
   }
-
 </style>
+
+<script>
+  const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const revealItems = Array.from(document.querySelectorAll('[data-reveal]'));
+  const revealGroups = Array.from(document.querySelectorAll('[data-reveal-group]'));
+
+  revealGroups.forEach((group) => {
+    const items = Array.from(group.querySelectorAll('[data-reveal]'));
+    items.forEach((item, index) => {
+      item.style.transitionDelay = `${Math.min(index * 65, 260)}ms`;
+    });
+  });
+
+  if (mediaQuery.matches) {
+    revealItems.forEach((item) => item.classList.add('is-visible'));
+  } else {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.14, rootMargin: '0px 0px -8% 0px' },
+    );
+
+    revealItems.forEach((item) => observer.observe(item));
+  }
+</script>

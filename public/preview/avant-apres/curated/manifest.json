@@ -1,0 +1,102 @@
+[
+  {
+    "id": "abdo-c01",
+    "family": "abdominoplastie",
+    "title": "Abdominoplastie avec cure de diastasis",
+    "before": "/preview/avant-apres/curated/abdo-c01/before.jpg",
+    "after": "/preview/avant-apres/curated/abdo-c01/after.jpg",
+    "result_delay_label": "3 mois",
+    "intervention_category": "silhouette",
+    "case_number": 1
+  },
+  {
+    "id": "abdo-c02",
+    "family": "abdominoplastie",
+    "title": "Abdominoplastie avec liposuccion associee",
+    "before": "/preview/avant-apres/curated/abdo-c02/before.jpg",
+    "after": "/preview/avant-apres/curated/abdo-c02/after.jpg",
+    "result_delay_label": "4 mois",
+    "intervention_category": "silhouette",
+    "case_number": 2
+  },
+  {
+    "id": "abdo-c03",
+    "family": "abdominoplastie",
+    "title": "Abdominoplastie post-grossesse",
+    "before": "/preview/avant-apres/curated/abdo-c03/before.jpg",
+    "after": "/preview/avant-apres/curated/abdo-c03/after.jpg",
+    "result_delay_label": "3 mois",
+    "intervention_category": "silhouette",
+    "case_number": 3
+  },
+  {
+    "id": "breast-c01",
+    "family": "chirurgie-mammaire",
+    "title": "Reduction mammaire",
+    "before": "/preview/avant-apres/curated/breast-c01/before.jpg",
+    "after": "/preview/avant-apres/curated/breast-c01/after.jpg",
+    "result_delay_label": "3 mois",
+    "intervention_category": "seins",
+    "case_number": 4
+  },
+  {
+    "id": "breast-c02",
+    "family": "chirurgie-mammaire",
+    "title": "Augmentation mammaire",
+    "before": "/preview/avant-apres/curated/breast-c02/before.jpg",
+    "after": "/preview/avant-apres/curated/breast-c02/after.jpg",
+    "result_delay_label": "3 mois",
+    "intervention_category": "seins",
+    "case_number": 5
+  },
+  {
+    "id": "face-c01",
+    "family": "lifting-visage",
+    "title": "Lifting cervico-facial",
+    "before": "/preview/avant-apres/curated/face-c01/before.jpg",
+    "after": "/preview/avant-apres/curated/face-c01/after.jpg",
+    "result_delay_label": "6 mois",
+    "intervention_category": "visage",
+    "case_number": 6
+  },
+  {
+    "id": "face-c02",
+    "family": "lifting-visage",
+    "title": "Lifting visage et cou",
+    "before": "/preview/avant-apres/curated/face-c02/before.jpg",
+    "after": "/preview/avant-apres/curated/face-c02/after.jpg",
+    "result_delay_label": "7 mois",
+    "intervention_category": "visage",
+    "case_number": 7
+  },
+  {
+    "id": "rhino-c01",
+    "family": "rhinoplastie",
+    "title": "Rhinoplastie primaire",
+    "before": "/preview/avant-apres/curated/rhino-c01/before.jpg",
+    "after": "/preview/avant-apres/curated/rhino-c01/after.jpg",
+    "result_delay_label": "10 jours",
+    "intervention_category": "visage",
+    "case_number": 8
+  },
+  {
+    "id": "rhino-c02",
+    "family": "rhinoplastie",
+    "title": "Septorhinoplastie",
+    "before": "/preview/avant-apres/curated/rhino-c02/before.jpg",
+    "after": "/preview/avant-apres/curated/rhino-c02/after.jpg",
+    "result_delay_label": "3 mois",
+    "intervention_category": "visage",
+    "case_number": 9
+  },
+  {
+    "id": "male-c01",
+    "family": "chirurgie-homme",
+    "title": "Gynecomastie et liposuccion",
+    "before": "/preview/avant-apres/curated/male-c01/before.jpg",
+    "after": "/preview/avant-apres/curated/male-c01/after.jpg",
+    "result_delay_label": "4 semaines",
+    "intervention_category": "silhouette",
+    "case_number": 10
+  }
+]

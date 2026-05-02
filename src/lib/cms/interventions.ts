@@ -1,6 +1,8 @@
 import type { InterventionCategoryKey } from '@/lib/interventions';
+import type { SeoInterventionPageData } from '@/lib/interventions/seoPages';
 import { getSupabaseAdmin } from './supabase';
 import type { InterventionContentBlock } from './interventionBlocks';
+import type { InterventionTemplateKind } from './interventionSeoTemplate';
 
 export type InterventionStatus = 'brouillon' | 'publie';
 
@@ -16,6 +18,10 @@ export type CmsIntervention = {
   status: InterventionStatus;
   seo_title: string | null;
   seo_description: string | null;
+  template_kind: InterventionTemplateKind;
+  hero_image_src: string | null;
+  hero_image_alt: string | null;
+  seo_page_data: SeoInterventionPageData | null;
   created_at: string;
   updated_at: string;
 };

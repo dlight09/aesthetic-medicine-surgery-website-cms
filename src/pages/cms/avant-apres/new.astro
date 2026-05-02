@@ -102,6 +102,91 @@ const interventionsByCategory = interventionCategories.map((category) => {
           <span class="font-semibold text-ink/80">Description avant / après</span>
           <textarea rows={3} class="cms-textarea" name="description"></textarea>
         </label>
+
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Résumé public</span>
+          <textarea rows={2} class="cms-textarea" name="summary" placeholder="Résumé court affiché sur la fiche cas"></textarea>
+        </label>
+
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Contexte clinique</span>
+          <textarea rows={3} class="cms-textarea" name="clinical_context" placeholder="Contexte synthétique (antécédents, indications, précautions)"></textarea>
+        </label>
+
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Actes réalisés (1 par ligne)</span>
+          <textarea rows={4} class="cms-textarea" name="procedures_text" placeholder="Abdominoplastie\nCure de diastasis\nLiposuccion"></textarea>
+        </label>
+
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Tags (séparés par virgule)</span>
+          <input class="cms-input" name="tags_text" placeholder="post-bariatrique, reprise, fumeuse" />
+        </label>
+
+        <div class="grid gap-4 sm:grid-cols-3">
+          <label class="grid gap-2 text-sm">
+            <span class="font-semibold text-ink/80">Âge</span>
+            <input class="cms-input" type="number" min="0" max="120" name="patient_age" />
+          </label>
+          <label class="grid gap-2 text-sm">
+            <span class="font-semibold text-ink/80">Poids (kg)</span>
+            <input class="cms-input" type="number" min="0" step="0.1" name="weight_kg" />
+          </label>
+          <label class="grid gap-2 text-sm">
+            <span class="font-semibold text-ink/80">Grossesses</span>
+            <input class="cms-input" type="number" min="0" name="pregnancies_count" />
+          </label>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-3">
+          <label class="grid gap-2 text-sm">
+            <span class="font-semibold text-ink/80">Sexe patient</span>
+            <select class="cms-select" name="patient_sex">
+              <option value="">Non renseigné</option>
+              <option value="female">Femme</option>
+              <option value="male">Homme</option>
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm">
+            <span class="font-semibold text-ink/80">Tabagisme</span>
+            <select class="cms-select" name="smoking_status">
+              <option value="">Non renseigné</option>
+              <option value="non_smoker">Non fumeur</option>
+              <option value="smoker">Fumeur</option>
+              <option value="former">Ancien fumeur</option>
+              <option value="unknown">Inconnu</option>
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm">
+            <span class="font-semibold text-ink/80">Délai résultat (label)</span>
+            <input class="cms-input" name="result_delay_label" placeholder="Ex: 3 mois" />
+          </label>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-3">
+          <label class="inline-flex items-center gap-2 text-sm">
+            <input type="checkbox" class="h-4 w-4" name="post_bariatric" />
+            <span>Post-bariatrique</span>
+          </label>
+          <label class="inline-flex items-center gap-2 text-sm">
+            <input type="checkbox" class="h-4 w-4" name="revision_case" />
+            <span>Reprise</span>
+          </label>
+          <label class="inline-flex items-center gap-2 text-sm">
+            <input type="checkbox" class="h-4 w-4" name="prior_surgery" />
+            <span>Chirurgie antérieure</span>
+          </label>
+        </div>
+
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Autres vues (JSON optionnel)</span>
+          <textarea
+            rows={5}
+            class="cms-textarea font-mono text-xs"
+            name="media_sets_json"
+            placeholder='[{"label":"Profil","result_delay_label":"3 mois","before_path":"cases/.../set2-before.jpg","after_path":"cases/.../set2-after.jpg"}]'
+          ></textarea>
+        </label>
       </form>
     </section>
 
@@ -267,6 +352,8 @@ const interventionsByCategory = interventionCategories.map((category) => {
       const payload = {
         title: interventionLabel,
         description: String(formData.get('description') ?? '').trim() || null,
+        summary: String(formData.get('summary') ?? '').trim() || null,
+        clinical_context: String(formData.get('clinical_context') ?? '').trim() || null,
         intervention_category: null,
         intervention_slug: null,
         consent: formData.get('consent') === 'on',
@@ -274,7 +361,8 @@ const interventionsByCategory = interventionCategories.map((category) => {
         internal_ref: String(formData.get('internal_ref') ?? '').trim() || null,
         before_path: String(formData.get('before_path') ?? '').trim(),
         after_path: String(formData.get('after_path') ?? '').trim(),
-        status: intent === 'publish' ? 'publie' : 'brouillon'
+        status: intent === 'publish' ? 'publie' : 'brouillon',
+        featured: false,
       };
 
       const interventionRef = String(formData.get('intervention_ref') ?? '').trim();
@@ -302,11 +390,87 @@ const interventionsByCategory = interventionCategories.map((category) => {
         return;
       }
 
+      const parseNumber = (raw) => {
+        const value = String(raw ?? '').trim();
+        if (!value) return null;
+        const n = Number(value);
+        return Number.isFinite(n) ? n : null;
+      };
+
+      const proceduresText = String(formData.get('procedures_text') ?? '');
+      const procedures = proceduresText
+        .split('\n')
+        .map((x) => x.trim())
+        .filter(Boolean)
+        .map((label, idx) => ({ label, procedure_order: idx + 1, is_primary: idx === 0 }));
+
+      const tags = String(formData.get('tags_text') ?? '')
+        .split(',')
+        .map((x) => x.trim().toLowerCase())
+        .filter(Boolean);
+
+      let extraMediaSets = [];
+      const mediaSetsRaw = String(formData.get('media_sets_json') ?? '').trim();
+      if (mediaSetsRaw) {
+        try {
+          const parsed = JSON.parse(mediaSetsRaw);
+          if (Array.isArray(parsed)) {
+            extraMediaSets = parsed
+              .map((item, idx) => ({
+                label: typeof item?.label === 'string' ? item.label : null,
+                view_key: typeof item?.view_key === 'string' ? item.view_key : null,
+                result_delay_label:
+                  typeof item?.result_delay_label === 'string' ? item.result_delay_label : null,
+                before_path: typeof item?.before_path === 'string' ? item.before_path : '',
+                after_path: typeof item?.after_path === 'string' ? item.after_path : '',
+                set_order: idx + 2,
+                is_cover: false,
+              }))
+              .filter((item) => item.before_path && item.after_path);
+          }
+        } catch (jsonErr) {
+          if (error) error.textContent = 'JSON invalide dans "Autres vues".';
+          if (status) status.textContent = '';
+          return;
+        }
+      }
+
+      const coverDelay = String(formData.get('result_delay_label') ?? '').trim() || null;
+
+      const richPayload = {
+        ...payload,
+        procedures,
+        tags,
+        patient_context: {
+          patient_sex: String(formData.get('patient_sex') ?? '').trim() || null,
+          patient_age: parseNumber(formData.get('patient_age')),
+          weight_kg: parseNumber(formData.get('weight_kg')),
+          smoking_status: String(formData.get('smoking_status') ?? '').trim() || null,
+          pregnancies_count: parseNumber(formData.get('pregnancies_count')),
+          post_bariatric: formData.get('post_bariatric') === 'on',
+          revision_case: formData.get('revision_case') === 'on',
+          prior_surgery: formData.get('prior_surgery') === 'on',
+          history_notes: null,
+        },
+        media_sets: [
+          {
+            set_order: 1,
+            label: 'Vue principale',
+            view_key: 'front',
+            result_delay_label: coverDelay,
+            before_path: payload.before_path,
+            after_path: payload.after_path,
+            is_cover: true,
+          },
+          ...extraMediaSets,
+        ],
+      };
+
       try {
         const res = await fetch('/api/cms/avant-apres', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(richPayload)
         });
         if (!res.ok) throw new Error('save');
         const data = await res.json();

@@ -111,13 +111,22 @@ const caseCards = cases.map((item) => {
   const categoryTitle = item.intervention_category
     ? categoryLabelByKey.get(item.intervention_category) ?? item.intervention_category
     : null;
+  const contextChips: string[] = [];
+  if (item.media_sets?.[0]?.result_delay_label) contextChips.push(item.media_sets[0].result_delay_label);
+  if (item.patient_context?.smoking_status === 'non_smoker') contextChips.push('Non fumeuse');
+  if (item.patient_context?.smoking_status === 'smoker') contextChips.push('Fumeuse');
+  if (item.patient_context?.post_bariatric) contextChips.push('Post-bariatrique');
+  if (item.patient_context?.revision_case) contextChips.push('Reprise');
+
   return {
     ...item,
     interventionMeta,
     categoryTitle,
     caseLabel: formatCaseNumber(item.case_number) ?? 'Cas',
+    contextChips,
   };
 });
+const hasPreviewCases = caseCards.some((item) => item.id.startsWith('preview-'));
 ---
 
 <BaseLayout title="Avant/Après" description="Galerie Avant/Après (lorsque disponible) avec consentement et mentions.">
@@ -147,6 +156,11 @@ const caseCards = cases.map((item) => {
       <p class="mt-4 max-w-3xl text-sm leading-relaxed text-ink/70">
         Les résultats varient selon chaque patient. Les photos ne constituent pas une garantie de résultat. Toute publication est réalisée avec consentement.
       </p>
+      {hasPreviewCases ? (
+        <p class="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.13em] text-amber-700">
+          Certaines images sont des extraits PDF utilises temporairement en previsualisation, en attendant les photos HQ.
+        </p>
+      ) : null}
     </header>
 
     {categoryFilters.length ? (
@@ -240,6 +254,15 @@ const caseCards = cases.map((item) => {
                   <p class="mt-1 text-xs font-semibold uppercase tracking-[0.15em] text-ink/55">{item.categoryTitle}</p>
                 ) : null}
                 {item.description ? <p class="mt-3 max-w-[44ch] text-sm leading-relaxed text-ink/70">{item.description}</p> : null}
+                {item.contextChips.length ? (
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    {item.contextChips.slice(0, 4).map((chip) => (
+                      <span class="rounded-full border border-ink/10 bg-mist/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-ink/65">
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
               </div>
               <span class="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink/10 text-ink/55 transition group-hover:border-ink/25 group-hover:text-ink">
                 <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" aria-hidden="true">

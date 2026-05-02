@@ -7,10 +7,14 @@ import { getPublicInterventionBySlug } from '@/lib/cms/interventions';
 import { renderMarkdown } from '@/lib/markdown';
 import InterventionBlocks from '@/components/InterventionBlocks.astro';
 import PremiumInterventionPage from '@/components/interventions/PremiumInterventionPage.astro';
+import SeoInterventionPage from '@/components/interventions/SeoInterventionPage.astro';
 import { listLinkedBlogSlugsForIntervention, listPublicBlogPosts } from '@/lib/cms/blog';
 import { getCollection } from 'astro:content';
 import { interventionCategoryKeys, type InterventionCategoryKey } from '@/lib/interventions';
+import { interventionCategoryMeta } from '@/lib/interventions';
 import { premiumInterventionPages } from '@/lib/interventions/premiumPages';
+import { seoInterventionPages } from '@/lib/interventions/seoPages';
+import { coerceSeoTemplateV2Data } from '@/lib/cms/interventionSeoTemplate';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 
@@ -22,6 +26,7 @@ const slug = String(Astro.params.slug ?? '').trim();
 if (!category || !slug) {
   return Astro.redirect('/interventions');
 }
+const fallbackSeoPageData = seoInterventionPages[slug] ?? null;
 
 const cmsAuthed = Astro.cookies.get('cms_auth')?.value === 'true';
 
@@ -42,13 +47,26 @@ const entry =
       })
     : null;
 
-if (!dbItem && !entry) {
+const seoPageDataRaw =
+  (dbItem?.template_kind === 'seo_v1' || dbItem?.template_kind === 'seo_v2') && dbItem.seo_page_data
+    ? {
+        ...dbItem.seo_page_data,
+        categoryLabel: dbItem.seo_page_data.categoryLabel || interventionCategoryMeta[category].title,
+      }
+    : fallbackSeoPageData;
+
+const seoPageData = coerceSeoTemplateV2Data(seoPageDataRaw, {
+  hero_image_src: dbItem?.hero_image_src ?? null,
+  hero_image_alt: dbItem?.hero_image_alt ?? null,
+});
+
+if (!dbItem && !entry && !seoPageData) {
   return Astro.redirect(`/interventions/${category}`);
 }
 
-const title = dbItem?.seo_title || dbItem?.title || entry?.data.title;
-const description = dbItem?.seo_description || dbItem?.description || entry?.data.description;
-const pageTitle = dbItem?.title || entry?.data.title;
+const title = dbItem?.seo_title || dbItem?.title || entry?.data.title || seoPageData?.h1;
+const description = dbItem?.seo_description || dbItem?.description || entry?.data.description || seoPageData?.intro;
+const pageTitle = dbItem?.title || entry?.data.title || seoPageData?.h1;
 const categoryThumb = interventionCategories.find((c) => c.key === category)?.thumbnailSrc;
 
 const hasBlocks = Array.isArray(dbItem?.content_blocks) && (dbItem?.content_blocks?.length ?? 0) > 0;
@@ -94,7 +112,9 @@ if (dbItem) {
 ---
 
 <BaseLayout title={title} description={description} noindex={dbItem?.status === 'brouillon' && cmsAuthed}>
-  {premiumPageData ? (
+  {seoPageData ? (
+    <SeoInterventionPage data={seoPageData} />
+  ) : premiumPageData ? (
     <PremiumInterventionPage
       categoryLabel={premiumPageData.categoryLabel}
       titleStart={premiumPageData.titleStart}

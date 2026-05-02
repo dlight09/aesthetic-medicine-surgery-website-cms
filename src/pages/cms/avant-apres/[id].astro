@@ -54,6 +54,22 @@ const currentInterventionRef =
   item.intervention_category && item.intervention_slug
     ? `${item.intervention_category}::${item.intervention_slug}`
     : '';
+const proceduresText = item.procedures.map((proc) => proc.label).join('\n');
+const tagsText = item.tags.join(', ');
+const coverMediaSet = item.media_sets.find((set) => set.is_cover) ?? item.media_sets[0] ?? null;
+const extraMediaSetsJson = JSON.stringify(
+  item.media_sets
+    .filter((set) => !coverMediaSet || set.id !== coverMediaSet.id)
+    .map((set) => ({
+      label: set.label,
+      view_key: set.view_key,
+      result_delay_label: set.result_delay_label,
+      before_path: set.before_path,
+      after_path: set.after_path,
+    })),
+  null,
+  2,
+);
 ---
 
 <CmsLayout title="Edition cas">
@@ -68,6 +84,82 @@ const currentInterventionRef =
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Description avant / après</span>
           <textarea rows={3} class="cms-textarea" name="description">{item.description ?? ''}</textarea>
+        </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Résumé public</span>
+          <textarea rows={2} class="cms-textarea" name="summary">{item.summary ?? ''}</textarea>
+        </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Contexte clinique</span>
+          <textarea rows={3} class="cms-textarea" name="clinical_context">{item.clinical_context ?? ''}</textarea>
+        </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Actes réalisés (1 par ligne)</span>
+          <textarea rows={4} class="cms-textarea" name="procedures_text">{proceduresText}</textarea>
+        </label>
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Tags (séparés par virgule)</span>
+          <input class="cms-input" name="tags_text" value={tagsText} />
+        </label>
+
+        <div class="grid gap-4 sm:grid-cols-3">
+          <label class="grid gap-2 text-sm">
+            <span class="font-semibold text-ink/80">Âge</span>
+            <input class="cms-input" type="number" min="0" max="120" name="patient_age" value={item.patient_context?.patient_age ?? ''} />
+          </label>
+          <label class="grid gap-2 text-sm">
+            <span class="font-semibold text-ink/80">Poids (kg)</span>
+            <input class="cms-input" type="number" min="0" step="0.1" name="weight_kg" value={item.patient_context?.weight_kg ?? ''} />
+          </label>
+          <label class="grid gap-2 text-sm">
+            <span class="font-semibold text-ink/80">Grossesses</span>
+            <input class="cms-input" type="number" min="0" name="pregnancies_count" value={item.patient_context?.pregnancies_count ?? ''} />
+          </label>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-3">
+          <label class="grid gap-2 text-sm">
+            <span class="font-semibold text-ink/80">Sexe patient</span>
+            <select class="cms-select" name="patient_sex">
+              <option value="" selected={!item.patient_context?.patient_sex}>Non renseigné</option>
+              <option value="female" selected={item.patient_context?.patient_sex === 'female'}>Femme</option>
+              <option value="male" selected={item.patient_context?.patient_sex === 'male'}>Homme</option>
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm">
+            <span class="font-semibold text-ink/80">Tabagisme</span>
+            <select class="cms-select" name="smoking_status">
+              <option value="" selected={!item.patient_context?.smoking_status}>Non renseigné</option>
+              <option value="non_smoker" selected={item.patient_context?.smoking_status === 'non_smoker'}>Non fumeur</option>
+              <option value="smoker" selected={item.patient_context?.smoking_status === 'smoker'}>Fumeur</option>
+              <option value="former" selected={item.patient_context?.smoking_status === 'former'}>Ancien fumeur</option>
+              <option value="unknown" selected={item.patient_context?.smoking_status === 'unknown'}>Inconnu</option>
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm">
+            <span class="font-semibold text-ink/80">Délai résultat (label)</span>
+            <input class="cms-input" name="result_delay_label" value={coverMediaSet?.result_delay_label ?? ''} />
+          </label>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-3">
+          <label class="inline-flex items-center gap-2 text-sm">
+            <input type="checkbox" class="h-4 w-4" name="post_bariatric" checked={item.patient_context?.post_bariatric === true} />
+            <span>Post-bariatrique</span>
+          </label>
+          <label class="inline-flex items-center gap-2 text-sm">
+            <input type="checkbox" class="h-4 w-4" name="revision_case" checked={item.patient_context?.revision_case === true} />
+            <span>Reprise</span>
+          </label>
+          <label class="inline-flex items-center gap-2 text-sm">
+            <input type="checkbox" class="h-4 w-4" name="prior_surgery" checked={item.patient_context?.prior_surgery === true} />
+            <span>Chirurgie antérieure</span>
+          </label>
+        </div>
+
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Autres vues (JSON optionnel)</span>
+          <textarea rows={5} class="cms-textarea font-mono text-xs" name="media_sets_json">{extraMediaSetsJson}</textarea>
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Intervention associée</span>
@@ -97,21 +189,21 @@ const currentInterventionRef =
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="rounded-2xl border border-ink/10 bg-mist p-4">
             <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant</div>
-            <img data-preview="before" src={item.beforeUrl} alt="Avant" class="mt-3 h-32 w-full rounded-xl object-cover" />
+            <img data-preview="before" src={coverMediaSet?.beforeUrl ?? item.beforeUrl} alt="Avant" class="mt-3 h-32 w-full rounded-xl object-cover" />
             <input type="file" accept="image/*" class="mt-3 block text-xs" data-upload="before" />
             <div class="mt-2 text-[11px] text-ink/50">JPG/PNG, 10MB max.</div>
             <div data-upload-status="before" class="mt-1 text-[11px] text-ink/60"></div>
             <div data-upload-error="before" class="mt-1 text-[11px] text-rose-600"></div>
-            <input type="hidden" name="before_path" data-path="before" value={item.before_path} />
+            <input type="hidden" name="before_path" data-path="before" value={coverMediaSet?.before_path ?? item.before_path} />
           </div>
           <div class="rounded-2xl border border-ink/10 bg-mist p-4">
             <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Après</div>
-            <img data-preview="after" src={item.afterUrl} alt="Après" class="mt-3 h-32 w-full rounded-xl object-cover" />
+            <img data-preview="after" src={coverMediaSet?.afterUrl ?? item.afterUrl} alt="Après" class="mt-3 h-32 w-full rounded-xl object-cover" />
             <input type="file" accept="image/*" class="mt-3 block text-xs" data-upload="after" />
             <div class="mt-2 text-[11px] text-ink/50">JPG/PNG, 10MB max.</div>
             <div data-upload-status="after" class="mt-1 text-[11px] text-ink/60"></div>
             <div data-upload-error="after" class="mt-1 text-[11px] text-rose-600"></div>
-            <input type="hidden" name="after_path" data-path="after" value={item.after_path} />
+            <input type="hidden" name="after_path" data-path="after" value={coverMediaSet?.after_path ?? item.after_path} />
           </div>
         </div>
 
@@ -267,15 +359,18 @@ const currentInterventionRef =
       const payload = {
         title: interventionLabel || item.title,
         description: String(formData.get('description') ?? '').trim() || null,
+        summary: String(formData.get('summary') ?? '').trim() || null,
+        clinical_context: String(formData.get('clinical_context') ?? '').trim() || null,
         intervention_category: null,
         intervention_slug: null,
-        case_number: String(formData.get('case_number') ?? '').trim(),
+        case_number: Number(String(formData.get('case_number') ?? '').trim()) || null,
         consent: formData.get('consent') === 'on',
         consent_date: String(formData.get('consent_date') ?? '').trim() || null,
         internal_ref: String(formData.get('internal_ref') ?? '').trim() || null,
         before_path: String(formData.get('before_path') ?? '').trim(),
         after_path: String(formData.get('after_path') ?? '').trim(),
-        status: intent === 'publish' ? 'publie' : 'brouillon'
+        status: intent === 'publish' ? 'publie' : 'brouillon',
+        featured: false,
       };
 
       const interventionRef = String(formData.get('intervention_ref') ?? '').trim();
@@ -309,12 +404,88 @@ const currentInterventionRef =
         return;
       }
 
+      const parseNumber = (raw) => {
+        const value = String(raw ?? '').trim();
+        if (!value) return null;
+        const n = Number(value);
+        return Number.isFinite(n) ? n : null;
+      };
+
+      const proceduresText = String(formData.get('procedures_text') ?? '');
+      const procedures = proceduresText
+        .split('\n')
+        .map((x) => x.trim())
+        .filter(Boolean)
+        .map((label, idx) => ({ label, procedure_order: idx + 1, is_primary: idx === 0 }));
+
+      const tags = String(formData.get('tags_text') ?? '')
+        .split(',')
+        .map((x) => x.trim().toLowerCase())
+        .filter(Boolean);
+
+      let extraMediaSets = [];
+      const mediaSetsRaw = String(formData.get('media_sets_json') ?? '').trim();
+      if (mediaSetsRaw) {
+        try {
+          const parsed = JSON.parse(mediaSetsRaw);
+          if (Array.isArray(parsed)) {
+            extraMediaSets = parsed
+              .map((item, idx) => ({
+                label: typeof item?.label === 'string' ? item.label : null,
+                view_key: typeof item?.view_key === 'string' ? item.view_key : null,
+                result_delay_label:
+                  typeof item?.result_delay_label === 'string' ? item.result_delay_label : null,
+                before_path: typeof item?.before_path === 'string' ? item.before_path : '',
+                after_path: typeof item?.after_path === 'string' ? item.after_path : '',
+                set_order: idx + 2,
+                is_cover: false,
+              }))
+              .filter((entry) => entry.before_path && entry.after_path);
+          }
+        } catch (jsonErr) {
+          if (error) error.textContent = 'JSON invalide dans "Autres vues".';
+          if (status) status.textContent = '';
+          return;
+        }
+      }
+
+      const coverDelay = String(formData.get('result_delay_label') ?? '').trim() || null;
+
+      const richPayload = {
+        ...payload,
+        procedures,
+        tags,
+        patient_context: {
+          patient_sex: String(formData.get('patient_sex') ?? '').trim() || null,
+          patient_age: parseNumber(formData.get('patient_age')),
+          weight_kg: parseNumber(formData.get('weight_kg')),
+          smoking_status: String(formData.get('smoking_status') ?? '').trim() || null,
+          pregnancies_count: parseNumber(formData.get('pregnancies_count')),
+          post_bariatric: formData.get('post_bariatric') === 'on',
+          revision_case: formData.get('revision_case') === 'on',
+          prior_surgery: formData.get('prior_surgery') === 'on',
+          history_notes: null,
+        },
+        media_sets: [
+          {
+            set_order: 1,
+            label: 'Vue principale',
+            view_key: 'front',
+            result_delay_label: coverDelay,
+            before_path: payload.before_path,
+            after_path: payload.after_path,
+            is_cover: true,
+          },
+          ...extraMediaSets,
+        ],
+      };
+
       try {
         const caseId = form.dataset.id ?? '';
         const res = await fetch(`/api/cms/avant-apres/${encodeURIComponent(caseId)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(richPayload)
         });
         if (!res.ok) throw new Error('save');
         if (status) status.textContent = 'Enregistré.';

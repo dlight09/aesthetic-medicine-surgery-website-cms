@@ -43,6 +43,38 @@ const interventionHref = relatedIntervention
   : null;
 const caseLabel = item.case_number ? `Cas ${String(item.case_number).padStart(2, '0')}` : null;
 const pageTitle = caseLabel && relatedIntervention ? `${caseLabel} — ${relatedIntervention.title}` : item.title;
+const mediaSets = item.media_sets?.length
+  ? item.media_sets
+  : [
+      {
+        id: 'legacy',
+        case_id: item.id,
+        set_order: 1,
+        label: 'Vue principale',
+        view_key: null,
+        result_delay_value: null,
+        result_delay_unit: null,
+        result_delay_label: null,
+        before_path: item.before_path,
+        after_path: item.after_path,
+        is_cover: true,
+        public_note: null,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        beforeUrl: item.beforeUrl,
+        afterUrl: item.afterUrl,
+      },
+    ];
+
+const patientChips: string[] = [];
+if (item.patient_context?.patient_age) patientChips.push(`${item.patient_context.patient_age} ans`);
+if (item.patient_context?.weight_kg) patientChips.push(`${Number(item.patient_context.weight_kg)} kg`);
+if (item.patient_context?.smoking_status === 'non_smoker') patientChips.push('Non fumeuse');
+if (item.patient_context?.smoking_status === 'smoker') patientChips.push('Fumeuse');
+if (item.patient_context?.post_bariatric) patientChips.push('Post-bariatrique');
+if (item.patient_context?.revision_case) patientChips.push('Reprise');
+if (item.patient_context?.pregnancies_count) patientChips.push(`${item.patient_context.pregnancies_count} grossesse(s)`);
+const isPreviewCase = item.id.startsWith('preview-');
 ---
 
 <BaseLayout title={pageTitle} description="Avant/après avec consentement. Les résultats varient selon chaque patient.">
@@ -54,12 +86,60 @@ const pageTitle = caseLabel && relatedIntervention ? `${caseLabel} — ${related
         Intervention associée: <a class="link" href={interventionHref}>{relatedIntervention.title}</a>
       </div>
     ) : null}
-    {item.description ? <p class="mt-3 text-lg text-ink/75">{item.description}</p> : null}
+    {item.summary ? <p class="mt-3 text-lg text-ink/75">{item.summary}</p> : item.description ? <p class="mt-3 text-lg text-ink/75">{item.description}</p> : null}
+    {isPreviewCase ? (
+      <p class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.13em] text-amber-700">
+        Cas de previsualisation (extrait PDF). Les photos HQ seront integrees ensuite.
+      </p>
+    ) : null}
 
-    <div class="mt-6 text-sm text-ink/60">Glissez le curseur pour comparer.</div>
-    <div class="mt-4">
-      <BeforeAfterSlider beforeUrl={item.beforeUrl} afterUrl={item.afterUrl} />
+    {patientChips.length ? (
+      <div class="mt-5 flex flex-wrap gap-2">
+        {patientChips.map((chip) => (
+          <span class="rounded-full border border-ink/15 bg-mist/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-ink/70">{chip}</span>
+        ))}
+      </div>
+    ) : null}
+
+    {item.procedures.length ? (
+      <div class="mt-8 rounded-2xl border border-ink/10 bg-paper p-5">
+        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-ink/55">Actes realises</div>
+        <ul class="mt-3 space-y-2 text-sm text-ink/75">
+          {item.procedures.map((proc) => (
+            <li>
+              {proc.label}
+              {proc.is_primary ? <span class="ml-2 rounded-full bg-ink/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink/65">Principal</span> : null}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ) : null}
+
+    <div class="mt-8 space-y-8">
+      {mediaSets.map((set) => (
+        <section class="rounded-3xl border border-ink/10 bg-paper p-5 sm:p-6">
+          <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h2 class="font-display text-2xl tracking-tight">{set.label ?? 'Vue'}</h2>
+            {set.result_delay_label ? (
+              <span class="rounded-full border border-ink/15 bg-mist px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-ink/65">
+                {set.result_delay_label}
+              </span>
+            ) : null}
+          </div>
+          <div class="text-sm text-ink/60">Glissez le curseur pour comparer.</div>
+          <div class="mt-3">
+            <BeforeAfterSlider beforeUrl={set.beforeUrl} afterUrl={set.afterUrl} />
+          </div>
+          {set.public_note ? <p class="mt-4 text-sm text-ink/70">{set.public_note}</p> : null}
+        </section>
+      ))}
     </div>
+
+    {item.clinical_context ? (
+      <div class="mt-8 rounded-2xl border border-ink/10 bg-mist p-5 text-sm leading-relaxed text-ink/75">
+        {item.clinical_context}
+      </div>
+    ) : null}
 
     <div class="mt-10 rounded-3xl border border-ink/10 bg-mist p-6 text-sm text-ink/75">
       Les résultats varient selon chaque patient. Toute publication se fait avec consentement.

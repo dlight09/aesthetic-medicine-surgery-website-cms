@@ -12,9 +12,6 @@ const { title, noindex = true } = Astro.props;
 const fullTitle = buildTitle(title ? `CMS - ${title}` : 'CMS');
 const pathname = Astro.url.pathname;
 const authed = Astro.cookies.get('cms_auth')?.value === 'true';
-if (!authed) {
-  return Astro.redirect('/cms/login');
-}
 
 const navItems = [
   {
@@ -70,6 +67,17 @@ function isActive(href: string) {
     <meta property="og:title" content={fullTitle} />
   </head>
   <body class="cms font-body text-ink">
+    {!authed ? (
+      <main class="min-h-screen grid place-items-center p-6">
+        <div class="cms-card max-w-md p-6 text-center">
+          <div class="text-sm text-ink/70">Session CMS expirée.</div>
+          <a href="/cms/login" class="btn btn-pill btn-sm btn-primary mt-4 inline-flex">Se connecter</a>
+        </div>
+        <script is:inline>
+          window.location.replace('/cms/login');
+        </script>
+      </main>
+    ) : (
     <div class="cms-shell min-h-screen">
       <dialog id="cms-nav" class="cms-drawer sm:hidden">
         <div class="cms-drawer-panel">
@@ -296,5 +304,6 @@ function isActive(href: string) {
         }
       })();
     </script>
+    )}
   </body>
 </html>

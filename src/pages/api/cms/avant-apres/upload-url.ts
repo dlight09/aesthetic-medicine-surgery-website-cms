@@ -9,7 +9,13 @@ export const POST: APIRoute = async (context) => {
 
   const body = await context.request.json().catch(() => null);
   const fileName = typeof body?.fileName === 'string' ? body.fileName : '';
-  const kind = body?.kind === 'before' || body?.kind === 'after' ? body.kind : null;
+  const kindRaw = typeof body?.kind === 'string' ? body.kind : '';
+  const kind = kindRaw
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 48);
 
   if (!fileName || !kind) {
     return new Response('Invalid payload', { status: 400 });

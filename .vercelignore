@@ -1,0 +1,5 @@
+node_modules
+dist
+.astro
+public/preview/avant-apres/pdf-extract/raw
+Dr_Sirine_Soussi_Parcours.pdf

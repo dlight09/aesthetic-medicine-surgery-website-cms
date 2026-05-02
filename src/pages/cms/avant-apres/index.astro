@@ -250,6 +250,9 @@ const interventionOptionsByCategory = new Map(
                           <div>
                             <div class="font-semibold text-ink/90">{formatCaseNumber(item.case_number)}</div>
                             <div class="text-xs text-ink/60">MAJ: {formatDate(item.updated_at)}</div>
+                            <div class="text-xs text-ink/50">
+                              {item.media_sets?.length ?? 0} vue(s) • {item.procedures?.length ?? 0} acte(s)
+                            </div>
                             {item.description ? (
                               <div class="text-xs text-ink/50">{item.description}</div>
                             ) : null}

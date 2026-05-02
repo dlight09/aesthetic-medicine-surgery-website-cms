@@ -4,6 +4,10 @@ import { interventionCategoryKeys, type InterventionCategoryKey } from '@/lib/in
 import { createIntervention, listCmsInterventions } from '@/lib/cms/interventions';
 import { defaultInterventionMarkdownTemplate } from '@/lib/cms/interventionTemplate';
 import { coerceBlocks, defaultInterventionBlocks } from '@/lib/cms/interventionBlocks';
+import {
+  coerceSeoTemplateV2Data,
+  type InterventionTemplateKind,
+} from '@/lib/cms/interventionSeoTemplate';
 
 function slugify(input: string) {
   return (input ?? '')
@@ -55,6 +59,20 @@ export const POST: APIRoute = async (context) => {
   const seo_title = typeof body.seo_title === 'string' ? body.seo_title.trim() || null : null;
   const seo_description =
     typeof body.seo_description === 'string' ? body.seo_description.trim() || null : null;
+  const template_kind: InterventionTemplateKind =
+    body.template_kind === 'seo_v2'
+      ? 'seo_v2'
+      : body.template_kind === 'seo_v1'
+        ? 'seo_v1'
+        : 'legacy_blocks';
+  const hero_image_src =
+    typeof body.hero_image_src === 'string' ? body.hero_image_src.trim() || null : null;
+  const hero_image_alt =
+    typeof body.hero_image_alt === 'string' ? body.hero_image_alt.trim() || null : null;
+  const seo_page_data = coerceSeoTemplateV2Data((body as any).seo_page_data, {
+    hero_image_src,
+    hero_image_alt,
+  });
   const content_blocks = coerceBlocks(body.content_blocks) ?? null;
   const body_md =
     typeof body.body_md === 'string' && body.body_md.trim()
@@ -66,8 +84,21 @@ export const POST: APIRoute = async (context) => {
   if (!slug || !category) return new Response('Missing required fields', { status: 400 });
 
   if (status === 'publie') {
-    if (!title || !description || (!body_md.trim() && !finalBlocks.length)) {
-      return new Response('Missing required fields for publish', { status: 400 });
+    if (template_kind === 'seo_v1' || template_kind === 'seo_v2') {
+      const hasTemplate =
+        !!seo_page_data &&
+        !!seo_page_data.breadcrumb &&
+        !!seo_page_data.h1 &&
+        !!seo_page_data.intro &&
+        seo_page_data.quickFacts.length === 4 &&
+        seo_page_data.sections.length === 9 &&
+        seo_page_data.faq.length > 0;
+      if (!hasTemplate)
+        return new Response('Missing required SEO template fields for publish', { status: 400 });
+    } else {
+      if (!title || !description || (!body_md.trim() && !finalBlocks.length)) {
+        return new Response('Missing required fields for publish', { status: 400 });
+      }
     }
   }
 
@@ -83,6 +114,10 @@ export const POST: APIRoute = async (context) => {
       status: status as 'brouillon' | 'publie',
       seo_title,
       seo_description,
+      template_kind,
+      hero_image_src,
+      hero_image_alt,
+      seo_page_data,
     });
     return new Response(JSON.stringify(created), {
       status: 201,

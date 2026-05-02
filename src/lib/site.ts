@@ -15,18 +15,20 @@ export const site = {
     'Site d’information médicale: chirurgie plastique, esthétique, reconstructrice et chirurgie de la main. Prise de rendez-vous par téléphone ou WhatsApp.',
   locale: 'fr_FR',
   contact: {
-    // Placeholders (do not ship to production)
-    phoneDisplay: '+216 99 999 999',
-    phoneE164: '+21699999999',
-    whatsappE164: '+21699999999',
-    addressLines: ['99 Rue Exemple', '1000 Tunis, Tunisie'],
-    hoursLines: ['Lun-Ven 09:00-18:00'],
+    phoneDisplay: '+216 52 233 333',
+    phoneE164: '+21652233333',
+    whatsappE164: '+21652233333',
+    addressLines: [
+      'Immeuble Ben Cheikh, 1er étage',
+      'Rue du Lac Turkana, Les Berges du Lac 1, Tunis',
+    ],
+    hoursLines: ['Sur rendez-vous', 'Consultation individuelle'],
     city: 'Tunis',
     country: 'Tunisie',
   } satisfies ContactInfo,
   links: {
-    tel: 'tel:+21699999999',
-    whatsapp: 'https://wa.me/21699999999',
+    tel: 'tel:+21652233333',
+    whatsapp: 'https://wa.me/21652233333',
   },
 };
 
