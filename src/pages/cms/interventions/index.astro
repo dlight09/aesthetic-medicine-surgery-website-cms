@@ -111,7 +111,7 @@ const categoryLabel = (key: InterventionCategoryKey) => interventionCategoryMeta
         const okCat = !cat || itemCat === cat;
         const okSt = !st || itemSt === st;
         const show = okTerm && okCat && okSt;
-        (el as HTMLElement).style.display = show ? '' : 'none';
+        el.style.display = show ? '' : 'none';
         if (show) visible += 1;
       });
       if (countEl) countEl.textContent = `${visible} intervention${visible > 1 ? 's' : ''}`;
