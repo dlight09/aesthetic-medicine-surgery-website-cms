@@ -212,7 +212,7 @@ function getSection(key: string) {
         title,
         description: String(formData.get('description') ?? '').trim(),
         category,
-        order: item.order ?? '',
+        order: '',
         seo_title: String(formData.get('seo_title') ?? '').trim(),
         seo_description: String(formData.get('seo_description') ?? '').trim(),
         template_kind: 'seo_v2',
