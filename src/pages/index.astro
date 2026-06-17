@@ -455,11 +455,11 @@ const testimonials = [
 
 <script>
   const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const revealItems = Array.from(document.querySelectorAll('[data-reveal]'));
-  const revealGroups = Array.from(document.querySelectorAll('[data-reveal-group]'));
+  const revealItems = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+  const revealGroups = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal-group]'));
 
   revealGroups.forEach((group) => {
-    const items = Array.from(group.querySelectorAll('[data-reveal]'));
+    const items = Array.from(group.querySelectorAll<HTMLElement>('[data-reveal]'));
     items.forEach((item, index) => {
       item.style.transitionDelay = `${Math.min(index * 65, 260)}ms`;
     });

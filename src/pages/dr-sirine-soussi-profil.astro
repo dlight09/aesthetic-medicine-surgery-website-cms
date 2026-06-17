@@ -189,8 +189,9 @@ const timelineEntries = [
               reconstructrice, au contact de chirurgiens de renommée internationale.
             </p>
             <p>
-              J'ai exercé successivement au sein de : Clinique Mont-Louis, Clinique du Louvre, Clinique Trocadéro, Clinique des
-              Princes et collaboré avec les Docteurs Sarfati, Mamlouk, Derhy, Bennaceur et Bonvallot.
+              J’ai eu le privilège de me former aux côtés des Docteurs Bennaceur, Derhy, Mamlouk, Sarfati et Bonvalot, dont
+              l’expertise reconnue, l’exigence scientifique et la grande générosité dans la transmission du savoir ont profondément
+              enrichi ma pratique.
             </p>
           </div>
         </details>
@@ -512,22 +513,21 @@ const timelineEntries = [
 
 <script>
   const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const revealItems = Array.from(document.querySelectorAll('[data-reveal]'));
-  const revealGroups = Array.from(document.querySelectorAll('[data-reveal-group]'));
-  const sectionLinks = Array.from(document.querySelectorAll('[data-section-link]'));
+  const revealItems = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+  const revealGroups = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal-group]'));
+  const sectionLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-section-link]'));
   const sections = sectionLinks
-    .map((link) => {
+    .flatMap((link) => {
       const href = link.getAttribute('href');
-      if (!href?.startsWith('#')) return null;
-      const section = document.querySelector(href);
-      if (!section) return null;
-      return { link, section };
-    })
-    .filter(Boolean);
-  const detailEls = Array.from(document.querySelectorAll('[data-details]'));
+      if (!href?.startsWith('#')) return [];
+      const section = document.querySelector<HTMLElement>(href);
+      if (!section) return [];
+      return [{ link, section }];
+    });
+  const detailEls = Array.from(document.querySelectorAll<HTMLDetailsElement>('[data-details]'));
 
   revealGroups.forEach((group) => {
-    const items = Array.from(group.querySelectorAll('[data-reveal]'));
+    const items = Array.from(group.querySelectorAll<HTMLElement>('[data-reveal]'));
     items.forEach((item, index) => {
       item.style.transitionDelay = `${Math.min(index * 70, 280)}ms`;
     });

@@ -170,8 +170,9 @@ const clinics = ['Clinique Mont-Louis', 'Clinique du Louvre', 'Clinique Trocadé
               reconstructrice, au contact de chirurgiens de renommée internationale.
             </p>
             <p>
-              J'ai exercé successivement au sein de : Clinique Mont-Louis, Clinique du Louvre, Clinique Trocadéro, Clinique des
-              Princes et collaboré avec les Docteurs Sarfati, Mamlouk, Derhy, Bennaceur et Bonvallot.
+              J’ai eu le privilège de me former aux côtés des Docteurs Bennaceur, Derhy, Mamlouk, Sarfati et Bonvalot, dont
+              l’expertise reconnue, l’exigence scientifique et la grande générosité dans la transmission du savoir ont profondément
+              enrichi ma pratique.
             </p>
           </div>
         </details>
@@ -307,12 +308,9 @@ const clinics = ['Clinique Mont-Louis', 'Clinique du Louvre', 'Clinique Trocadé
               </p>
               <p>
                 Ces trois années m'ont permis de me former aux techniques les plus innovantes de la chirurgie esthétique et
-                reconstructrice, au contact de chirurgiens de renommée internationale. J'ai exercé successivement au sein de :
-              </p>
-              <p>
-                Clinique Mont-Louis Clinique du Louvre Clinique Trocadéro Clinique des Princes et collaboré avec les Docteurs
-                Sarfati, Mamlouk, Derhy, Bennaceur et Bonvallot - des praticiens dont l'exigence et la maîtrise technique ont
-                profondément influencé ma façon d'opérer et de concevoir la chirurgie.
+                reconstructrice, au contact de chirurgiens de renommée internationale. J’ai eu le privilège de me former aux côtés des
+                Docteurs Bennaceur, Derhy, Mamlouk, Sarfati et Bonvalot, dont l’expertise reconnue, l’exigence scientifique et la
+                grande générosité dans la transmission du savoir ont profondément enrichi ma pratique.
               </p>
             </div>
           </details>
@@ -440,7 +438,7 @@ const clinics = ['Clinique Mont-Louis', 'Clinique du Louvre', 'Clinique Trocadé
 
 <script>
   const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const revealItems = Array.from(document.querySelectorAll('[data-reveal]'));
+  const revealItems = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
 
   if (mediaQuery.matches) {
     revealItems.forEach((item) => item.classList.add('is-visible'));
