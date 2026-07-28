@@ -42,7 +42,7 @@ const interventionHref = relatedIntervention
   ? `/interventions/${relatedIntervention.category}/${item.intervention_slug}`
   : null;
 const caseLabel = item.case_number ? `Cas ${String(item.case_number).padStart(2, '0')}` : null;
-const pageTitle = caseLabel && relatedIntervention ? `${caseLabel} — ${relatedIntervention.title}` : item.title;
+const pageTitle = caseLabel && relatedIntervention ? `${caseLabel} - ${relatedIntervention.title}` : item.title;
 const mediaSets = item.media_sets?.length
   ? item.media_sets
   : [
@@ -74,7 +74,6 @@ if (item.patient_context?.smoking_status === 'smoker') patientChips.push('Fumeus
 if (item.patient_context?.post_bariatric) patientChips.push('Post-bariatrique');
 if (item.patient_context?.revision_case) patientChips.push('Reprise');
 if (item.patient_context?.pregnancies_count) patientChips.push(`${item.patient_context.pregnancies_count} grossesse(s)`);
-const isPreviewCase = item.id.startsWith('preview-');
 ---
 
 <BaseLayout title={pageTitle} description="Avant/après avec consentement. Les résultats varient selon chaque patient.">
@@ -87,12 +86,6 @@ const isPreviewCase = item.id.startsWith('preview-');
       </div>
     ) : null}
     {item.summary ? <p class="mt-3 text-lg text-ink/75">{item.summary}</p> : item.description ? <p class="mt-3 text-lg text-ink/75">{item.description}</p> : null}
-    {isPreviewCase ? (
-      <p class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.13em] text-amber-700">
-        Cas de previsualisation (extrait PDF). Les photos HQ seront integrees ensuite.
-      </p>
-    ) : null}
-
     {patientChips.length ? (
       <div class="mt-5 flex flex-wrap gap-2">
         {patientChips.map((chip) => (

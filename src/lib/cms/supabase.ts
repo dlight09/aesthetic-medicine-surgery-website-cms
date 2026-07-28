@@ -27,3 +27,7 @@ export function getAvantApresBucket() {
 export function getCmsMediaBucket() {
   return import.meta.env.SUPABASE_CMS_MEDIA_BUCKET ?? 'cms-media';
 }
+
+export function getBookingMediaBucket() {
+  return import.meta.env.SUPABASE_BOOKING_MEDIA_BUCKET ?? 'booking-media';
+}

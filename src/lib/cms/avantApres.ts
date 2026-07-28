@@ -1,5 +1,4 @@
 import { getAvantApresBucket, getSupabaseAdmin } from './supabase';
-import { getPreviewAvantApresCaseById, getPreviewAvantApresCases } from './avantApresPreview';
 
 export type AvantApresStatus = 'brouillon' | 'publie';
 
@@ -212,6 +211,47 @@ function normalizeProcedures(payload: CreateOrUpdatePayload['procedures']) {
   return items;
 }
 
+async function nextCaseNumber(
+  category: string,
+  slug: string,
+  excludeId?: string,
+) {
+  const supabase = getSupabaseAdmin();
+  let query = supabase
+    .from(tableName)
+    .select('case_number')
+    .eq('intervention_category', category)
+    .eq('intervention_slug', slug);
+  if (excludeId) query = query.neq('id', excludeId);
+  const { data, error } = await query;
+  if (error) throw error;
+  const max = (data ?? []).reduce((highest, row) => {
+    const number = typeof row.case_number === 'number' ? row.case_number : 0;
+    return Math.max(highest, number);
+  }, 0);
+  return max + 1;
+}
+
+function isCaseNumberConflict(error: unknown) {
+  return Boolean(error && typeof error === 'object' && (error as { code?: string }).code === '23505');
+}
+
+function caseMediaPaths(item: AvantApresCaseView) {
+  return new Set(
+    [
+      item.before_path,
+      item.after_path,
+      ...item.media_sets.flatMap((set) => [set.before_path, set.after_path]),
+    ].filter(Boolean),
+  );
+}
+
+async function removeMediaPaths(paths: Iterable<string>) {
+  const items = Array.from(new Set(paths)).filter(Boolean);
+  if (!items.length) return;
+  await getSupabaseAdmin().storage.from(getAvantApresBucket()).remove(items);
+}
+
 async function loadRelations(caseIds: string[]) {
   if (!caseIds.length) {
     return {
@@ -350,15 +390,9 @@ export async function listPublicAvantApresCases() {
 
     const cases = (data ?? []).map((row) => asCase(row as Record<string, unknown>));
     const relations = await loadRelations(cases.map((item) => item.id));
-    const dbCases = await Promise.all(cases.map((item) => buildCaseView(item, relations)));
-    if (dbCases.length >= 8) return dbCases;
-
-    const preview = getPreviewAvantApresCases();
-    const existing = new Set(dbCases.map((item) => item.id));
-    const previewOnly = preview.filter((item) => !existing.has(item.id));
-    return [...dbCases, ...previewOnly];
+    return await Promise.all(cases.map((item) => buildCaseView(item, relations)));
   } catch {
-    return getPreviewAvantApresCases();
+    return [];
   }
 }
 
@@ -374,13 +408,13 @@ export async function getPublicAvantApresCase(id: string) {
       .maybeSingle();
 
     if (error) throw error;
-    if (!data) return getPreviewAvantApresCaseById(id);
+    if (!data) return null;
 
     const item = asCase(data as Record<string, unknown>);
     const relations = await loadRelations([id]);
     return await buildCaseView(item, relations);
   } catch {
-    return getPreviewAvantApresCaseById(id);
+    return null;
   }
 }
 
@@ -404,14 +438,15 @@ export async function createAvantApresCase(payload: CreateOrUpdatePayload) {
       ? payload.after_path.trim()
       : (coverSet?.after_path ?? '');
 
+  const category = typeof payload.intervention_category === 'string' ? payload.intervention_category : '';
+  const slug = typeof payload.intervention_slug === 'string' ? payload.intervention_slug : '';
+  if (!category || !slug) throw new Error('An intervention is required');
+
   const casePayload = {
     title: String(payload.title ?? '').trim(),
     description: typeof payload.description === 'string' ? payload.description : null,
-    intervention_category:
-      typeof payload.intervention_category === 'string' ? payload.intervention_category : null,
-    intervention_slug:
-      typeof payload.intervention_slug === 'string' ? payload.intervention_slug : null,
-    case_number: typeof payload.case_number === 'number' ? payload.case_number : null,
+    intervention_category: category,
+    intervention_slug: slug,
     status: payload.status === 'publie' ? 'publie' : 'brouillon',
     consent: Boolean(payload.consent),
     consent_date: typeof payload.consent_date === 'string' ? payload.consent_date : null,
@@ -427,8 +462,23 @@ export async function createAvantApresCase(payload: CreateOrUpdatePayload) {
     updated_at: now,
   };
 
-  const { data, error } = await supabase.from(tableName).insert(casePayload).select('id').single();
-  if (error) throw error;
+  let data: { id: string } | null = null;
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const caseNumber = await nextCaseNumber(category, slug);
+    const result = await supabase
+      .from(tableName)
+      .insert({ ...casePayload, case_number: caseNumber })
+      .select('id')
+      .single();
+    if (!result.error && result.data) {
+      data = result.data;
+      break;
+    }
+    lastError = result.error;
+    if (!isCaseNumberConflict(result.error)) throw result.error;
+  }
+  if (!data) throw lastError ?? new Error('Unable to assign case number');
   const caseId = String(data.id);
 
   const patientContext = payload.patient_context;
@@ -501,6 +551,9 @@ export async function createAvantApresCase(payload: CreateOrUpdatePayload) {
 export async function updateAvantApresCase(id: string, payload: CreateOrUpdatePayload) {
   const supabase = getSupabaseAdmin();
   const now = new Date().toISOString();
+  const current = await getCmsAvantApresCase(id);
+  if (!current) throw new Error('Case not found');
+  const oldMediaPaths = caseMediaPaths(current);
 
   const patch: Record<string, unknown> = { updated_at: now };
   const baseFields = [
@@ -528,8 +581,31 @@ export async function updateAvantApresCase(id: string, payload: CreateOrUpdatePa
     }
   });
 
-  const { error } = await supabase.from(tableName).update(patch).eq('id', id);
-  if (error) throw error;
+  const nextCategory =
+    typeof payload.intervention_category === 'string'
+      ? payload.intervention_category
+      : current.intervention_category;
+  const nextSlug =
+    typeof payload.intervention_slug === 'string' ? payload.intervention_slug : current.intervention_slug;
+  const interventionChanged =
+    nextCategory !== current.intervention_category || nextSlug !== current.intervention_slug;
+  if (interventionChanged) {
+    if (!nextCategory || !nextSlug) throw new Error('An intervention is required');
+    patch.case_number = await nextCaseNumber(nextCategory, nextSlug, id);
+  }
+
+  let updateError: unknown = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { error } = await supabase.from(tableName).update(patch).eq('id', id);
+    if (!error) {
+      updateError = null;
+      break;
+    }
+    updateError = error;
+    if (!interventionChanged || !isCaseNumberConflict(error) || !nextCategory || !nextSlug) throw error;
+    patch.case_number = await nextCaseNumber(nextCategory, nextSlug, id);
+  }
+  if (updateError) throw updateError;
 
   if ('patient_context' in payload) {
     const patientContext = payload.patient_context;
@@ -626,11 +702,15 @@ export async function updateAvantApresCase(id: string, payload: CreateOrUpdatePa
 
   const updated = await getCmsAvantApresCase(id);
   if (!updated) throw new Error('Unable to load updated case');
+  const currentMediaPaths = caseMediaPaths(updated);
+  await removeMediaPaths([...oldMediaPaths].filter((path) => !currentMediaPaths.has(path)));
   return updated;
 }
 
 export async function deleteAvantApresCase(id: string) {
   const supabase = getSupabaseAdmin();
+  const item = await getCmsAvantApresCase(id);
   const { error } = await supabase.from(tableName).delete().eq('id', id);
   if (error) throw error;
+  if (item) await removeMediaPaths(caseMediaPaths(item));
 }

@@ -4,15 +4,45 @@
 
 :root {
   --c-ink: 20 20 19;
-  --c-paper: 248 245 240;
-  --c-sand: 231 219 200;
-  --c-copper: 185 111 84;
-  --c-mist: 242 242 240;
+  --c-paper: 240 233 222;
+  --c-sand: 218 197 169;
+  --c-copper: 190 119 76;
+  --c-copper-deep: 135 72 45;
+  --c-mist: 234 224 211;
 }
 
 html {
   background: rgb(var(--c-paper));
   color: rgb(var(--c-ink));
+}
+
+.public-site {
+  --c-paper: 255 255 240;
+  --c-mist: 232 205 151;
+  background: rgb(var(--c-paper));
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-display {
+  font-family: 'Andale Mono', AndaleMono, monospace;
+  font-weight: 500;
+}
+
+p {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+/* Small ink labels need a darker value on the public ivory surface. */
+.public-site .text-ink\/55,
+.public-site .text-ink\/60 {
+  color: rgb(var(--c-ink) / 0.65);
 }
 
 ::selection {
@@ -41,9 +71,8 @@ html {
   opacity: 0.35;
 }
 
-/* A slightly more editorial rhythm */
 .prose-med {
-  font-family: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+  text-wrap: pretty;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -117,9 +146,9 @@ body.menu-scroll-lock {
   }
 
   .btn-accent {
-    @apply bg-copper text-paper shadow-soft;
-    @apply hover:shadow-lift hover:bg-copper/90;
-    @apply active:shadow-soft active:bg-copper/80;
+    @apply bg-copper-deep text-paper shadow-soft;
+    @apply hover:shadow-lift hover:bg-copper-deep/95;
+    @apply active:shadow-soft active:bg-copper-deep/90;
   }
 
   /* Link with visible focus */

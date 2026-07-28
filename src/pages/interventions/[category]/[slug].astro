@@ -15,6 +15,7 @@ import { interventionCategoryMeta } from '@/lib/interventions';
 import { premiumInterventionPages } from '@/lib/interventions/premiumPages';
 import { seoInterventionPages } from '@/lib/interventions/seoPages';
 import { coerceSeoTemplateV2Data } from '@/lib/cms/interventionSeoTemplate';
+import { isCmsAuthed } from '@/lib/cms/auth';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 
@@ -28,7 +29,7 @@ if (!category || !slug) {
 }
 const fallbackSeoPageData = seoInterventionPages[slug] ?? null;
 
-const cmsAuthed = Astro.cookies.get('cms_auth')?.value === 'true';
+const cmsAuthed = isCmsAuthed(Astro);
 
 let dbItem: Awaited<ReturnType<typeof getPublicInterventionBySlug>> = null;
 try {

@@ -33,81 +33,94 @@ const processSteps = [
 ---
 
 <BaseLayout title="Rendez-vous" description="Prendre rendez-vous: telephone, WhatsApp, adresse, horaires et informations de consultation.">
-  <section class="mx-auto max-w-6xl px-4 pb-20 pt-14">
-    <header class="grid items-end gap-10 border-b border-ink/10 pb-12 lg:grid-cols-12">
-      <div class="lg:col-span-7">
-        <span class="text-xs font-semibold uppercase tracking-[0.2em] text-ink/55">Planifiez votre visite</span>
-        <h1 class="mt-6 font-display text-6xl tracking-tight sm:text-7xl lg:text-8xl">Rendez-vous</h1>
-        <p class="mt-6 max-w-2xl text-lg leading-relaxed text-ink/75">
-          Entrez dans un parcours structuré, avec une information claire et une consultation personnalisée à {site.contact.city}.
+  <section class="relative overflow-hidden bg-ink">
+    <img
+      src="/images/hero-clinic-01.webp"
+      width="1536"
+      height="1024"
+      alt="Espace de consultation du cabinet"
+      loading="eager"
+      class="absolute inset-0 h-full w-full object-cover opacity-45"
+    />
+    <div class="absolute inset-0 bg-ink/72"></div>
+    <div class="relative mx-auto max-w-6xl px-4 py-14 sm:py-20 lg:py-24">
+      <div class="max-w-2xl text-paper">
+        <span class="text-xs font-semibold uppercase tracking-[0.2em] text-paper/70">Première demande</span>
+        <h1 class="mt-5 font-display text-4xl tracking-tight text-paper sm:text-5xl">Rendez-vous</h1>
+        <p class="mt-5 max-w-xl text-base leading-relaxed text-paper/82 sm:text-lg">
+          Contactez directement le cabinet pour une première demande et l’organisation d’une consultation adaptée à votre situation.
         </p>
       </div>
-      <div class="overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-lift lg:col-span-5">
-        <img
-          src="/images/hero-clinic-01.webp"
-          width="1536"
-          height="1024"
-          alt="Clinique et espace de consultation"
-          loading="eager"
-          class="h-[28rem] w-full object-cover transition duration-700 hover:scale-[1.03]"
-        />
-      </div>
-    </header>
 
-    <section class="mt-14 grid gap-4 md:grid-cols-3">
-      <article class="rounded-3xl border border-ink/10 bg-mist p-7 shadow-soft">
-        <div class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-paper text-ink/80">
-          <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" aria-hidden="true">
-            <path d="M5 6.5c0 6.4 5.1 11.5 11.5 11.5h1.1a1.4 1.4 0 0 0 1.4-1.4v-2.2c0-.7-.5-1.3-1.2-1.4l-2.3-.4a1.5 1.5 0 0 0-1.4.4l-1 .9a13.2 13.2 0 0 1-3.9-3.9l.9-1a1.5 1.5 0 0 0 .4-1.4l-.4-2.3c-.1-.7-.7-1.2-1.4-1.2H6.4A1.4 1.4 0 0 0 5 5.4v1.1Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
-          </svg>
+      <section class="mt-10 max-w-3xl rounded-3xl border border-paper/20 bg-paper p-5 text-ink shadow-lift sm:p-8">
+        <div class="border-b border-ink/10 pb-6">
+          <h2 class="font-display text-2xl tracking-tight">Envoyer une demande</h2>
+          <p class="mt-2 max-w-2xl text-sm leading-relaxed text-ink/75">Décrivez brièvement votre demande et joignez les photos utiles à sa compréhension. Elles restent strictement accessibles à l’équipe du cabinet.</p>
         </div>
-        <div class="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-ink/55">Téléphone</div>
-        <div class="mt-3 font-display text-3xl tracking-tight">{site.contact.phoneDisplay}</div>
-        <div class="mt-2 text-sm text-ink/70">Disponible selon horaires du cabinet</div>
-        <div class="mt-6">
-          <a href={site.links.tel} class="btn btn-pill btn-sm btn-primary">Appeler</a>
-        </div>
-      </article>
 
-      <article class="rounded-3xl border border-ink/10 bg-mist p-7 shadow-soft">
-        <div class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-paper text-ink/80">
-          <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" aria-hidden="true">
-            <path d="M12.1 4.8A7.2 7.2 0 0 0 5 12a7 7 0 0 0 1 3.7L5 19l3.6-1a7.2 7.2 0 1 0 3.5-13.2Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
-            <path d="M9.4 10.1c.2.4.8 1.3 1.7 2 .9.8 1.8 1.1 2.2 1.2.3.1.6 0 .8-.2l.7-.7c.2-.2.6-.3.9-.1l1 .6c.3.2.4.6.3.9-.3.9-1.2 1.5-2.2 1.4-1.2-.2-2.6-.9-4-2.1-1.2-1.1-2-2.3-2.2-3.5-.1-.9.3-1.8 1.1-2.3.3-.2.7-.1.9.1l.7.9c.2.3.2.7 0 .9l-.5.7c-.2.2-.2.5-.1.7Z" fill="currentColor" fill-opacity="0.15"></path>
-          </svg>
-        </div>
-        <div class="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-ink/55">WhatsApp</div>
-        <div class="mt-3 font-display text-3xl tracking-tight">{site.contact.phoneDisplay}</div>
-        <div class="mt-2 text-sm text-ink/70">Réponse rapide selon disponibilités</div>
-        <div class="mt-6">
-          <a href={site.links.whatsapp} class="btn btn-pill btn-sm btn-secondary">Écrire</a>
-        </div>
-      </article>
+        <form id="booking-form" class="mt-8 space-y-8" novalidate>
+          <fieldset class="space-y-5">
+            <legend class="font-display text-lg tracking-tight text-ink">Vos coordonnées</legend>
+            <div class="grid gap-5 sm:grid-cols-2">
+              <label class="grid gap-2 text-sm font-semibold text-ink/85">
+                <span class="booking-label">Nom et prénom <b aria-hidden="true">*</b></span>
+              <input name="fullName" autocomplete="name" required class="booking-input" />
+              </label>
+              <label class="grid gap-2 text-sm font-semibold text-ink/85">
+                <span class="booking-label">E-mail <b aria-hidden="true">*</b></span>
+              <input name="email" type="email" autocomplete="email" required class="booking-input" />
+              </label>
+            </div>
+            <label class="grid gap-2 text-sm font-semibold text-ink/85">
+              <span class="booking-label">Numéro de téléphone <b aria-hidden="true">*</b></span>
+              <input name="phone" type="tel" autocomplete="tel" required class="booking-input" />
+            </label>
+          </fieldset>
+          <fieldset class="space-y-5 border-t border-ink/10 pt-7">
+            <legend class="font-display text-lg tracking-tight text-ink">Votre demande</legend>
+            <label class="mt-5 grid gap-2 text-sm font-semibold text-ink/85">
+              <span class="booking-label">Votre message <b aria-hidden="true">*</b></span>
+              <textarea name="message" rows="5" required class="booking-input resize-y" placeholder="Expliquez votre demande ou la zone concernée."></textarea>
+            </label>
+            <div class="booking-photo-area">
+              <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <span class="booking-label">Photos à joindre <b aria-hidden="true">*</b></span>
+                <span class="text-sm text-ink/65">De 1 à 5 photos</span>
+              </div>
+              <label for="booking-photos" class="booking-upload mt-3">
+                <span class="font-semibold text-ink">Ajoutez les photos utiles à votre demande</span>
+                <span class="mt-1 block max-w-xl text-sm leading-relaxed text-ink/70">JPG, PNG ou WebP, 3 Mo maximum par photo. Elles ne sont ni publiées ni partagées.</span>
+                <span class="mt-4 inline-flex rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper transition">Sélectionner les photos</span>
+              </label>
+              <input id="booking-photos" name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple class="sr-only" />
+              <ul id="booking-photo-list" class="mt-3 space-y-2 text-sm text-ink/75" aria-live="polite"></ul>
+            </div>
+          </fieldset>
+          <label class="flex items-start gap-3 text-sm leading-relaxed text-ink/75">
+            <input name="consent" type="checkbox" required class="mt-1 h-4 w-4 rounded border-ink/30 accent-copper-deep" />
+            <span>J’accepte que le cabinet traite mes informations et les photos jointes afin de répondre à ma demande, conformément à l’<a href="/consentement" class="font-semibold underline decoration-ink/35 underline-offset-4 hover:decoration-ink">information sur le consentement</a>. <b aria-hidden="true" class="text-copper-deep">*</b></span>
+          </label>
+          <input name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true" />
+          <div class="flex flex-col gap-4 border-t border-ink/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <p id="booking-status" class="text-sm leading-relaxed text-ink/70" role="status" aria-live="polite">Tous les champs, y compris les photos, sont obligatoires.</p>
+            <button type="submit" class="btn btn-pill btn-lg btn-accent">Envoyer la demande</button>
+          </div>
+        </form>
 
-      <article class="rounded-3xl border border-ink/10 bg-mist p-7 shadow-soft">
-        <div class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-paper text-ink/80">
-          <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" aria-hidden="true">
-            <path d="M12 20s6-4.9 6-9.4a6 6 0 1 0-12 0C6 15.1 12 20 12 20Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
-            <circle cx="12" cy="10.6" r="2.1" stroke="currentColor" stroke-width="1.6"></circle>
-          </svg>
+        <div class="mt-7 border-t border-ink/10 pt-6">
+          <p class="text-sm leading-relaxed text-ink/70">Vous préférez échanger directement ?</p>
+          <div class="mt-3 flex flex-wrap gap-3">
+            <a href={site.links.tel} class="btn btn-pill btn-md btn-primary">Appeler</a>
+            <a href={site.links.whatsapp} class="btn btn-pill btn-md btn-secondary">WhatsApp</a>
+            <a href={site.links.email} class="btn btn-pill btn-md btn-secondary">E-mail</a>
+          </div>
         </div>
-        <div class="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-ink/55">Adresse</div>
-        <div class="mt-3 text-lg leading-relaxed text-ink/80">
-          {site.contact.addressLines.map((line) => (
-            <div>{line}</div>
-          ))}
-          <div>{site.contact.city}, {site.contact.country}</div>
-        </div>
-        <a href={mapsHref} target="_blank" rel="noopener noreferrer" class="mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-ink/75 hover:text-ink">
-          Ouvrir dans Maps
-          <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" aria-hidden="true">
-            <path d="M8 16 16 8M9 8h7v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-          </svg>
-        </a>
-      </article>
-    </section>
+      </section>
+    </div>
+  </section>
 
-    <section id="consultation" class="mt-20 rounded-3xl border border-ink/10 bg-mist/60 px-6 py-14 sm:px-10">
+  <section class="mx-auto max-w-6xl px-4 pb-20 pt-14 sm:pt-20">
+    <section id="consultation" class="rounded-3xl border border-ink/10 bg-mist/60 px-6 py-14 sm:px-10">
       <div class="flex items-start justify-between gap-4">
         <div class="max-w-2xl">
           <h2 class="font-display text-4xl tracking-tight sm:text-5xl">Votre parcours de consultation</h2>
@@ -128,27 +141,6 @@ const processSteps = [
       </div>
     </section>
 
-    <section class="mt-20 overflow-hidden rounded-3xl border border-ink/10 bg-ink shadow-lift lg:grid lg:grid-cols-2">
-      <div class="p-10 text-paper sm:p-14">
-        <h2 class="font-display text-4xl leading-tight tracking-tight sm:text-5xl">Prête à planifier votre consultation ?</h2>
-        <p class="mt-5 max-w-xl text-base leading-relaxed text-paper/80">
-          Réservez votre créneau pour une évaluation personnalisée et un échange complet sur les options adaptées à votre situation.
-        </p>
-        <div class="mt-8 flex flex-wrap gap-3">
-          <a href={site.links.tel} class="btn btn-pill btn-lg bg-paper text-ink hover:bg-paper/90">Appeler</a>
-          <a href={site.links.whatsapp} class="btn btn-pill btn-lg border border-paper/35 bg-transparent text-paper hover:bg-paper/10">WhatsApp</a>
-        </div>
-      </div>
-      <div class="h-80 lg:h-full">
-        <img
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMuQzC6L3YIQzzZhlT5KYl9UmX8mRdVEdEuQ98_2txAlXGLLNHiXy34ZOuf0QbPeSFP9KzfIT3gyOu1LNZipKeWhnJ2UqmDFPhc36DDvRrOiM2i-iAnnIDF6Eh1vFAF9r-YUVkm222ccy5L1nuJ61VwUtJ_COPcTEawz3ky4iiWNVIr0jx6BlR5VgALmc1w8bGLLwSy9Z2Pj-UG9CwdOf3vjxsfcgLmwSU4rgbXf7q3gR2LaRDWgrCfaQNE465EAojmqhHss8J6FRh"
-          alt="Préparation de consultation en cabinet"
-          class="h-full w-full object-cover opacity-85"
-          loading="lazy"
-        />
-      </div>
-    </section>
-
     <section class="mt-20 grid gap-0 overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft lg:grid-cols-[1.15fr_0.85fr]">
       <div class="h-[26rem] min-h-[22rem] bg-mist">
         <iframe
@@ -161,7 +153,7 @@ const processSteps = [
         ></iframe>
       </div>
       <div class="bg-mist/50 p-8 sm:p-10">
-        <h3 class="font-display text-3xl tracking-tight">Venir à la clinique</h3>
+        <h3 class="font-display text-3xl tracking-tight">Venir au cabinet</h3>
         <p class="mt-4 text-sm leading-relaxed text-ink/70">
           Le cabinet se situe à {site.contact.city}. Vous pouvez ouvrir l'itinéraire directement dans Google Maps.
         </p>
@@ -179,4 +171,125 @@ const processSteps = [
       </div>
     </section>
   </section>
+
 </BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#booking-form');
+  const photoInput = document.querySelector<HTMLInputElement>('#booking-photos');
+  const photoList = document.querySelector<HTMLUListElement>('#booking-photo-list');
+  const status = document.querySelector<HTMLElement>('#booking-status');
+  const submitButton = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+  const maxPhotos = 5;
+  const maxPhotoSize = 3 * 1024 * 1024;
+  const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+  let selectedPhotos: File[] = [];
+
+  function setStatus(message: string, isError = false) {
+    if (!status) return;
+    status.textContent = message;
+    status.className = `text-sm leading-relaxed ${isError ? 'text-copper-deep font-semibold' : 'text-ink/70'}`;
+  }
+
+  function escapeHtml(value: string) {
+    const element = document.createElement('span');
+    element.textContent = value;
+    return element.innerHTML;
+  }
+
+  function renderPhotos() {
+    if (!photoList) return;
+    if (!selectedPhotos.length) {
+      photoList.innerHTML = '<li class="rounded-xl border border-dashed border-ink/20 px-3 py-2 text-ink/65">Aucune photo sélectionnée.</li>';
+      return;
+    }
+    photoList.innerHTML = selectedPhotos.map((file, index) => `
+      <li class="flex items-center justify-between gap-3 rounded-xl bg-mist/45 px-3 py-2">
+        <span class="min-w-0 truncate">${escapeHtml(file.name)} <span class="text-ink/55">(${Math.ceil(file.size / 1024)} Ko)</span></span>
+        <button type="button" class="font-semibold text-ink underline underline-offset-2" data-photo-index="${index}">Retirer</button>
+      </li>`).join('');
+  }
+
+  photoInput?.addEventListener('change', () => {
+    const files = Array.from(photoInput.files ?? []);
+    const invalid = files.find((file) => !allowedTypes.has(file.type) || file.size > maxPhotoSize);
+    if (invalid) {
+      setStatus('Chaque photo doit être au format JPG, PNG ou WebP et ne pas dépasser 3 Mo.', true);
+      photoInput.value = '';
+      return;
+    }
+    if (selectedPhotos.length + files.length > maxPhotos) {
+      setStatus(`Vous pouvez joindre jusqu’à ${maxPhotos} photos.`, true);
+      photoInput.value = '';
+      return;
+    }
+    selectedPhotos = [...selectedPhotos, ...files];
+    photoInput.value = '';
+    setStatus(`${selectedPhotos.length} photo${selectedPhotos.length > 1 ? 's' : ''} sélectionnée${selectedPhotos.length > 1 ? 's' : ''}.`);
+    renderPhotos();
+  });
+
+  photoList?.addEventListener('click', (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-photo-index]');
+    if (!button) return;
+    selectedPhotos.splice(Number(button.dataset.photoIndex), 1);
+    renderPhotos();
+    if (!selectedPhotos.length) setStatus('Ajoutez au moins une photo pour envoyer votre demande.', true);
+  });
+
+  renderPhotos();
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    if (!selectedPhotos.length) {
+      setStatus('Ajoutez au moins une photo pour envoyer votre demande.', true);
+      photoInput?.focus();
+      return;
+    }
+
+    const data = new FormData(form);
+    submitButton!.disabled = true;
+    setStatus('Enregistrement de votre demande…');
+
+    try {
+      const response = await fetch('/api/bookings/submit', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          fullName: data.get('fullName'), email: data.get('email'), phone: data.get('phone'), message: data.get('message'),
+          consent: data.get('consent') === 'on', website: data.get('website'),
+          photos: selectedPhotos.map(({ name, type, size }) => ({ name, type, size })),
+        }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      const { uploads } = await response.json();
+
+      if (uploads.length) {
+        setStatus('Envoi sécurisé des photos…');
+        const results = await Promise.all(uploads.map((upload: { signedUrl: string }, index: number) => fetch(upload.signedUrl, {
+          method: 'PUT', headers: { 'content-type': selectedPhotos[index].type }, body: selectedPhotos[index],
+        })));
+        if (results.some((result) => !result.ok)) throw new Error('La demande est enregistrée, mais une ou plusieurs photos n’ont pas pu être envoyées. Contactez le cabinet si nécessaire.');
+      }
+
+      form.reset();
+      selectedPhotos = [];
+      renderPhotos();
+      setStatus('Votre demande a bien été envoyée. Le cabinet vous répondra dans les meilleurs délais.');
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Une erreur est survenue. Veuillez réessayer ou contacter le cabinet directement.', true);
+    } finally {
+      submitButton!.disabled = false;
+    }
+  });
+</script>
+
+<style>
+  .booking-label { @apply inline-flex w-fit items-baseline gap-1 whitespace-nowrap font-semibold text-ink/90; }
+  .booking-label b { @apply text-copper-deep; }
+  .booking-input { @apply w-full rounded-xl border border-ink/20 bg-paper px-4 py-3 text-base text-ink outline-none transition placeholder:text-ink/60 focus:border-copper-deep focus:ring-2 focus:ring-copper/25; }
+  .booking-photo-area { @apply rounded-2xl border border-ink/10 bg-mist/25 p-5 sm:p-6; }
+  .booking-upload { @apply block cursor-pointer rounded-xl border border-dashed border-ink/30 bg-paper p-5 text-sm text-ink transition hover:border-copper-deep hover:bg-paper/70 focus-within:ring-2 focus-within:ring-copper/30; }
+  .booking-upload:hover span:last-child { @apply bg-ink/90; }
+</style>

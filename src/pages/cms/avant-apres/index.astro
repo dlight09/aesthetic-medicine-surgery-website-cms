@@ -54,7 +54,7 @@ const interventionTitleByRef = new Map(
 const formatDate = (value: string) =>
   new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 const formatCaseNumber = (value?: number | null) =>
-  value ? `Cas ${String(value).padStart(2, '0')}` : '—';
+  value ? `Cas ${String(value).padStart(2, '0')}` : '-';
 
 const casesByRef = new Map<string, AvantApresCaseWithIntervention[]>();
 const unassignedCases = items.filter((item) => !item.intervention_category || !item.intervention_slug);
@@ -188,7 +188,7 @@ const interventionOptionsByCategory = new Map(
         </label>
       </div>
       <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-ink/60">
-        <div id="aa-count">—</div>
+        <div id="aa-count">-</div>
         <button type="button" id="aa-reset" class="text-sm font-semibold text-ink/70 hover:text-ink">
           Réinitialiser
         </button>

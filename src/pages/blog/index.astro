@@ -18,10 +18,10 @@ type CardPost = {
 };
 
 const imageFallbacks = [
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuDhRYHRdCQpEf87Z3HGF1xgQQidQ10_7kzg0wSs1w6_dQgLSCGLZ2vOn3kDhsnKczUG2Ceyu4EYGUGxyu1S86fQoSck2lkhfouk4iZObM1D7rJFreHC_dzjcQZgN57rwV1pKrFUQns6Z7kQY3BXQtaAdfZNDxsM2cwqG8LL8EouWRc9XjWz1sM0BIN6wb_CuasDTzMf-eIRunmVE5iTDe6iqW5WyUR4e8AyQmdQ2Am-lNFH5l3DfiBeuDYz6_TVpx3b9tivhKNYV6tK',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuD6a1mmjP_VatbsxWcjeUe9XRZeIS2G1Ftocmxh7b_wSujbOVMEN-b0yfJD1X8MyNWk2DwUXwxMLZSOzb1imAoh1Aji9MicYl17AJZIU-vGOtT12B1CLiZnkzP-YKxpceBazUU8JiWWGuenyX5jsApCQi7nLtUGRMFgQsAjatJhrIx65UDTwuGTkUzTR6SP00f9G_OfLU4VPGThL2Mcj8UsjVYflYcQJAPIhGi--ENxoriHvNRpXaZkFDcxItFlXdQeaTKJMwK14ScT',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuAZbsogzAwkJwfqjgpQfnJDeJXsUy43c13rVl5QRt1JJNfwcJNZWkxrKOvIQPXTv0-frDXr2F4oNZRUk7-WLdyT5A6rB77VHnWOykLsDBrvjzw-baV7Yx8nXSbDMsInPHk69a06AwxdHHQAzs8WQRUvJ3hIgbNNmiisqXF_xBhu_peyKZnShwNaMHErAs66Af_zi0GkESkHmqN0OWEj_m6pNYhbRKjDUzDIMhhBJUGFDwxzRqaYmqjMeNTPFFis7iBk-XfU93qIuHxz',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCn6dceebeeO8vhTJ6aFaGKmxJF88kkykJvqk4qqGhmv01n4IVmxvlEKDB7UNWoApRdd7lCRdcEc42W-kuXCAZ_D5Rshvsjr5ZxpnNHT0Tn6afUjTNwD3Wvs9fge-5aV2_DRRQ-yYa7Jp_Qcazuf3ot1NStwWk8TV29IkZPSnIC0EpIa48pGc0SfPXyiS_9ule7VYzSksuwzguZxw6FpmEVIbpRbK8HKaT6Q1PuVv4zHhHjrHswM-F-lLe65iP7NarCMIBbpvTHyADH',
+  '/images/placeholders/clinic.webp',
+  '/images/placeholders/skin.jpg',
+  '/images/placeholders/surgery.jpg',
+  '/images/placeholders/hand.jpg',
 ];
 
 function inferThemeFromText(input: string): BlogTheme {
@@ -168,7 +168,7 @@ const cards = featured ? filteredPosts.slice(1) : filteredPosts;
                 <h2 class="font-display text-3xl leading-tight tracking-tight transition group-hover:opacity-75">{p.title}</h2>
                 <p class="text-sm leading-relaxed text-ink/70">{p.description}</p>
                 <div class="flex items-center justify-between border-t border-ink/10 pt-3 text-[10px] uppercase tracking-[0.18em] text-ink/50">
-                  <span>{p.dateLabel || '—'}</span>
+                  <span>{p.dateLabel || '-'}</span>
                   <span>{p.readMinutes} min</span>
                 </div>
               </div>

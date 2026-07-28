@@ -1,79 +1,63 @@
 ---
 import CmsLayout from '@/layouts/CmsLayout.astro';
-import { cmsBookings } from '@/lib/cms/mock';
-
-export async function getStaticPaths() {
-  return cmsBookings.map((b) => ({ params: { id: b.id } }));
-}
+import { getBookingPhotoUrls, getBookingRequest } from '@/lib/cms/bookings';
+import { isCmsAuthed } from '@/lib/cms/auth';
 
 const { id } = Astro.params;
-const booking = cmsBookings.find((b) => b.id === id) ?? cmsBookings[0];
+if (!isCmsAuthed(Astro)) return Astro.redirect('/cms/login');
+const booking = id ? await getBookingRequest(id) : null;
+if (!booking) return Astro.redirect('/cms/bookings');
+const photoUrls = await getBookingPhotoUrls(booking.photo_paths);
+const formatDate = (value: string) => new Intl.DateTimeFormat('fr-TN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 ---
 
 <CmsLayout title="Demande">
   <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
     <section class="cms-card p-7">
       <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Demande</div>
-      <h1 class="mt-2 font-display text-3xl tracking-tight">{booking.patientName}</h1>
+       <h1 class="mt-2 font-display text-3xl tracking-tight">{booking.full_name}</h1>
       <p class="mt-2 text-sm text-ink/60">Reference: {booking.id}</p>
 
       <div class="mt-8 grid gap-4 sm:grid-cols-2">
         <div class="rounded-2xl border border-ink/10 bg-mist p-4 text-sm">
           <div class="text-xs uppercase tracking-wide text-ink/50">Telephone</div>
-          <div class="mt-2 font-semibold text-ink/90">{booking.phone}</div>
+          <a href={`tel:${booking.phone.replace(/\s/g, '')}`} class="mt-2 block font-semibold text-ink/90 underline underline-offset-4">{booking.phone}</a>
         </div>
         <div class="rounded-2xl border border-ink/10 bg-mist p-4 text-sm">
-          <div class="text-xs uppercase tracking-wide text-ink/50">Canal</div>
-          <div class="mt-2 font-semibold text-ink/90">{booking.channel}</div>
+          <div class="text-xs uppercase tracking-wide text-ink/50">E-mail</div>
+          <a href={`mailto:${booking.email}`} class="mt-2 block break-all font-semibold text-ink/90 underline underline-offset-4">{booking.email}</a>
         </div>
         <div class="rounded-2xl border border-ink/10 bg-mist p-4 text-sm">
-          <div class="text-xs uppercase tracking-wide text-ink/50">Motif</div>
-          <div class="mt-2 font-semibold text-ink/90">{booking.category}</div>
+          <div class="text-xs uppercase tracking-wide text-ink/50">Reçue le</div>
+          <div class="mt-2 font-semibold text-ink/90">{formatDate(booking.created_at)}</div>
         </div>
         <div class="rounded-2xl border border-ink/10 bg-mist p-4 text-sm">
-          <div class="text-xs uppercase tracking-wide text-ink/50">Date souhaitee</div>
-          <div class="mt-2 font-semibold text-ink/90">{booking.desiredDate}</div>
+          <div class="text-xs uppercase tracking-wide text-ink/50">Consentement</div>
+          <div class="mt-2 font-semibold text-ink/90">Recueilli le {formatDate(booking.consent_at)}</div>
         </div>
       </div>
 
       <div class="mt-8">
-        <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Notes internes</div>
-        <textarea
-          rows={6}
-          class="cms-textarea mt-2 w-full"
-          placeholder="Notes internes, commentaires, prochaines actions..."
-        ></textarea>
-      </div>
+         <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Message</div>
+         <p class="mt-2 whitespace-pre-wrap rounded-2xl border border-ink/10 bg-mist/45 p-5 text-sm leading-relaxed text-ink/80">{booking.message}</p>
+       </div>
 
-      <div class="mt-8 rounded-2xl border border-ink/10 bg-mist p-4 text-sm text-ink/70">
-        <div class="font-semibold text-ink/80">Historique</div>
-        <ul class="mt-3 space-y-2">
-          <li>11/02/2026 — Demande creee</li>
-          <li>11/02/2026 — Premiere tentative d’appel</li>
-        </ul>
-      </div>
+       {photoUrls.length > 0 && <div class="mt-8"><div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Photos jointes</div><div class="mt-3 grid gap-3 sm:grid-cols-2">{photoUrls.map((url, index) => <a href={url} target="_blank" rel="noreferrer" class="overflow-hidden rounded-2xl border border-ink/10 bg-mist"><img src={url} alt={`Photo jointe ${index + 1}`} class="aspect-[4/3] w-full object-cover" loading="lazy" /></a>)}</div></div>}
     </section>
 
     <aside class="cms-panel p-6">
       <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Actions</div>
-      <div class="mt-3 space-y-2">
-        <a href={`tel:${booking.phone.replace(/\s/g, '')}`} class="btn btn-pill btn-md btn-primary w-full">Appeler</a>
-        <a href={`https://wa.me/${booking.phone.replace(/\D/g, '')}`} class="btn btn-pill btn-md btn-secondary w-full">
-          WhatsApp
-        </a>
+       <div class="mt-3 space-y-2">
+         <a href={`tel:${booking.phone.replace(/\s/g, '')}`} class="btn btn-pill btn-md btn-primary w-full">Appeler</a>
+         <a href={`mailto:${booking.email}`} class="btn btn-pill btn-md btn-secondary w-full">E-mail</a>
       </div>
 
       <div class="mt-6">
         <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Statut</div>
-        <select class="cms-select mt-2 w-full">
-          <option selected={booking.status === 'Nouveau'}>Nouveau</option>
-          <option selected={booking.status === 'Contacte'}>Contacte</option>
-          <option selected={booking.status === 'Planifie'}>Planifie</option>
-          <option>Cloture</option>
-        </select>
+         <div class="mt-2 rounded-xl border border-ink/10 bg-mist px-3 py-2 text-sm font-semibold capitalize text-ink/80">{booking.status}</div>
       </div>
 
-      <div class="mt-6 text-xs text-ink/60">UI uniquement — sauvegarde activee apres integration.</div>
+       <div class="mt-6 text-xs text-ink/60">Les photos jointes sont accessibles uniquement dans cet espace administrateur.</div>
     </aside>
   </div>
 </CmsLayout>

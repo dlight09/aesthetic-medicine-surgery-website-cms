@@ -1,21 +1,28 @@
 ---
 import CmsLayout from '@/layouts/CmsLayout.astro';
-import { cmsBookings } from '@/lib/cms/mock';
+import { listBookingRequests } from '@/lib/cms/bookings';
+import { isCmsAuthed } from '@/lib/cms/auth';
+
+if (!isCmsAuthed(Astro)) return Astro.redirect('/cms/login');
+const bookings = await listBookingRequests();
 
 const statusClass = (status: string) => {
   switch (status) {
-    case 'Nouveau':
+    case 'nouveau':
       return 'bg-copper/15 text-copper';
-    case 'Contacte':
+    case 'contacte':
       return 'bg-ink/10 text-ink/80';
-    case 'Planifie':
+    case 'planifie':
       return 'bg-emerald-100 text-emerald-700';
-    case 'Cloture':
+    case 'cloture':
       return 'bg-ink/5 text-ink/60';
     default:
       return 'bg-ink/10 text-ink/70';
   }
 };
+
+const statusLabel = (status: string) => status.charAt(0).toUpperCase() + status.slice(1);
+const formatDate = (value: string) => new Intl.DateTimeFormat('fr-TN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 ---
 
 <CmsLayout title="Demandes">
@@ -32,9 +39,9 @@ const statusClass = (status: string) => {
       <select class="cms-select rounded-full">
         <option>Statut: tous</option>
         <option>Nouveau</option>
-        <option>Contacte</option>
-        <option>Planifie</option>
-        <option>Cloture</option>
+        <option>Contacté</option>
+        <option>Planifié</option>
+        <option>Clôturé</option>
       </select>
       <input
         type="search"
@@ -44,30 +51,29 @@ const statusClass = (status: string) => {
     </div>
 
     <div class="cms-card shadow-soft">
-      <div class="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr] gap-4 border-b border-ink/10 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-ink/50">
-        <div>Patient</div>
-        <div>Canal</div>
-        <div>Motif</div>
-        <div>Date souhaitee</div>
-        <div>Statut</div>
-      </div>
-      <div class="divide-y divide-ink/5">
-        {cmsBookings.map((b) => (
-          <a href={`/cms/bookings/${b.id}`} class="cms-row grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr] gap-4 px-6 py-4 text-sm">
+        <div class="grid grid-cols-[1.2fr_1fr_0.8fr_0.8fr] gap-4 border-b border-ink/10 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-ink/50">
+          <div>Patient</div>
+          <div>Message</div>
+          <div>Reçue le</div>
+          <div>Statut</div>
+        </div>
+        <div class="divide-y divide-ink/5">
+          {bookings.map((b) => (
+          <a href={`/cms/bookings/${b.id}`} class="cms-row grid grid-cols-[1.2fr_1fr_0.8fr_0.8fr] gap-4 px-6 py-4 text-sm">
             <div>
-              <div class="font-semibold text-ink/90">{b.patientName}</div>
+              <div class="font-semibold text-ink/90">{b.full_name}</div>
               <div class="text-xs text-ink/60">{b.phone}</div>
             </div>
-            <div class="text-ink/70">{b.channel}</div>
-            <div class="text-ink/70">{b.category}</div>
-            <div class="text-ink/70">{b.desiredDate}</div>
+            <div class="truncate text-ink/70">{b.message}</div>
+            <div class="text-ink/70">{formatDate(b.created_at)}</div>
             <div>
               <span class:list={['cms-pill', statusClass(b.status)]}>
-                {b.status}
+                {statusLabel(b.status)}
               </span>
             </div>
           </a>
         ))}
+        {bookings.length === 0 && <div class="px-6 py-10 text-sm text-ink/65">Aucune demande reçue pour le moment.</div>}
       </div>
     </div>
   </div>

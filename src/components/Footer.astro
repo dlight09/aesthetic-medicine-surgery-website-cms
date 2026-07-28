@@ -1,43 +1,103 @@
 ---
 import { site } from '@/lib/site';
+import BrandLockup from '@/components/BrandLockup.astro';
+
+const quickLinks = [
+  { label: 'Dr Sirine Soussi', href: '/dr-sirine-soussi' },
+  { label: 'Interventions', href: '/interventions' },
+  { label: 'Avant/Après', href: '/avant-apres' },
+  { label: 'Blog', href: '/blog' },
+  { label: 'Consentement', href: '/consentement' },
+  { label: 'Rendez-vous', href: '/contact' },
+];
+
+const addressQuery = [...site.contact.addressLines, site.contact.city, site.contact.country].join(', ');
+const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`;
+
 ---
 
-<footer class="border-t border-ink/10 bg-paper">
-  <div class="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3">
-    <div>
-      <div class="font-display text-lg">{site.name}</div>
-      <p class="mt-2 text-sm text-ink/70">{site.tagline}</p>
-    </div>
-
-    <div class="text-sm">
-      <div class="font-semibold">Contact</div>
-      <div class="mt-2 text-ink/70">
-        <div>{site.contact.phoneDisplay}</div>
-        {site.contact.addressLines.map((l) => (
-          <div>{l}</div>
-        ))}
-        {site.contact.hoursLines.map((l) => (
-          <div>{l}</div>
-        ))}
+<footer class="overflow-hidden bg-ink text-paper">
+  <div class="mx-auto max-w-7xl px-4">
+    <div class="grid border-b border-paper/12 lg:grid-cols-[1.55fr_0.8fr_0.8fr_0.85fr]">
+      <div class="flex items-center py-10 lg:justify-center lg:border-r lg:border-paper/12 lg:pr-10">
+        <a href="/" aria-label="Accueil" class="group inline-flex items-center gap-5 rounded-md p-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/50 focus-visible:ring-offset-2 focus-visible:ring-offset-ink">
+          <BrandLockup
+            id="footer-brand"
+            alignment="center"
+            gapClass="gap-0"
+            markClass="h-48 -mr-10 -translate-y-5 transition group-hover:opacity-82 sm:h-56 lg:h-64"
+            textBlockClass="items-center text-center translate-y-12"
+            wordmarkClass=""
+            wordmarkSize="clamp(1.15rem, 2vw, 1.55rem)"
+            subtitle="CHIRURGIE PLASTIQUE · RECONSTRUCTRICE · ESTHÉTIQUE"
+            subtitleClass="lg:max-w-none lg:whitespace-nowrap"
+            subtitleSize="0.6rem"
+          />
+        </a>
       </div>
-    </div>
 
-    <div class="text-sm">
-      <div class="font-semibold">Informations</div>
-      <div class="mt-2 grid gap-1">
-        <a class="text-ink/70 hover:text-ink" href="/dr-sirine-soussi">Dr Sirine Soussi</a>
-        <a class="text-ink/70 hover:text-ink" href="/contact#consultation">Consultation</a>
-        <a class="text-ink/70 hover:text-ink" href="/contact">Rendez-vous</a>
-        <a class="text-ink/70 hover:text-ink" href="/mentions-legales">Mentions legales</a>
-        <a class="text-ink/70 hover:text-ink" href="/confidentialite">Confidentialite</a>
+      <nav class="py-10 lg:border-r lg:border-paper/12 lg:px-10" aria-label="Accès rapide">
+        <div class="font-display text-xl tracking-tight text-paper">Accès rapide</div>
+        <div class="mt-7 grid gap-5 text-sm text-paper/70">
+          {quickLinks.map((link) => (
+            <a href={link.href} class="rounded-md transition hover:text-paper focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/50 focus-visible:ring-offset-2 focus-visible:ring-offset-ink">{link.label}</a>
+          ))}
+        </div>
+      </nav>
+
+      <section class="py-10 lg:border-r lg:border-paper/12 lg:px-10" aria-labelledby="footer-contact-title">
+        <div id="footer-contact-title" class="font-display tracking-tight text-paper" style="font-size: 1.25rem !important; line-height: 1.25 !important;">Contact & RDV</div>
+        <div class="mt-7 grid gap-5 text-sm text-paper/70">
+          <a href={site.links.tel} class="flex items-center gap-3 rounded-md transition hover:text-paper focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/50 focus-visible:ring-offset-2 focus-visible:ring-offset-ink">
+            <svg aria-hidden="true" viewBox="0 0 24 24" class="size-4 shrink-0 text-copper" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5.2 4.6c.5-.5 1.2-.7 1.9-.4l2.1.9c.7.3 1 .9.9 1.6l-.3 1.9a1.3 1.3 0 0 0 .4 1.1l4.1 4.1c.3.3.7.5 1.1.4l1.9-.3c.7-.1 1.3.2 1.6.9l.9 2.1c.3.7.1 1.4-.4 1.9l-1 1c-.8.8-2 1.1-3.1.7-2.8-1-5.4-2.8-7.6-5-2.2-2.2-4-4.8-5-7.6-.4-1.1-.1-2.3.7-3.1l1-1Z" />
+            </svg>
+            <span>{site.contact.phoneDisplay}</span>
+          </a>
+          <a href={site.links.email} class="flex items-start gap-3 break-words rounded-md transition hover:text-paper focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/50 focus-visible:ring-offset-2 focus-visible:ring-offset-ink">
+            <svg aria-hidden="true" viewBox="0 0 24 24" class="mt-0.5 size-4 shrink-0 text-copper" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="m4 7 8 6 8-6" />
+            </svg>
+            <span>{site.contact.email}</span>
+          </a>
+          <a href={mapsHref} target="_blank" rel="noopener noreferrer" class="flex items-start gap-3 rounded-md leading-relaxed transition hover:text-paper focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/50 focus-visible:ring-offset-2 focus-visible:ring-offset-ink">
+            <svg aria-hidden="true" viewBox="0 0 24 24" class="mt-0.5 size-4 shrink-0 text-copper" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 21s7-5.1 7-12a7 7 0 0 0-14 0c0 6.9 7 12 7 12Z" />
+              <circle cx="12" cy="9" r="2.4" />
+            </svg>
+            <span>{site.contact.addressLines.map((line) => <span class="block">{line}</span>)}<span class="block">{site.contact.city}, {site.contact.country}</span></span>
+          </a>
+        </div>
+      </section>
+
+      <div class="py-10 lg:pl-10">
+        <div class="font-display text-xl tracking-tight text-paper">Restez connecté</div>
+        <div class="mt-7 flex flex-wrap gap-3">
+          <a href="https://www.instagram.com/" target="_blank" rel="noreferrer" class="inline-flex size-11 items-center justify-center rounded-full border border-paper/28 text-paper transition hover:border-paper hover:bg-paper hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/50 focus-visible:ring-offset-2 focus-visible:ring-offset-ink" aria-label="Instagram">
+            <svg aria-hidden="true" viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="3.5" y="3.5" width="17" height="17" rx="4.5" />
+              <circle cx="12" cy="12" r="4" />
+              <circle cx="17.4" cy="6.7" r="0.8" fill="currentColor" stroke="none" />
+            </svg>
+          </a>
+          <a href="https://www.facebook.com/" target="_blank" rel="noreferrer" class="inline-flex size-11 items-center justify-center rounded-full border border-paper/28 text-paper transition hover:border-paper hover:bg-paper hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/50 focus-visible:ring-offset-2 focus-visible:ring-offset-ink" aria-label="Facebook">
+            <svg aria-hidden="true" viewBox="0 0 24 24" class="size-5" fill="currentColor">
+              <path d="M13.7 20v-7h2.4l.4-2.8h-2.8V8.4c0-.8.2-1.4 1.4-1.4h1.5V4.5c-.3 0-1.1-.1-2.1-.1-2.1 0-3.5 1.3-3.5 3.6v2.2H8.7V13H11v7h2.7Z" />
+            </svg>
+          </a>
+          <a href="https://www.youtube.com/" target="_blank" rel="noreferrer" class="inline-flex size-11 items-center justify-center rounded-full border border-paper/28 text-paper transition hover:border-paper hover:bg-paper hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/50 focus-visible:ring-offset-2 focus-visible:ring-offset-ink" aria-label="YouTube">
+            <svg aria-hidden="true" viewBox="0 0 24 24" class="size-5" fill="currentColor">
+              <path d="M21.6 7.2a3 3 0 0 0-2.1-2.1C17.6 4.6 12 4.6 12 4.6s-5.6 0-7.5.5a3 3 0 0 0-2.1 2.1C1.9 9.1 1.9 12 1.9 12s0 2.9.5 4.8a3 3 0 0 0 2.1 2.1c1.9.5 7.5.5 7.5.5s5.6 0 7.5-.5a3 3 0 0 0 2.1-2.1c.5-1.9.5-4.8.5-4.8s0-2.9-.5-4.8ZM10.2 15.1V8.9l5.4 3.1-5.4 3.1Z" />
+            </svg>
+          </a>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <div class="border-t border-ink/10">
-    <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 text-xs text-ink/60">
+    </div>
+
+    <div class="py-5 text-right text-xs font-semibold tracking-[0.02em] text-paper/78">
       <div>© {new Date().getFullYear()} {site.name}</div>
-      <div>Site d’information - ne remplace pas une consultation.</div>
     </div>
   </div>
 </footer>

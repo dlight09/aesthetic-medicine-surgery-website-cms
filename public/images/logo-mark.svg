@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="30 8 66 140" role="img" aria-label="Monogramme du Dr Sirine Soussi">
+  <defs>
+    <clipPath id="logo-mark-clip">
+      <path d="M30 8H70V20H105V90H90V108H57V148H30Z" />
+    </clipPath>
+  </defs>
+  <image href="dr-soussi-logo.svg" width="265.11249" height="165.89375" clip-path="url(#logo-mark-clip)" />
+</svg>

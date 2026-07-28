@@ -8,11 +8,12 @@ export default {
         paper: 'rgb(var(--c-paper) / <alpha-value>)',
         sand: 'rgb(var(--c-sand) / <alpha-value>)',
         copper: 'rgb(var(--c-copper) / <alpha-value>)',
+        'copper-deep': 'rgb(var(--c-copper-deep) / <alpha-value>)',
         mist: 'rgb(var(--c-mist) / <alpha-value>)'
       },
       fontFamily: {
-        display: ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
-        body: ['Source Sans 3', 'ui-sans-serif', 'system-ui', 'sans-serif']
+        display: ['Andale Mono', 'AndaleMono', 'monospace'],
+        body: ['Manrope', 'sans-serif']
       },
       boxShadow: {
         soft: '0 14px 38px rgba(17, 24, 39, 0.08)',

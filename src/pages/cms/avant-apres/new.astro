@@ -3,6 +3,7 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
 import { interventionCategories } from '@/lib/interventions';
 import { listCmsInterventions } from '@/lib/cms/interventions';
 import { getCollection } from 'astro:content';
+import AdditionalMediaSetsEditor from '@/components/cms/AdditionalMediaSetsEditor.astro';
 
 type InterventionLite = { title: string; slug: string; category: string; order?: number | null };
 
@@ -67,7 +68,7 @@ const interventionsByCategory = interventionCategories.map((category) => {
         </label>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Numéro du cas</span>
-          <div class="cms-input flex items-center text-sm text-ink/70" data-case-display>—</div>
+          <div class="cms-input flex items-center text-sm text-ink/70" data-case-display>-</div>
           <span class="text-xs text-ink/50">Attribué automatiquement selon l’intervention.</span>
         </label>
 
@@ -78,7 +79,7 @@ const interventionsByCategory = interventionCategories.map((category) => {
               Aperçu
             </div>
             <img data-preview="before" class="mt-3 hidden h-32 w-full rounded-xl object-cover" alt="" />
-            <input type="file" accept="image/*" class="mt-3 block text-xs" data-upload="before" />
+            <input type="file" accept="image/jpeg,image/png,image/webp" class="mt-3 block text-xs" data-upload="before" />
             <div class="mt-2 text-[11px] text-ink/50">JPG/PNG, 10MB max.</div>
             <div data-upload-status="before" class="mt-1 text-[11px] text-ink/60"></div>
             <div data-upload-error="before" class="mt-1 text-[11px] text-rose-600"></div>
@@ -90,7 +91,7 @@ const interventionsByCategory = interventionCategories.map((category) => {
               Aperçu
             </div>
             <img data-preview="after" class="mt-3 hidden h-32 w-full rounded-xl object-cover" alt="" />
-            <input type="file" accept="image/*" class="mt-3 block text-xs" data-upload="after" />
+            <input type="file" accept="image/jpeg,image/png,image/webp" class="mt-3 block text-xs" data-upload="after" />
             <div class="mt-2 text-[11px] text-ink/50">JPG/PNG, 10MB max.</div>
             <div data-upload-status="after" class="mt-1 text-[11px] text-ink/60"></div>
             <div data-upload-error="after" class="mt-1 text-[11px] text-rose-600"></div>
@@ -178,15 +179,7 @@ const interventionsByCategory = interventionCategories.map((category) => {
           </label>
         </div>
 
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Autres vues (JSON optionnel)</span>
-          <textarea
-            rows={5}
-            class="cms-textarea font-mono text-xs"
-            name="media_sets_json"
-            placeholder='[{"label":"Profil","result_delay_label":"3 mois","before_path":"cases/.../set2-before.jpg","after_path":"cases/.../set2-after.jpg"}]'
-          ></textarea>
-        </label>
+        <AdditionalMediaSetsEditor />
       </form>
     </section>
 
@@ -263,7 +256,7 @@ const interventionsByCategory = interventionCategories.map((category) => {
       if (!(caseDisplay instanceof HTMLElement)) return;
       const value = interventionSelect.value;
       if (!value) {
-        caseDisplay.textContent = '—';
+        caseDisplay.textContent = '-';
         return;
       }
       try {
@@ -278,7 +271,7 @@ const interventionsByCategory = interventionCategories.map((category) => {
         const nextNumber = (numbers.length ? Math.max(...numbers) : 0) + 1;
         caseDisplay.textContent = `Cas ${String(nextNumber).padStart(2, '0')}`;
       } catch (err) {
-        caseDisplay.textContent = '—';
+        caseDisplay.textContent = '-';
       }
     };
 
@@ -307,7 +300,7 @@ const interventionsByCategory = interventionCategories.map((category) => {
           const res = await fetch('/api/cms/avant-apres/upload-url', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileName: file.name, kind })
+            body: JSON.stringify({ fileName: file.name, kind, contentType: file.type })
           });
           if (!res.ok) throw new Error('upload-url');
           const data = await res.json();
@@ -378,8 +371,8 @@ const interventionsByCategory = interventionCategories.map((category) => {
         return;
       }
 
-      if (intent === 'publish' && !payload.consent) {
-        if (error) error.textContent = 'Le consentement est requis pour publier.';
+      if (intent === 'publish' && (!payload.consent || !payload.consent_date)) {
+        if (error) error.textContent = 'Le consentement daté est requis pour publier.';
         if (status) status.textContent = '';
         return;
       }

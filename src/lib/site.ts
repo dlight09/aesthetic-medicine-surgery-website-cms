@@ -2,6 +2,7 @@ export type ContactInfo = {
   phoneDisplay: string;
   phoneE164: string;
   whatsappE164: string;
+  email: string;
   addressLines: string[];
   hoursLines: string[];
   city: string;
@@ -18,9 +19,10 @@ export const site = {
     phoneDisplay: '+216 52 233 333',
     phoneE164: '+21652233333',
     whatsappE164: '+21652233333',
+    email: 'dr.sirine.soussi@gmail.com',
     addressLines: [
-      'Immeuble Ben Cheikh, 1er étage',
-      'Rue du Lac Turkana, Les Berges du Lac 1, Tunis',
+      '11 Rue du Lac Turkana',
+      'Berges du Lac 1, Tunis',
     ],
     hoursLines: ['Sur rendez-vous', 'Consultation individuelle'],
     city: 'Tunis',
@@ -29,6 +31,7 @@ export const site = {
   links: {
     tel: 'tel:+21652233333',
     whatsapp: 'https://wa.me/21652233333',
+    email: 'mailto:dr.sirine.soussi@gmail.com',
   },
 };
 

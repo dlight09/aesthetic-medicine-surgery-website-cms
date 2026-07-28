@@ -9,21 +9,19 @@ export const POST: APIRoute = async (context) => {
 
   const body = await context.request.json().catch(() => null);
   const fileName = typeof body?.fileName === 'string' ? body.fileName : '';
-  const kindRaw = typeof body?.kind === 'string' ? body.kind : '';
-  const kind = kindRaw
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 48);
+  const kind = body?.kind === 'before' || body?.kind === 'after' ? body.kind : '';
+  const contentType = typeof body?.contentType === 'string' ? body.contentType : '';
+  const allowedTypes = new Map([
+    ['image/jpeg', 'jpg'],
+    ['image/png', 'png'],
+    ['image/webp', 'webp'],
+  ]);
 
-  if (!fileName || !kind) {
+  if (!fileName || !kind || !allowedTypes.has(contentType)) {
     return new Response('Invalid payload', { status: 400 });
   }
 
-  const ext = fileName.split('.').pop()?.toLowerCase() ?? 'jpg';
-  const safeExt = ext.length > 0 && ext.length <= 6 ? ext : 'jpg';
-  const path = `cases/${randomUUID()}/${kind}.${safeExt}`;
+  const path = `cases/${randomUUID()}/${kind}.${allowedTypes.get(contentType)}`;
 
   const supabase = getSupabaseAdmin();
   const bucket = getAvantApresBucket();

@@ -109,6 +109,15 @@ export const PUT: APIRoute = async (context) => {
       : undefined,
   };
 
+  const existing = await getCmsAvantApresCase(id);
+  if (!existing) return new Response('Not found', { status: 404 });
+  const willPublish = (payload.status ?? existing.status) === 'publie';
+  const hasConsent = payload.consent ?? existing.consent;
+  const consentDate = payload.consent_date ?? existing.consent_date;
+  if (willPublish && (!hasConsent || !consentDate)) {
+    return new Response('Dated consent is required before publication', { status: 422 });
+  }
+
   const updated = await updateAvantApresCase(id, payload);
   return new Response(JSON.stringify(updated), {
     status: 200,

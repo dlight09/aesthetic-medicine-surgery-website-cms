@@ -5,13 +5,14 @@ import BlogBlocks from '@/components/BlogBlocks.astro';
 import { getPublicBlogPostBySlug } from '@/lib/cms/blog';
 import { listPublicInterventions } from '@/lib/cms/interventions';
 import { listLinkedInterventionSlugsForBlog } from '@/lib/cms/blog';
+import { isCmsAuthed } from '@/lib/cms/auth';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 
 const slug = String(Astro.params.slug ?? '').trim();
 if (!slug) return Astro.redirect('/blog');
 
-const cmsAuthed = Astro.cookies.get('cms_auth')?.value === 'true';
+const cmsAuthed = isCmsAuthed(Astro);
 
 let dbPost: Awaited<ReturnType<typeof getPublicBlogPostBySlug>> = null;
 try {

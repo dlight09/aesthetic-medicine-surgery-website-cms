@@ -1,5 +1,6 @@
 ---
 import { site } from '@/lib/site';
+import BrandLockup from '@/components/BrandLockup.astro';
 import { getCollection } from 'astro:content';
 import {
   interventionCategories,
@@ -121,14 +122,24 @@ const megaInterventions = interventionCategories.map((c) => {
 });
 ---
 
-<header class="sticky top-0 z-40 border-b border-ink/10 bg-paper/80 backdrop-blur">
+<header
+  class="site-header fixed inset-x-0 top-0 z-40 border-b text-paper"
+  data-transparent={pathname === '/' ? 'true' : 'false'}
+  data-scrolled={pathname === '/' ? 'false' : 'true'}
+>
   <div class="relative mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-    <a href="/" class="group flex items-baseline gap-2">
-      <span class="font-display text-lg tracking-tight">{site.name}</span>
-      <span class="hidden text-xs text-ink/65 sm:inline">{site.contact.city}</span>
+    <a href="/" class="group inline-flex items-center">
+      <BrandLockup
+        id="header-brand"
+        class="transition group-hover:opacity-82"
+        gapClass="gap-2 lg:gap-3"
+        markClass="h-9 lg:h-11"
+        wordmarkClass="hidden lg:inline"
+        wordmarkSize="0.9rem"
+      />
     </a>
 
-    <nav aria-label="Navigation principale" class="hidden items-center gap-1 text-sm sm:flex">
+    <nav aria-label="Navigation principale" class="hidden items-center gap-1 text-sm lg:flex">
       {nav.map((i) => {
         const active = isActiveHref(i.href);
 
@@ -140,10 +151,10 @@ const megaInterventions = interventionCategories.map((c) => {
                   href={i.href}
                   aria-current={active ? 'page' : undefined}
                   class:list={[
-                    'rounded-full px-3 py-2 transition',
-                    'text-ink/75 hover:text-ink',
+                    'rounded-full px-3 py-3 transition',
+                    'text-paper/72 hover:text-paper',
                     'focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40',
-                    active && 'bg-mist text-ink'
+                    active && 'bg-paper/10 text-paper'
                   ]}
                 >
                   <span class:list={[active && 'font-semibold']}>{i.label}</span>
@@ -151,7 +162,7 @@ const megaInterventions = interventionCategories.map((c) => {
 
                 <button
                   type="button"
-                  class="-ml-1 inline-flex items-center justify-center rounded-full px-2 py-2 text-ink/65 transition hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40"
+                  class="-ml-1 inline-flex min-h-11 min-w-11 items-center justify-center rounded-full px-2 py-2 text-paper/62 transition hover:text-paper focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40"
                   aria-label="Ouvrir le menu Interventions"
                   aria-haspopup="true"
                   aria-expanded="false"
@@ -293,10 +304,10 @@ const megaInterventions = interventionCategories.map((c) => {
             href={i.href}
             aria-current={active ? 'page' : undefined}
             class:list={[
-              'rounded-full px-3 py-2 transition',
-              'text-ink/75 hover:text-ink',
+              'rounded-full px-3 py-3 transition',
+              'text-paper/72 hover:text-paper',
               'focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40',
-              active && 'bg-mist text-ink'
+              active && 'bg-paper/10 text-paper'
             ]}
           >
             <span class:list={[active && 'font-semibold']}>{i.label}</span>
@@ -308,14 +319,14 @@ const megaInterventions = interventionCategories.map((c) => {
     <div class="flex items-center gap-2">
       <a
         href={site.links.whatsapp}
-        class="hidden rounded-full border border-ink/15 bg-mist px-3 py-2 text-sm text-ink/80 transition hover:border-ink/25 hover:bg-paper sm:inline-flex"
+        class="hidden min-h-11 rounded-full border border-paper/18 bg-paper/10 px-3 py-2 text-sm text-paper/82 transition hover:border-paper/34 hover:bg-paper/16 hover:text-paper lg:inline-flex"
       >
         WhatsApp
       </a>
 
       <button
         type="button"
-        class="inline-flex items-center justify-center rounded-full border border-ink/15 bg-paper px-3 py-2 text-sm text-ink/80 transition hover:border-ink/25 hover:bg-mist focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40 sm:hidden"
+        class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-paper/18 bg-paper/10 px-3 py-2 text-sm text-paper/82 transition hover:border-paper/34 hover:bg-paper/16 hover:text-paper focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40 lg:hidden"
         aria-haspopup="dialog"
         aria-controls="mobile-menu"
         data-menu-open
@@ -340,7 +351,7 @@ const megaInterventions = interventionCategories.map((c) => {
 
       <a
         href={site.links.tel}
-        class="inline-flex rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper shadow-soft transition hover:shadow-lift"
+        class="inline-flex min-h-11 rounded-full bg-paper px-4 py-2 text-sm font-semibold text-ink shadow-soft transition hover:bg-sand hover:shadow-lift"
       >
         Appeler
       </a>
@@ -349,7 +360,7 @@ const megaInterventions = interventionCategories.map((c) => {
 
   <dialog
     id="mobile-menu"
-    class="sm:hidden w-full max-w-none bg-transparent p-0"
+    class="lg:hidden w-full max-w-none bg-transparent p-0"
     data-menu-dialog
   >
     <div class="fixed inset-0">
@@ -370,7 +381,7 @@ const megaInterventions = interventionCategories.map((c) => {
               </div>
               <button
                 type="button"
-                class="inline-flex items-center justify-center rounded-full border border-ink/15 bg-paper px-3 py-2 text-sm text-ink/80 transition hover:border-ink/25 hover:bg-mist focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40"
+                class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-ink/15 bg-paper px-3 py-2 text-sm text-ink/80 transition hover:border-ink/25 hover:bg-mist focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40"
                 data-menu-close
               >
                 <span class="sr-only">Fermer le menu</span>
@@ -438,6 +449,16 @@ const megaInterventions = interventionCategories.map((c) => {
 
   <script is:inline>
     (() => {
+      const header = document.querySelector('.site-header');
+      if (header instanceof HTMLElement && header.dataset.transparent === 'true') {
+        const updateHeader = () => {
+          header.dataset.scrolled = window.scrollY > 32 ? 'true' : 'false';
+        };
+
+        updateHeader();
+        window.addEventListener('scroll', updateHeader, { passive: true });
+      }
+
       const openBtn = document.querySelector('[data-menu-open]');
       const dialog = document.querySelector('[data-menu-dialog]');
       if (!(openBtn instanceof HTMLElement)) return;
@@ -554,4 +575,22 @@ const megaInterventions = interventionCategories.map((c) => {
       });
     })();
   </script>
+
+  <style>
+    .site-header {
+      background: rgb(var(--c-ink));
+      border-color: rgba(var(--c-paper) / 0.1);
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+      transition:
+        background-color 220ms ease,
+        border-color 220ms ease,
+        box-shadow 220ms ease;
+    }
+
+    .site-header[data-transparent='true'][data-scrolled='false'] {
+      background: transparent;
+      border-color: transparent;
+      box-shadow: none;
+    }
+  </style>
 </header>

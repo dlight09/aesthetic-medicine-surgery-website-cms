@@ -2,11 +2,24 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { site } from '@/lib/site';
 
-const credentials = [
-  'Chirurgienne plasticienne · Tunis',
-  'Ancienne Assistante Hospitalo-Universitaire · Institut Kassab',
-  'Fellowship Paris 2016-2019',
-  'Chirurgie de la main',
+const addressQuery = [...site.contact.addressLines, site.contact.city, site.contact.country]
+  .filter(Boolean)
+  .join(', ');
+const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`;
+
+const philosophyCards = [
+  {
+    title: "L'art du détail",
+    text: "Une passion pour les formes et les proportions qui guide chaque intervention, du plan opératoire au dernier geste.",
+  },
+  {
+    title: 'Sécurité absolue',
+    text: "La sécurité du patient prime sur tout. Je ne pratique que les interventions pour lesquelles l'indication est juste.",
+  },
+  {
+    title: 'Résultats naturels',
+    text: "Sublimer sans transformer. Respecter l'identité de chaque corps, comme un sculpteur respecte la matière.",
+  },
 ];
 
 const keyMoments = [
@@ -41,13 +54,13 @@ const timelineEntries = [
 >
   <section class="relative overflow-hidden bg-paper">
     <div class="absolute inset-0 bg-[radial-gradient(70rem_35rem_at_15%_10%,rgba(231,219,200,0.38),transparent_60%),radial-gradient(60rem_32rem_at_85%_15%,rgba(185,111,84,0.10),transparent_60%)]"></div>
-    <div class="relative mx-auto grid max-w-6xl gap-8 px-4 py-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:py-20" data-reveal-group="hero">
+    <div class="relative mx-auto grid max-w-6xl gap-8 px-4 py-14 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:py-20" data-reveal-group="hero">
       <div class="reveal fx-image-pan relative overflow-hidden rounded-[2rem] border border-ink/10 bg-mist shadow-lift" data-reveal>
         <img
-          src="/images/doctor/dr-sirine-soussi-01.png"
-          width="1200"
-          height="1500"
-          alt="Portrait du Dr Sirine Soussi"
+          src="/images/placeholders/clinic.webp"
+          width="1280"
+          height="960"
+          alt="Cabinet du Dr Sirine Soussi"
           loading="eager"
           fetchpriority="high"
           class="h-[30rem] w-full object-cover sm:h-[38rem]"
@@ -61,16 +74,8 @@ const timelineEntries = [
       </div>
 
       <div class="space-y-7 lg:pl-6">
-        <div class="flex flex-wrap gap-2">
-          {credentials.map((item) => (
-            <span class="reveal fx-chip rounded-full border border-ink/10 bg-paper/88 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/72 shadow-soft" data-reveal>
-              {item}
-            </span>
-          ))}
-        </div>
-
         <blockquote class="reveal max-w-2xl" data-reveal>
-          <p class="quote-serif text-3xl italic leading-tight tracking-tight text-ink sm:text-4xl">
+          <p class="quote-serif text-[1.625rem] text-ink md:text-[2rem]">
             « Je suis convaincue que la chirurgie esthétique n'a de sens que lorsqu'elle est pratiquée avec une exigence absolue :
             rigueur technique, sécurité non négociable, et respect profond du corps. »
           </p>
@@ -89,6 +94,47 @@ const timelineEntries = [
     </div>
   </section>
 
+  <section class="relative isolate overflow-hidden bg-ink text-paper">
+    <div class="pointer-events-none absolute -left-32 top-12 -z-10 h-80 w-80 rounded-full bg-copper/24 blur-3xl"></div>
+    <div class="pointer-events-none absolute bottom-0 right-0 -z-10 h-96 w-96 rounded-full bg-sand/12 blur-3xl"></div>
+    <div class="mx-auto max-w-6xl border-b border-paper/12 px-4" data-reveal-group="philo">
+      <div class="grid lg:grid-cols-[1.12fr_0.88fr]">
+        <div class="py-16 lg:py-24 lg:pr-12">
+          <h2 class="section-heading reveal max-w-3xl uppercase text-paper" data-reveal>Philosophie de prise en charge</h2>
+          <div class="mt-7 max-w-3xl space-y-5 text-base leading-8 text-paper/82 sm:text-lg">
+            <p class="reveal" data-reveal>
+              J'ai grandi dans une famille où la médecine était une vocation transmise, une présence quotidienne qui m'a appris très tôt
+              que soigner relevait avant tout d'une exigence morale - envers soi-même autant qu'envers l'autre. Mais ce qui m'a conduite
+              vers la chirurgie esthétique en particulier, c'est quelque chose de plus intime - une sensibilité aux formes, aux
+              proportions, à la beauté des choses bien faites.
+            </p>
+            <p class="reveal" data-reveal>
+              Depuis toujours, je suis attirée par les arts plastiques, la sculpture, tout ce qui relève de la création précise et
+              réfléchie. La chirurgie plastique est, pour moi, le lieu exact où ces deux univers se rejoignent : la rigueur de la science,
+              la dextérité du geste, et le sens esthétique qui guide chaque décision.
+            </p>
+            <p class="reveal" data-reveal>
+              Opérer, c'est sculpter. Avec la même exigence qu'un artiste qui ne pose son outil que lorsque chaque détail est juste - ni
+              trop, ni insuffisant. Cette méticulosité, je l'ai depuis l'enfance. Elle n'est pas une contrainte, c'est ce qui me définit et
+              ce qui, je crois, fait la différence dans mon travail.
+            </p>
+          </div>
+        </div>
+
+        <div class="reveal border-t border-paper/12 py-8 lg:border-l lg:border-t-0 lg:py-24 lg:pl-12" data-reveal>
+          <div class="grid gap-4">
+            {philosophyCards.map((item) => (
+              <article class="rounded-[1.5rem] border border-paper/12 bg-paper p-6 text-ink">
+                <div class="mb-5 h-px w-20 bg-copper/70"></div>
+                <h3 class="font-display text-2xl leading-tight tracking-tight text-copper-deep">{item.title}</h3>
+                <p class="mt-3 text-sm leading-7 text-ink/76">{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+  </section>
+
   <section class="sticky top-[4.45rem] z-20 border-y border-ink/10 bg-paper/92 backdrop-blur">
     <div class="mx-auto flex max-w-6xl gap-2 overflow-x-auto px-4 py-3 no-scrollbar">
       <a href="#parcours" class="profile-anchor" data-section-link>Parcours</a>
@@ -99,21 +145,23 @@ const timelineEntries = [
     </div>
   </section>
 
-  <section class="bg-paper pb-8">
-    <div class="mx-auto grid max-w-6xl gap-4 px-4 md:grid-cols-3" data-reveal-group="moments">
+  <section class="bg-paper pb-10 pt-6">
+    <div class="mx-auto max-w-6xl px-4" data-reveal-group="moments">
+      <div class="grid border-y border-ink/10 md:grid-cols-3 md:divide-x md:divide-ink/10">
       {keyMoments.map((item) => (
-        <article class="reveal fx-lift-soft fx-card-edge rounded-[1.75rem] border border-ink/10 bg-mist/55 p-6 shadow-soft" data-reveal>
-          <h2 class="card-kicker text-copper">{item.title}</h2>
+        <article class="reveal py-5 md:px-6" data-reveal>
+          <h2 class="profile-heading profile-heading-sm text-copper">{item.title}</h2>
           <p class="mt-3 text-sm leading-7 text-ink/76">{item.text}</p>
         </article>
       ))}
+      </div>
     </div>
   </section>
 
   <section id="parcours" class="bg-paper py-16">
     <div class="mx-auto grid max-w-6xl gap-8 px-4 lg:grid-cols-[1.05fr_0.95fr] lg:items-start" data-reveal-group="parcours">
       <div class="reveal rounded-[2rem] border border-ink/10 bg-paper p-7 shadow-soft sm:p-8" data-reveal>
-        <div class="text-sm font-semibold uppercase tracking-[0.2em] text-ink/50">Mon parcours</div>
+        <div class="section-label text-ink/62">Mon parcours</div>
         <div class="mt-4 space-y-5 text-base leading-8 text-ink/78">
           <p>
             La chirurgie plastique n'est pas venue à moi par hasard. C'est une discipline que j'ai choisie pour sa rigueur, pour
@@ -121,7 +169,7 @@ const timelineEntries = [
             de chaque patiente et chaque patient que j'accompagne.
           </p>
           <div class="rounded-2xl border border-ink/10 bg-mist/45 p-5">
-            <div class="text-sm font-semibold uppercase tracking-[0.2em] text-ink/48">Formation</div>
+            <div class="text-sm font-semibold tracking-[0.08em] text-ink/62">Formation</div>
             <p class="mt-3 text-sm leading-7 text-ink/76 sm:text-base">
               Diplômée de la Faculté de Médecine de Tunis avec le titre de Docteur en Médecine, j'ai intégré dès 2012 la spécialité
               de chirurgie plastique et chirurgie de la main par concours de résidanat. Ces années de résidanat dans les hôpitaux
@@ -159,13 +207,13 @@ const timelineEntries = [
       </div>
 
       <div class="reveal rounded-[2rem] border border-ink/10 bg-paper p-7 shadow-soft sm:p-8 lg:order-1" data-reveal>
-        <div class="text-sm font-semibold uppercase tracking-[0.2em] text-copper">Expérience internationale · Paris, 2016-2019</div>
+        <div class="section-label text-copper-deep">Expérience internationale · Paris, 2016-2019</div>
         <p class="mt-4 text-base leading-8 text-ink/78">
-          En 2016, j'ai eu l'opportunité de rejoindre l'Hôpital Saint-Louis à Paris, en stage observateur auprès du Dr Revol,
-          figure incontournable de la chirurgie plastique et reconstructrice française.
+          En 2016, j'ai eu l'opportunité de rejoindre l'Hôpital Saint-Louis à Paris. Stage observateur avec l’équipe de chirurgie
+          plastique du Pr Revol, service pionnier de formation qui a façonné l’école française de chirurgie plastique et reconstructrice.
         </p>
         <div class="mt-5 rounded-2xl border border-ink/10 bg-mist/45 p-5">
-          <div class="text-sm font-semibold uppercase tracking-[0.2em] text-ink/48">Paris</div>
+          <div class="text-sm font-semibold tracking-[0.08em] text-ink/62">Paris</div>
           <div class="mt-4 space-y-4 text-sm leading-7 text-ink/76 sm:text-base">
             <p>
               Cette expérience a ouvert pour moi trois années de formation intensive au sein des plus grandes cliniques parisiennes,
@@ -189,13 +237,13 @@ const timelineEntries = [
   <section id="tunisie-section" class="bg-paper py-16">
     <div class="mx-auto grid max-w-6xl gap-8 px-4 lg:grid-cols-[1.03fr_0.97fr] lg:items-start" data-reveal-group="tunisie">
       <div class="reveal rounded-[2rem] border border-ink/10 bg-paper p-7 shadow-soft sm:p-8" data-reveal>
-        <div class="text-sm font-semibold uppercase tracking-[0.2em] text-ink/50">Retour en Tunisie</div>
+        <div class="section-label text-ink/62">Retour en Tunisie</div>
         <p class="mt-4 text-base leading-8 text-ink/78">
           À la fin de l'année 2019, j'ai fait le choix de revenir en Tunisie, avec la conviction que les compétences acquises à Paris
           pouvaient contribuer au développement de la chirurgie plastique dans mon pays.
         </p>
         <div class="mt-5 rounded-2xl border border-ink/10 bg-mist/45 p-5">
-          <div class="text-sm font-semibold uppercase tracking-[0.2em] text-ink/48">Institut Kassab</div>
+          <div class="text-sm font-semibold tracking-[0.08em] text-ink/62">Institut Kassab</div>
           <div class="mt-4 space-y-4 text-sm leading-7 text-ink/76 sm:text-base">
             <p>En 2021, j'ai obtenu mon titre officiel de Spécialiste en Chirurgie Plastique et Chirurgie de la Main.</p>
             <p>
@@ -225,10 +273,10 @@ const timelineEntries = [
     </div>
   </section>
 
-  <section id="timeline-section" class="bg-[#f4efe8] py-16">
+  <section id="timeline-section" class="bg-mist/35 py-16">
     <div class="mx-auto max-w-5xl px-4">
       <div class="reveal max-w-2xl" data-reveal>
-        <div class="text-sm font-semibold uppercase tracking-[0.2em] text-ink/50">Cursus en bref</div>
+        <div class="section-label text-ink/62">Cursus en bref</div>
       </div>
 
       <div class="mt-10 grid gap-4" data-reveal-group="timeline">
@@ -238,7 +286,7 @@ const timelineEntries = [
               <div class="timeline-year font-display text-3xl tracking-tight text-copper">{year}</div>
             </div>
             <div>
-              <h3 class="about-title text-xl tracking-tight text-ink sm:text-2xl">{title}</h3>
+              <h3 class="profile-heading profile-heading-sm text-ink">{title}</h3>
               <p class="mt-2 text-sm leading-7 text-ink/76 sm:text-base">{text}</p>
             </div>
           </article>
@@ -250,11 +298,18 @@ const timelineEntries = [
   <section id="cabinet-section" class="bg-paper py-16">
     <div class="mx-auto grid max-w-6xl gap-8 px-4 lg:grid-cols-[0.94fr_1.06fr]" data-reveal-group="cabinet">
       <div class="reveal rounded-[2rem] border border-ink/10 bg-mist/55 p-8 shadow-soft sm:p-10" data-reveal>
-        <div class="text-sm font-semibold uppercase tracking-[0.2em] text-ink/50">Aujourd'hui à Tunis</div>
+        <div class="section-label text-ink/62">Aujourd'hui à Tunis</div>
         <div class="mt-4 space-y-5 text-sm leading-relaxed text-ink/76">
           <div>
             <div class="font-semibold text-ink">Adresse</div>
-            <div class="mt-2">{site.contact.addressLines.join(' · ')}</div>
+            <a href={mapsHref} target="_blank" rel="noreferrer" class="group mt-2 inline-flex items-start gap-2 rounded-md underline decoration-ink/30 underline-offset-4 transition hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/50 focus-visible:ring-offset-2 focus-visible:ring-offset-mist">
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="mt-0.5 size-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 21s7-5.1 7-12a7 7 0 0 0-14 0c0 6.9 7 12 7 12Z" />
+                <circle cx="12" cy="9" r="2.4" />
+              </svg>
+              <span>{site.contact.addressLines.join(' · ')}, {site.contact.city}</span>
+              <span aria-hidden="true" class="shrink-0 transition-transform group-hover:translate-x-0.5">↗</span>
+            </a>
           </div>
           <div>
             <div class="font-semibold text-ink">Téléphone</div>
@@ -304,17 +359,36 @@ const timelineEntries = [
   }
 
   .quote-serif {
-    font-family: 'Cormorant Garamond', 'Fraunces', serif;
-    font-weight: 500;
-    letter-spacing: -0.015em;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: normal;
+    line-height: 1.4;
   }
 
-  .card-kicker {
-    font-size: 0.9rem;
+  .section-label {
+    font-size: 0.93rem;
     font-weight: 600;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.08em;
     line-height: 1.4;
+    text-wrap: balance;
+  }
+
+  .profile-heading {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    line-height: 1.16;
     text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  .profile-heading-lg {
+    font-size: clamp(1.75rem, 3.6vw, 2.75rem);
+  }
+
+  .profile-heading-sm {
+    font-size: clamp(1.15rem, 2vw, 1.6rem);
   }
 
   .profile-anchor:hover,
@@ -329,7 +403,6 @@ const timelineEntries = [
     transform: translateY(-1px);
   }
 
-  .fx-chip,
   .fx-lift-soft {
     transition:
       transform 200ms ease,
@@ -338,7 +411,6 @@ const timelineEntries = [
       background-color 200ms ease;
   }
 
-  .fx-chip:hover,
   .fx-lift-soft:hover {
     transform: translateY(-2px);
     border-color: rgba(var(--c-copper) / 0.25);
@@ -393,16 +465,23 @@ const timelineEntries = [
   }
 
   .reveal {
-    opacity: 0;
-    transform: translateY(20px);
-    transition:
-      opacity 560ms ease,
-      transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity: 1;
+    transform: none;
   }
 
-  .reveal.is-visible {
-    opacity: 1;
-    transform: translateY(0);
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal-ready .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition:
+        opacity 560ms ease,
+        transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .reveal-ready .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .timeline-row {
@@ -412,22 +491,6 @@ const timelineEntries = [
       linear-gradient(rgba(var(--c-paper) / 0.96), rgba(var(--c-paper) / 0.96)) padding-box,
       linear-gradient(135deg, rgba(var(--c-sand) / 0.35), rgba(var(--c-copper) / 0.1), transparent) border-box;
     border: 1px solid transparent;
-  }
-
-  .timeline-row::before {
-    content: '';
-    position: absolute;
-    inset: 1rem auto 1rem 0;
-    width: 4px;
-    border-radius: 999px;
-    background: linear-gradient(to bottom, rgba(var(--c-copper) / 0.72), rgba(var(--c-sand) / 0.32));
-    transform: scaleY(0.25);
-    transform-origin: top center;
-    transition: transform 420ms ease;
-  }
-
-  .timeline-row.is-visible::before {
-    transform: scaleY(1);
   }
 
   .timeline-year {
@@ -444,12 +507,10 @@ const timelineEntries = [
 
   @media (prefers-reduced-motion: reduce) {
     .profile-anchor,
-    .fx-chip,
     .fx-lift-soft,
     .fx-card-edge::before,
     .fx-image-pan img,
     .fx-cta-sheen::after,
-    .timeline-row::before,
     .timeline-year,
     .reveal,
     .reveal.is-visible {
@@ -473,6 +534,9 @@ const timelineEntries = [
       if (!section) return [];
       return [{ link, section }];
     });
+
+  document.documentElement.classList.add('reveal-ready');
+
   revealGroups.forEach((group) => {
     const items = Array.from(group.querySelectorAll<HTMLElement>('[data-reveal]'));
     items.forEach((item, index) => {

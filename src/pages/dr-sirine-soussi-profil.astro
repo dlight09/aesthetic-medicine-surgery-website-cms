@@ -2,13 +2,6 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { site } from '@/lib/site';
 
-const credentials = [
-  'Chirurgienne plasticienne · Tunis',
-  'Ancienne Assistante Hospitalo-Universitaire · Institut Kassab',
-  'Fellowship Paris 2016-2019',
-  'Chirurgie de la main',
-];
-
 const keyMoments = [
   {
     title: 'Paris · 2016-2019',
@@ -61,14 +54,6 @@ const timelineEntries = [
       </div>
 
       <div class="space-y-7 lg:pl-6">
-        <div class="flex flex-wrap gap-2">
-          {credentials.map((item) => (
-            <span class="reveal fx-chip rounded-full border border-ink/10 bg-paper/88 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/72 shadow-soft" data-reveal>
-              {item}
-            </span>
-          ))}
-        </div>
-
         <blockquote class="reveal max-w-3xl" data-reveal>
           <p class="font-display text-3xl leading-tight tracking-tight text-ink sm:text-5xl">
             « Je suis convaincue que la chirurgie esthétique n'a de sens que lorsqu'elle est pratiquée avec une exigence absolue :

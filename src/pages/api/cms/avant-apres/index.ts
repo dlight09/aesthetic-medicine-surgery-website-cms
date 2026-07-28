@@ -40,21 +40,34 @@ export const POST: APIRoute = async (context) => {
   }
 
   const status = body.status === 'publie' ? 'publie' : 'brouillon';
+  const consent = Boolean(body.consent);
+  const consentDate = parseOptionalString(body.consent_date);
+  const interventionCategory =
+    typeof body.intervention_category === 'string' && body.intervention_category.trim()
+      ? body.intervention_category
+      : null;
+  const interventionSlug =
+    typeof body.intervention_slug === 'string' && body.intervention_slug.trim()
+      ? body.intervention_slug
+      : null;
+
+  if (!interventionCategory || !interventionSlug) {
+    return new Response('An intervention is required', { status: 400 });
+  }
+
+  if (status === 'publie' && (!consent || !consentDate)) {
+    return new Response('Dated consent is required before publication', { status: 422 });
+  }
+
   const payload = {
     title,
     description: parseOptionalString(body.description),
-    intervention_category:
-      typeof body.intervention_category === 'string' && body.intervention_category.trim()
-        ? body.intervention_category
-        : null,
-    intervention_slug:
-      typeof body.intervention_slug === 'string' && body.intervention_slug.trim()
-        ? body.intervention_slug
-        : null,
+    intervention_category: interventionCategory,
+    intervention_slug: interventionSlug,
     case_number: null,
     status: status as 'brouillon' | 'publie',
-    consent: Boolean(body.consent),
-    consent_date: parseOptionalString(body.consent_date),
+    consent,
+    consent_date: consentDate,
     internal_ref: parseOptionalString(body.internal_ref),
     before_path,
     after_path,

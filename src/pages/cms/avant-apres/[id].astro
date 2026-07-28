@@ -4,6 +4,7 @@ import { getCmsAvantApresCase, type AvantApresCaseView } from '@/lib/cms/avantAp
 import { interventionCategories } from '@/lib/interventions';
 import { listCmsInterventions } from '@/lib/cms/interventions';
 import { getCollection } from 'astro:content';
+import AdditionalMediaSetsEditor from '@/components/cms/AdditionalMediaSetsEditor.astro';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 const { id } = Astro.params;
@@ -57,19 +58,17 @@ const currentInterventionRef =
 const proceduresText = item.procedures.map((proc) => proc.label).join('\n');
 const tagsText = item.tags.join(', ');
 const coverMediaSet = item.media_sets.find((set) => set.is_cover) ?? item.media_sets[0] ?? null;
-const extraMediaSetsJson = JSON.stringify(
-  item.media_sets
-    .filter((set) => !coverMediaSet || set.id !== coverMediaSet.id)
-    .map((set) => ({
-      label: set.label,
-      view_key: set.view_key,
-      result_delay_label: set.result_delay_label,
-      before_path: set.before_path,
-      after_path: set.after_path,
-    })),
-  null,
-  2,
-);
+const extraMediaSets = item.media_sets
+  .filter((set) => !coverMediaSet || set.id !== coverMediaSet.id)
+  .map((set) => ({
+    label: set.label,
+    view_key: set.view_key,
+    result_delay_label: set.result_delay_label,
+    before_path: set.before_path,
+    after_path: set.after_path,
+    beforeUrl: set.beforeUrl,
+    afterUrl: set.afterUrl,
+  }));
 ---
 
 <CmsLayout title="Edition cas">
@@ -77,7 +76,7 @@ const extraMediaSetsJson = JSON.stringify(
     <section class="cms-card p-7">
       <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant/Après</div>
       <h1 class="mt-2 font-display text-3xl tracking-tight">
-        {item.case_number ? `Cas ${String(item.case_number).padStart(2, '0')}` : 'Cas'} — {item.title}
+        {item.case_number ? `Cas ${String(item.case_number).padStart(2, '0')}` : 'Cas'} - {item.title}
       </h1>
 
       <form id="aa-form" class="mt-8 grid gap-5" data-id={item.id}>
@@ -157,10 +156,7 @@ const extraMediaSetsJson = JSON.stringify(
           </label>
         </div>
 
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Autres vues (JSON optionnel)</span>
-          <textarea rows={5} class="cms-textarea font-mono text-xs" name="media_sets_json">{extraMediaSetsJson}</textarea>
-        </label>
+        <AdditionalMediaSetsEditor initialMediaSets={extraMediaSets} />
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Intervention associée</span>
           <select class="cms-select" name="intervention_ref">
@@ -180,7 +176,7 @@ const extraMediaSetsJson = JSON.stringify(
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Numéro du cas</span>
           <div class="cms-input flex items-center text-sm text-ink/70">
-            {item.case_number ? `Cas ${String(item.case_number).padStart(2, '0')}` : '—'}
+            {item.case_number ? `Cas ${String(item.case_number).padStart(2, '0')}` : '-'}
           </div>
           <input type="hidden" name="case_number" value={item.case_number ?? ''} />
           <span class="text-xs text-ink/50">Attribué automatiquement selon l’intervention.</span>
@@ -190,7 +186,7 @@ const extraMediaSetsJson = JSON.stringify(
           <div class="rounded-2xl border border-ink/10 bg-mist p-4">
             <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant</div>
             <img data-preview="before" src={coverMediaSet?.beforeUrl ?? item.beforeUrl} alt="Avant" class="mt-3 h-32 w-full rounded-xl object-cover" />
-            <input type="file" accept="image/*" class="mt-3 block text-xs" data-upload="before" />
+            <input type="file" accept="image/jpeg,image/png,image/webp" class="mt-3 block text-xs" data-upload="before" />
             <div class="mt-2 text-[11px] text-ink/50">JPG/PNG, 10MB max.</div>
             <div data-upload-status="before" class="mt-1 text-[11px] text-ink/60"></div>
             <div data-upload-error="before" class="mt-1 text-[11px] text-rose-600"></div>
@@ -199,7 +195,7 @@ const extraMediaSetsJson = JSON.stringify(
           <div class="rounded-2xl border border-ink/10 bg-mist p-4">
             <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Après</div>
             <img data-preview="after" src={coverMediaSet?.afterUrl ?? item.afterUrl} alt="Après" class="mt-3 h-32 w-full rounded-xl object-cover" />
-            <input type="file" accept="image/*" class="mt-3 block text-xs" data-upload="after" />
+            <input type="file" accept="image/jpeg,image/png,image/webp" class="mt-3 block text-xs" data-upload="after" />
             <div class="mt-2 text-[11px] text-ink/50">JPG/PNG, 10MB max.</div>
             <div data-upload-status="after" class="mt-1 text-[11px] text-ink/60"></div>
             <div data-upload-error="after" class="mt-1 text-[11px] text-rose-600"></div>
@@ -319,7 +315,7 @@ const extraMediaSetsJson = JSON.stringify(
           const res = await fetch('/api/cms/avant-apres/upload-url', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileName: file.name, kind })
+            body: JSON.stringify({ fileName: file.name, kind, contentType: file.type })
           });
           if (!res.ok) throw new Error('upload-url');
           const data = await res.json();
@@ -392,8 +388,8 @@ const extraMediaSetsJson = JSON.stringify(
         return;
       }
 
-      if (intent === 'publish' && !payload.consent) {
-        if (error) error.textContent = 'Le consentement est requis pour publier.';
+      if (intent === 'publish' && (!payload.consent || !payload.consent_date)) {
+        if (error) error.textContent = 'Le consentement daté est requis pour publier.';
         if (status) status.textContent = '';
         return;
       }

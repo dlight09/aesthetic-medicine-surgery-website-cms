@@ -68,10 +68,10 @@ const faqStep = String((data.sections.length + 1)).padStart(2, '0');
 
             {section.callout?.text ? (
               <div class:list={[
-                'mt-4 rounded-xl border-l-4 px-4 py-3 italic',
+                'mt-4 rounded-xl border px-4 py-3 italic',
                 section.callout.tone === 'warning'
-                  ? 'border-amber-600 bg-amber-50 text-amber-900'
-                  : 'border-sky-700 bg-sky-50 text-sky-900',
+                  ? 'border-copper-deep/35 bg-mist/70 text-ink/85'
+                  : 'border-ink/15 bg-paper text-ink/85',
               ]}>
                 {section.callout.text}
               </div>
@@ -151,35 +151,14 @@ const faqStep = String((data.sections.length + 1)).padStart(2, '0');
 
 <style>
   .heading-sober {
-    font-family: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+    font-family: 'Andale Mono', AndaleMono, monospace;
     font-weight: 700;
     letter-spacing: -0.01em;
     line-height: 1.08;
   }
 
-  .quick-rail {
-    position: relative;
-  }
-
-  .quick-rail::before {
-    content: '';
-    position: absolute;
-    inset: -0.5rem 0 auto 0;
-    height: 2px;
-    background: linear-gradient(to right, rgba(var(--c-copper) / 0.2), rgba(var(--c-copper) / 0.6), rgba(var(--c-copper) / 0.2));
-  }
-
   .timeline-row {
-    position: relative;
     overflow: hidden;
-  }
-
-  .timeline-row::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 3px;
-    background: linear-gradient(to bottom, rgba(var(--c-copper) / 0.72), rgba(var(--c-sand) / 0.34));
   }
 
   .reveal {

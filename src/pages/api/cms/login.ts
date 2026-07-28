@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { createCmsSession } from '@/lib/cms/auth';
 
 export const POST: APIRoute = async (context) => {
   const password = import.meta.env.CMS_PASSWORD;
@@ -10,12 +11,13 @@ export const POST: APIRoute = async (context) => {
   }
 
   const secure = context.url.protocol === 'https:';
-  context.cookies.set('cms_auth', 'true', {
+  const session = createCmsSession();
+  context.cookies.set('cms_auth', session.token, {
     httpOnly: true,
     sameSite: 'lax',
     secure,
     path: '/',
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: session.maxAge,
   });
 
   return new Response(null, { status: 204 });

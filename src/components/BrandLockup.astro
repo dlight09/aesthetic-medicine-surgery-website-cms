@@ -1,0 +1,90 @@
+---
+type Props = {
+  id: string;
+  class?: string;
+  layout?: 'inline' | 'wordmark-centered';
+  alignment?: 'center' | 'end';
+  gapClass?: string;
+  markClass?: string;
+  markOffsetClass?: string;
+  textBlockClass?: string;
+  wordmarkClass?: string;
+  wordmarkSize?: string;
+  wordmarkWeight?: number;
+  wordmarkFontFamily?: string;
+  wordmarkLetterSpacing?: string;
+  subtitle?: string;
+  subtitleClass?: string;
+  subtitleSize?: string;
+};
+
+const {
+  id,
+  class: className = '',
+  layout = 'inline',
+  alignment = 'center',
+  gapClass = 'gap-4',
+  markClass = 'h-10',
+  markOffsetClass = 'mr-3',
+  textBlockClass = '',
+  wordmarkClass = '',
+  wordmarkSize = '1.25rem',
+  wordmarkWeight = 400,
+  wordmarkFontFamily = "'Andale Mono', AndaleMono, monospace",
+  wordmarkLetterSpacing = '-0.035em',
+  subtitle,
+  subtitleClass = '',
+  subtitleSize = '0.75rem',
+} = Astro.props;
+
+const clipId = `${id}-clip`;
+const filterId = `${id}-white`;
+---
+
+{layout === 'wordmark-centered' ? (
+  <span class:list={['relative inline-block', className]}>
+    <svg aria-hidden="true" viewBox="30 8 66 140" class:list={['absolute right-full top-1/2 w-auto -translate-y-1/2', markOffsetClass, markClass]}>
+      <defs>
+        <clipPath id={clipId}>
+          <path d="M30 8H70V20H105V90H90V108H57V148H30Z" />
+        </clipPath>
+        <filter id={filterId} color-interpolation-filters="sRGB">
+          <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0" />
+        </filter>
+      </defs>
+      <image href="/images/dr-soussi-logo.svg" width="265.11249" height="165.89375" clip-path={`url(#${clipId})`} filter={`url(#${filterId})`} />
+    </svg>
+    <span class:list={['flex flex-col gap-3', textBlockClass]}>
+      <span
+        class:list={['whitespace-nowrap text-paper', wordmarkClass]}
+        style={`font-family: ${wordmarkFontFamily}; font-size: ${wordmarkSize}; font-weight: ${wordmarkWeight}; letter-spacing: ${wordmarkLetterSpacing}; line-height: 1; -webkit-font-smoothing: antialiased;`}
+      >
+        DR SIRINE SOUSSI
+      </span>
+      {subtitle ? <span class:list={['max-w-[16rem] leading-5 tracking-[0.06em] text-paper/68', subtitleClass]} style={`font-size: ${subtitleSize};`}>{subtitle}</span> : null}
+    </span>
+  </span>
+) : (
+  <span class:list={['inline-flex', alignment === 'end' ? 'items-end' : 'items-center', gapClass, className]}>
+    <svg aria-hidden="true" viewBox="30 8 66 140" class:list={['w-auto shrink-0', markClass]}>
+      <defs>
+        <clipPath id={clipId}>
+          <path d="M30 8H70V20H105V90H90V108H57V148H30Z" />
+        </clipPath>
+        <filter id={filterId} color-interpolation-filters="sRGB">
+          <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0" />
+        </filter>
+      </defs>
+      <image href="/images/dr-soussi-logo.svg" width="265.11249" height="165.89375" clip-path={`url(#${clipId})`} filter={`url(#${filterId})`} />
+    </svg>
+    <span class:list={['flex flex-col gap-3', textBlockClass]}>
+      <span
+        class:list={['whitespace-nowrap text-paper', wordmarkClass]}
+        style={`font-family: ${wordmarkFontFamily}; font-size: ${wordmarkSize}; font-weight: ${wordmarkWeight}; letter-spacing: ${wordmarkLetterSpacing}; line-height: 1; -webkit-font-smoothing: antialiased;`}
+      >
+        DR SIRINE SOUSSI
+      </span>
+      {subtitle ? <span class:list={['max-w-[16rem] leading-5 tracking-[0.06em] text-paper/68', subtitleClass]} style={`font-size: ${subtitleSize};`}>{subtitle}</span> : null}
+    </span>
+  </span>
+)}
