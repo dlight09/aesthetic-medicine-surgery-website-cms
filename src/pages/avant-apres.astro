@@ -1,9 +1,14 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
-import { listPublicAvantApresCases, type AvantApresCaseView } from '@/lib/cms/avantApres';
+import {
+  listPublicAvantApresCaseReferences,
+  listPublicAvantApresCasesPage,
+  type AvantApresCaseView,
+} from '@/lib/cms/avantApres';
 import { interventionCategories } from '@/lib/interventions';
 import { listPublicInterventions } from '@/lib/cms/interventions';
+import FeaturedCaseCarousel from '@/components/FeaturedCaseCarousel.astro';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 const interventionCategory = Astro.url.searchParams.get('intervention_category');
@@ -14,16 +19,31 @@ type AvantApresCaseWithIntervention = AvantApresCaseView & {
   description?: string | null;
   case_number?: number | null;
 };
-let allCases: AvantApresCaseWithIntervention[] = [];
+const pageSize = 12;
+type AvantApresCaseReference = Pick<
+  AvantApresCaseWithIntervention,
+  'intervention_category' | 'intervention_slug' | 'case_number'
+>;
+let allCaseReferences: AvantApresCaseReference[] = [];
+let totalCases = 0;
+let cases: AvantApresCaseWithIntervention[] = [];
 try {
-  allCases = (await listPublicAvantApresCases()) as AvantApresCaseWithIntervention[];
+  const [page, references] = await Promise.all([
+    listPublicAvantApresCasesPage({
+      interventionCategory,
+      interventionSlug,
+      limit: pageSize,
+    }),
+    listPublicAvantApresCaseReferences(),
+  ]);
+  cases = page.items as AvantApresCaseWithIntervention[];
+  totalCases = page.total;
+  allCaseReferences = references as AvantApresCaseReference[];
 } catch {
-  allCases = [];
+  cases = [];
+  allCaseReferences = [];
 }
 
-let cases = [...allCases];
-if (interventionCategory) cases = cases.filter((item) => item.intervention_category === interventionCategory);
-if (interventionSlug) cases = cases.filter((item) => item.intervention_slug === interventionSlug);
 if (interventionCategory || interventionSlug) cases = cases.sort((a, b) => (a.case_number ?? 999) - (b.case_number ?? 999));
 
 type InterventionLite = { title: string; category: string; slug: string; order?: number | null };
@@ -72,11 +92,9 @@ const interventionTitle = matchingIntervention?.title;
 const interventionHref = matchingIntervention
   ? `/interventions/${matchingIntervention.category}/${interventionSlug}`
   : null;
-const formatCaseNumber = (value?: number | null) =>
-  value ? `Cas ${String(value).padStart(2, '0')}` : null;
 
-const casesByRef = new Map<string, AvantApresCaseWithIntervention[]>();
-allCases.forEach((item) => {
+const casesByRef = new Map<string, AvantApresCaseReference[]>();
+allCaseReferences.forEach((item) => {
   if (!item.intervention_category || !item.intervention_slug) return;
   const ref = `${item.intervention_category}::${item.intervention_slug}`;
   const list = casesByRef.get(ref) ?? [];
@@ -92,7 +110,7 @@ casesByRef.forEach((list, key) => {
 
 const categoryFilters = interventionCategories
   .map((category) => {
-    const count = allCases.filter((item) => item.intervention_category === category.key).length;
+    const count = allCaseReferences.filter((item) => item.intervention_category === category.key).length;
     return { ...category, count };
   })
   .filter((category) => category.count > 0);
@@ -122,11 +140,18 @@ const caseCards = cases.map((item) => {
     ...item,
     interventionMeta,
     categoryTitle,
-    caseLabel: formatCaseNumber(item.case_number) ?? 'Cas',
+    publicTitle: interventionMeta?.title ?? item.title ?? categoryTitle ?? 'Résultat documenté',
     contextChips,
+    isComparison: (item.media_sets?.find((set) => set.is_cover) ?? item.media_sets?.[0])?.media_mode === 'comparison',
   };
 });
-const featuredCase = caseCards[0] ?? null;
+const featuredCases = caseCards.slice(0, 6).map((item) => ({
+  href: `/avant-apres/${item.id}`,
+  title: item.publicTitle,
+  beforeUrl: item.beforeUrl,
+  afterUrl: item.afterUrl,
+  isComparison: item.isComparison,
+}));
 const hasPreviewCases = caseCards.some((item) => item.id.startsWith('preview-'));
 ---
 
@@ -135,8 +160,8 @@ const hasPreviewCases = caseCards.some((item) => item.id.startsWith('preview-'))
     <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-mist to-transparent"></div>
     <div class="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.28em] text-ink/60">Résultats documentés</p>
-        <h1 class="mt-4 font-display text-4xl leading-tight tracking-tight text-ink sm:text-6xl">Avant & après</h1>
+        <p class="text-sm font-semibold text-copper-deep">Résultats documentés</p>
+        <h1 class="mt-4 max-w-[12ch] text-balance font-display text-4xl leading-tight tracking-tight text-ink sm:text-6xl">Avant & après</h1>
         <p class="mt-6 max-w-xl text-lg leading-relaxed text-ink/75">
           Des cas sélectionnés pour illustrer une prise en charge individualisée. Chaque indication, geste et résultat s’apprécient au cas par cas.
         </p>
@@ -146,28 +171,8 @@ const hasPreviewCases = caseCards.some((item) => item.id.startsWith('preview-'))
         </div>
       </div>
 
-      {featuredCase ? (
-        <a href={`/avant-apres/${featuredCase.id}`} class="group overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-lift">
-          <div class="grid aspect-[5/4] grid-cols-2">
-            <div class="relative overflow-hidden border-r border-paper/30">
-              <img src={featuredCase.beforeUrl} alt="Photographie avant intervention" class="h-full w-full object-cover grayscale opacity-90 transition duration-700 group-hover:grayscale-0 group-hover:opacity-100" loading="eager" />
-              <span class="absolute left-4 top-4 rounded-full bg-paper/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/80">Avant</span>
-            </div>
-            <div class="relative overflow-hidden">
-              <img src={featuredCase.afterUrl} alt="Photographie après intervention" class="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]" loading="eager" />
-              <span class="absolute left-4 top-4 rounded-full bg-paper/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/80">Après</span>
-            </div>
-          </div>
-          <div class="flex items-center justify-between gap-4 p-5">
-            <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.16em] text-ink/55">Cas présenté</p>
-              <div class="mt-1 font-display text-xl tracking-tight text-ink">{featuredCase.caseLabel}</div>
-            </div>
-            <span class="inline-flex size-9 items-center justify-center rounded-full border border-ink/15 text-ink/70 transition group-hover:border-ink/35 group-hover:text-ink" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4"><path d="M8 16 16 8M9 8h7v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-            </span>
-          </div>
-        </a>
+      {featuredCases.length ? (
+        <FeaturedCaseCarousel items={featuredCases} />
       ) : (
         <div class="rounded-3xl border border-ink/10 bg-mist/70 p-8 shadow-soft">
           <p class="text-sm leading-relaxed text-ink/70">Les cas publiés apparaîtront ici une fois la sélection finalisée.</p>
@@ -176,24 +181,15 @@ const hasPreviewCases = caseCards.some((item) => item.id.startsWith('preview-'))
     </div>
   </section>
 
-  <section class="bg-mist/55 py-14 sm:py-16">
-    <div class="mx-auto max-w-6xl px-4">
-      <div class="grid gap-3 md:grid-cols-3">
-        <article class="rounded-2xl border border-ink/10 bg-paper p-6 shadow-soft">
-          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-ink/60">Consentement</p>
-          <p class="mt-3 text-sm leading-relaxed text-ink/75">Toute publication est réalisée avec <a href="/consentement" class="link underline underline-offset-4">consentement</a>.</p>
-        </article>
-        <article class="rounded-2xl border border-ink/10 bg-paper p-6 shadow-soft">
-          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-ink/60">Résultats personnels</p>
-          <p class="mt-3 text-sm leading-relaxed text-ink/75">Les résultats varient selon l’anatomie, l’indication et les suites propres à chaque patient.</p>
-        </article>
-        <article class="rounded-2xl border border-ink/10 bg-paper p-6 shadow-soft">
-          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-ink/60">Information médicale</p>
-          <p class="mt-3 text-sm leading-relaxed text-ink/75">Ces photographies ne constituent pas une garantie de résultat ni un avis médical personnalisé.</p>
-        </article>
+  <section class="bg-mist/55 py-12 sm:py-14">
+    <div class="mx-auto grid max-w-6xl gap-6 px-4 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+      <h2 class="max-w-[16ch] text-balance font-display text-2xl leading-tight tracking-tight text-ink">Voir des résultats avec justesse</h2>
+      <div class="rounded-3xl border border-ink/10 bg-paper px-6 py-5 shadow-soft sm:px-7">
+        <p class="text-sm leading-relaxed text-ink/80">Toute publication est réalisée avec <a href="/consentement" class="link underline underline-offset-4">consentement</a>. Les résultats varient selon l’anatomie, l’indication et les suites propres à chaque patient.</p>
+        <p class="mt-3 text-sm leading-relaxed text-ink/70">Ces photographies illustrent des prises en charge précises. Elles ne constituent ni une garantie de résultat ni un avis médical personnalisé.</p>
       </div>
       {hasPreviewCases ? (
-        <p class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-800">
+        <p class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-800 lg:col-start-2">
           Certaines images sont des extraits PDF utilisés temporairement en prévisualisation, en attendant les photos haute définition.
         </p>
       ) : null}
@@ -203,30 +199,29 @@ const hasPreviewCases = caseCards.some((item) => item.id.startsWith('preview-'))
   <section id="cas" class="bg-paper py-16 sm:py-20">
     <div class="mx-auto max-w-6xl px-4">
       <header class="max-w-3xl">
-        <p class="text-xs font-semibold uppercase tracking-[0.28em] text-ink/55">Sélection de cas</p>
-        <h2 class="mt-3 font-display text-3xl tracking-tight text-ink sm:text-4xl">Explorer les résultats</h2>
+        <h2 class="text-balance font-display text-3xl tracking-tight text-ink sm:text-4xl">Explorer les résultats</h2>
         {interventionTitle && interventionHref ? (
           <p class="mt-4 text-sm leading-relaxed text-ink/70">
-            Cas associés à <a class="link underline underline-offset-4" href={interventionHref}>{interventionTitle}</a>. <a class="link underline underline-offset-4" href="/avant-apres">Voir tous les cas</a>.
+            Résultats associés à <a class="link underline underline-offset-4" href={interventionHref}>{interventionTitle}</a>. <a class="link underline underline-offset-4" href="/avant-apres">Voir tous les résultats</a>.
           </p>
         ) : null}
       </header>
 
       {categoryFilters.length ? (
         <nav class="mt-10 border-y border-ink/10 py-5" aria-label="Filtrer les cas par catégorie">
-          <div class="flex flex-wrap gap-x-6 gap-y-3 text-xs font-semibold uppercase tracking-[0.16em]">
-            <a href="/avant-apres" class:list={['transition', !interventionCategory ? 'text-ink' : 'text-ink/55 hover:text-ink']}>Tout voir</a>
+          <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm font-semibold">
+            <a href="/avant-apres" class:list={['rounded-md py-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper', !interventionCategory ? 'text-ink' : 'text-ink/65 hover:text-ink']}>Tout voir</a>
             {categoryFilters.map((category) => (
-              <a href={`/avant-apres?intervention_category=${category.key}`} class:list={['transition', interventionCategory === category.key ? 'text-ink' : 'text-ink/55 hover:text-ink']}>
+              <a href={`/avant-apres?intervention_category=${category.key}`} class:list={['rounded-md py-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper', interventionCategory === category.key ? 'text-ink' : 'text-ink/65 hover:text-ink']}>
                 {category.title}
               </a>
             ))}
           </div>
           {interventionCategory && interventionFilters.length ? (
             <div class="mt-5 flex flex-wrap gap-2">
-              <a href={`/avant-apres?intervention_category=${interventionCategory}`} class:list={['btn btn-pill btn-sm', !interventionSlug ? 'btn-primary' : 'btn-secondary']}>Tous</a>
+              <a href={`/avant-apres?intervention_category=${interventionCategory}`} class:list={['btn btn-pill btn-sm min-h-11', !interventionSlug ? 'btn-primary' : 'btn-secondary']}>Tous</a>
               {interventionFilters.map((entry) => (
-                <a href={`/avant-apres?intervention_category=${entry.category}&intervention_slug=${entry.slug}`} class:list={['btn btn-pill btn-sm', interventionSlug === entry.slug ? 'btn-primary' : 'btn-secondary']}>
+                <a href={`/avant-apres?intervention_category=${entry.category}&intervention_slug=${entry.slug}`} class:list={['btn btn-pill btn-sm min-h-11', interventionSlug === entry.slug ? 'btn-primary' : 'btn-secondary']}>
                   {entry.title}
                 </a>
               ))}
@@ -236,37 +231,35 @@ const hasPreviewCases = caseCards.some((item) => item.id.startsWith('preview-'))
       ) : null}
 
       {caseCards.length ? (
-        <section class="mt-12 grid gap-8 md:grid-cols-2 md:gap-10">
+        <section id="aa-case-grid" class="mt-10 grid gap-6 md:grid-cols-2 md:gap-8" aria-busy="false">
           {caseCards.map((item) => (
-          <a href={`/avant-apres/${item.id}`} class="group overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift">
-            <div class="grid aspect-[5/4] grid-cols-2">
-                <div class="relative overflow-hidden border-r border-paper/30">
-                  <img
-                    src={item.beforeUrl}
-                    alt="Avant"
-                    class="h-full w-full object-cover grayscale opacity-85 transition duration-700 group-hover:grayscale-0 group-hover:opacity-100"
-                    loading="lazy"
-                  />
-                  <span class="absolute left-4 top-4 rounded-full bg-paper/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/80">
-                    Avant
-                  </span>
-                </div>
-                <div class="relative overflow-hidden">
-                  <img src={item.afterUrl} alt="Après" class="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]" loading="lazy" />
-                  <span class="absolute left-4 top-4 rounded-full bg-paper/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/80">
-                    Après
-                  </span>
-                </div>
+          <a href={`/avant-apres/${item.id}`} class="group card-focus overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft transition-shadow duration-300 hover:shadow-lift">
+            {item.isComparison ? (
+              <div class="relative bg-mist/50">
+                <img src={item.beforeUrl} alt="Photographie comparative avant et après intervention" class="h-80 w-full object-contain sm:h-96" loading="lazy" />
+                <span class="absolute left-4 top-4 rounded-full bg-paper/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/80">Avant / Après</span>
               </div>
+            ) : (
+              <div class="grid aspect-[5/4] grid-cols-2">
+                  <div class="relative overflow-hidden border-r border-paper/30">
+                    <img
+                      src={item.beforeUrl}
+                      alt="Avant"
+                      class="h-full w-full object-cover grayscale opacity-85 transition duration-700 group-hover:grayscale-0 group-hover:opacity-100"
+                      loading="lazy"
+                    />
+                    <span class="absolute left-4 top-4 rounded-full bg-paper/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/80">Avant</span>
+                  </div>
+                  <div class="relative overflow-hidden">
+                    <img src={item.afterUrl} alt="Après" class="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]" loading="lazy" />
+                    <span class="absolute left-4 top-4 rounded-full bg-paper/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/80">Après</span>
+                  </div>
+                </div>
+            )}
 
             <div class="flex items-start justify-between gap-4 p-6">
               <div>
-                <h3 class="font-display text-2xl tracking-tight">{item.caseLabel}</h3>
-                {item.interventionMeta ? (
-                  <p class="mt-1 text-xs font-semibold uppercase tracking-[0.15em] text-ink/55">{item.interventionMeta.title}</p>
-                ) : item.categoryTitle ? (
-                  <p class="mt-1 text-xs font-semibold uppercase tracking-[0.15em] text-ink/55">{item.categoryTitle}</p>
-                ) : null}
+                <h3 class="text-balance font-display text-[clamp(1.35rem,2vw,1.65rem)] tracking-tight">{item.publicTitle}</h3>
                 {item.description ? <p class="mt-3 max-w-[44ch] text-sm leading-relaxed text-ink/70">{item.description}</p> : null}
                 {item.contextChips.length ? (
                   <div class="mt-3 flex flex-wrap gap-2">
@@ -287,6 +280,22 @@ const hasPreviewCases = caseCards.some((item) => item.id.startsWith('preview-'))
           </a>
         ))}
       </section>
+      <div id="aa-load-more-wrap" class:list={['mt-10 flex flex-col items-center gap-4', { hidden: caseCards.length >= totalCases }]}>
+        <p id="aa-results-count" class="text-sm text-ink/70">{caseCards.length} résultats affichés sur {totalCases}</p>
+        <p id="aa-load-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+        <button
+          id="aa-load-more"
+          type="button"
+          class="btn btn-pill btn-md min-h-11 btn-secondary disabled:cursor-wait disabled:opacity-60"
+          data-offset={caseCards.length}
+          data-total={totalCases}
+          data-limit={pageSize}
+          data-category={interventionCategory ?? ''}
+          data-slug={interventionSlug ?? ''}
+        >
+          Charger plus de résultats
+        </button>
+      </div>
     ) : (
       <section class="mt-12 rounded-3xl border border-ink/10 bg-mist p-10 text-ink/75">
         {interventionTitle ? (
@@ -319,3 +328,136 @@ const hasPreviewCases = caseCards.some((item) => item.id.startsWith('preview-'))
     </div>
   </section>
 </BaseLayout>
+
+<script is:inline>
+  (() => {
+    const grid = document.getElementById('aa-case-grid');
+    const button = document.getElementById('aa-load-more');
+    const wrap = document.getElementById('aa-load-more-wrap');
+    const count = document.getElementById('aa-results-count');
+    const status = document.getElementById('aa-load-status');
+    if (!(grid instanceof HTMLElement) || !(button instanceof HTMLButtonElement)) return;
+
+    const createLabel = (text) => {
+      const label = document.createElement('span');
+      label.className = 'absolute left-4 top-4 rounded-full bg-paper/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/80';
+      label.textContent = text;
+      return label;
+    };
+
+    const createImage = (src, alt, className) => {
+      const image = document.createElement('img');
+      image.src = src;
+      image.alt = alt;
+      image.loading = 'lazy';
+      image.className = className;
+      return image;
+    };
+
+    const createCard = (item) => {
+      const card = document.createElement('a');
+      card.href = `/avant-apres/${encodeURIComponent(item.id)}`;
+      card.className = 'group card-focus overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft transition-shadow duration-300 hover:shadow-lift';
+      const coverSet = item.media_sets?.find((set) => set.is_cover) ?? item.media_sets?.[0];
+      const isComparison = coverSet?.media_mode === 'comparison';
+      const media = document.createElement('div');
+
+      if (isComparison) {
+        media.className = 'relative bg-mist/50';
+        media.append(createImage(item.beforeUrl, 'Photographie comparative avant et après intervention', 'h-80 w-full object-contain sm:h-96'));
+        media.append(createLabel('Avant / Après'));
+      } else {
+        media.className = 'grid aspect-[5/4] grid-cols-2';
+        const before = document.createElement('div');
+        before.className = 'relative overflow-hidden border-r border-paper/30';
+        before.append(createImage(item.beforeUrl, 'Avant', 'h-full w-full object-cover grayscale opacity-85'));
+        before.append(createLabel('Avant'));
+        const after = document.createElement('div');
+        after.className = 'relative overflow-hidden';
+        after.append(createImage(item.afterUrl, 'Après', 'h-full w-full object-cover'));
+        after.append(createLabel('Après'));
+        media.append(before, after);
+      }
+
+      const content = document.createElement('div');
+      content.className = 'flex items-start justify-between gap-4 p-6';
+      const details = document.createElement('div');
+      const title = document.createElement('h3');
+      title.className = 'text-balance font-display text-[clamp(1.35rem,2vw,1.65rem)] tracking-tight';
+      title.textContent = item.title || 'Résultat documenté';
+      details.append(title);
+      if (item.description) {
+        const description = document.createElement('p');
+        description.className = 'mt-3 max-w-[44ch] text-sm leading-relaxed text-ink/70';
+        description.textContent = item.description;
+        details.append(description);
+      }
+      const chips = [];
+      if (coverSet?.result_delay_label) chips.push(coverSet.result_delay_label);
+      if (item.patient_context?.smoking_status === 'non_smoker') chips.push('Non fumeuse');
+      if (item.patient_context?.smoking_status === 'smoker') chips.push('Fumeuse');
+      if (item.patient_context?.post_bariatric) chips.push('Post-bariatrique');
+      if (item.patient_context?.revision_case) chips.push('Reprise');
+      if (chips.length) {
+        const chipList = document.createElement('div');
+        chipList.className = 'mt-3 flex flex-wrap gap-2';
+        chips.slice(0, 4).forEach((chip) => {
+          const chipElement = document.createElement('span');
+          chipElement.className = 'rounded-full border border-ink/10 bg-mist/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-ink/65';
+          chipElement.textContent = chip;
+          chipList.append(chipElement);
+        });
+        details.append(chipList);
+      }
+      const arrow = document.createElement('span');
+      arrow.className = 'mt-1 inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-ink/15 text-ink/55';
+      arrow.setAttribute('aria-hidden', 'true');
+      arrow.innerHTML = '<svg viewBox="0 0 24 24" fill="none" class="h-4 w-4"><path d="M8 16 16 8M9 8h7v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+      content.append(details, arrow);
+      card.append(media, content);
+      return card;
+    };
+
+    button.addEventListener('click', async () => {
+      const offset = Number(button.dataset.offset ?? '0');
+      const total = Number(button.dataset.total ?? '0');
+      const limit = Number(button.dataset.limit ?? '12');
+      const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+      if (button.dataset.category) params.set('intervention_category', button.dataset.category);
+      if (button.dataset.slug) params.set('intervention_slug', button.dataset.slug);
+      button.disabled = true;
+      button.textContent = 'Chargement…';
+      grid.setAttribute('aria-busy', 'true');
+      if (status instanceof HTMLElement) status.textContent = 'Chargement de résultats supplémentaires.';
+      try {
+        const response = await fetch(`/api/public/avant-apres?${params}`);
+        if (!response.ok) throw new Error('request failed');
+        const page = await response.json();
+        const items = Array.isArray(page.items) ? page.items : [];
+        items.forEach((item) => grid.append(createCard(item)));
+        const nextOffset = offset + items.length;
+        button.dataset.offset = String(nextOffset);
+        if (count instanceof HTMLElement) count.textContent = `${nextOffset} résultats affichés sur ${total}`;
+        if (status instanceof HTMLElement) {
+          status.textContent = items.length
+            ? `${items.length} résultats ajoutés. ${nextOffset} résultats affichés sur ${total}.`
+            : 'Aucun résultat supplémentaire disponible.';
+        }
+        if (!items.length || nextOffset >= total) {
+          if (wrap instanceof HTMLElement) wrap.hidden = true;
+          return;
+        }
+        button.disabled = false;
+        button.textContent = 'Charger plus de résultats';
+      } catch {
+        button.disabled = false;
+        button.textContent = 'Réessayer';
+        if (status instanceof HTMLElement) {
+          status.textContent = 'Impossible de charger plus de résultats. Réessayez.';
+        }
+      } finally {
+        grid.setAttribute('aria-busy', 'false');
+      }
+    });
+  })();
+</script>

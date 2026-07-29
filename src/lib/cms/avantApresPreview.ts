@@ -176,6 +176,7 @@ export function getPreviewAvantApresCases(): AvantApresCaseView[] {
         result_delay_value: null,
         result_delay_unit: null,
         result_delay_label: seed.result_delay_label,
+        media_mode: 'pair',
         before_path: seed.before,
         after_path: seed.after,
         is_cover: true,

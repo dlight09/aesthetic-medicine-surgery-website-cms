@@ -7,7 +7,9 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "import:avant-apres:samples": "node --env-file=.env.local scripts/import-avant-apres-samples.mjs",
+    "import:avant-apres:remaining": "node --env-file=.env.local scripts/import-remaining-avant-apres.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

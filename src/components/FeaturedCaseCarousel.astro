@@ -1,0 +1,290 @@
+---
+type CaseSlide = {
+  href: string;
+  title: string;
+  beforeUrl: string;
+  afterUrl: string;
+  isComparison: boolean;
+};
+
+const { items } = Astro.props as { items: CaseSlide[] };
+const carouselId = `featured-case-carousel-${crypto.randomUUID()}`;
+---
+
+<section id={carouselId} class="featured-case-carousel" aria-roledescription="carrousel" aria-label="Résultats documentés">
+  <div class="featured-case-carousel__viewport">
+    {items.map((item, index) => (
+      <article class="featured-case-carousel__slide" data-slide aria-roledescription="diapositive" aria-label={`Résultat ${index + 1} sur ${items.length}`} hidden={index !== 0} aria-hidden={index !== 0 ? 'true' : 'false'}>
+        <a href={item.href} class="featured-case-carousel__link" tabindex={index === 0 ? 0 : -1}>
+          <div class:list={['featured-case-carousel__media', { 'featured-case-carousel__media--comparison': item.isComparison }]}>
+            {item.isComparison ? (
+              <img src={item.beforeUrl} alt="Photographie comparative avant et après intervention" loading={index === 0 ? 'eager' : 'lazy'} />
+            ) : (
+              <div class="featured-case-carousel__pair">
+                <img src={item.beforeUrl} alt="Photographie avant intervention" loading={index === 0 ? 'eager' : 'lazy'} />
+                <img src={item.afterUrl} alt="Photographie après intervention" loading="lazy" />
+              </div>
+            )}
+            <span class="featured-case-carousel__media-label">Avant / Après</span>
+          </div>
+          <div class="featured-case-carousel__caption">
+            <div>
+              <p>Photographies cliniques</p>
+              <h2>{item.title}</h2>
+            </div>
+            <span class="featured-case-carousel__arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M8 16 16 8M9 8h7v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </span>
+          </div>
+        </a>
+      </article>
+    ))}
+  </div>
+
+  {items.length > 1 ? (
+    <div class="featured-case-carousel__controls">
+      <button type="button" data-previous aria-label="Voir le résultat précédent">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </button>
+      <p><span data-position>1</span> <span aria-hidden="true">/</span> <span>{items.length}</span></p>
+      <button type="button" data-next aria-label="Voir le résultat suivant">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m10 6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </button>
+    </div>
+  ) : null}
+</section>
+
+<style>
+  .featured-case-carousel {
+    overflow: hidden;
+    border: 1px solid rgba(20, 20, 19, 0.1);
+    border-radius: 24px;
+    background: rgb(var(--c-paper));
+    box-shadow: 0 24px 60px rgb(var(--c-ink) / 0.12);
+  }
+
+  .featured-case-carousel__slide[hidden] {
+    display: none;
+  }
+
+  .featured-case-carousel__link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .featured-case-carousel__link:focus-visible {
+    outline: 2px solid rgb(var(--c-copper));
+    outline-offset: -4px;
+  }
+
+  .featured-case-carousel__media {
+    position: relative;
+    display: grid;
+    aspect-ratio: 5 / 4;
+    overflow: hidden;
+    place-items: center;
+    background: rgb(var(--c-mist) / 0.5);
+  }
+
+  .featured-case-carousel__media > img,
+  .featured-case-carousel__pair,
+  .featured-case-carousel__pair img {
+    width: 100%;
+    height: 100%;
+  }
+
+  .featured-case-carousel__media > img {
+    display: block;
+    object-fit: contain;
+  }
+
+  .featured-case-carousel__media--comparison {
+    aspect-ratio: auto;
+    min-height: 320px;
+  }
+
+  .featured-case-carousel__media--comparison > img {
+    height: auto;
+    max-height: 520px;
+    object-fit: contain;
+  }
+
+  .featured-case-carousel__pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .featured-case-carousel__pair img {
+    display: block;
+    min-width: 0;
+    object-fit: cover;
+  }
+
+  .featured-case-carousel__pair img:first-child {
+    filter: grayscale(1);
+    opacity: 0.88;
+  }
+
+  @media (min-width: 640px) {
+    .featured-case-carousel__media--comparison {
+      min-height: 420px;
+    }
+  }
+
+  .featured-case-carousel__media-label {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    padding: 5px 10px;
+    border-radius: 9999px;
+    background: rgb(var(--c-paper) / 0.94);
+    color: rgb(var(--c-ink));
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .featured-case-carousel__caption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .featured-case-carousel__caption p {
+    margin: 0;
+    color: rgb(var(--c-ink) / 0.7);
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .featured-case-carousel__caption h2 {
+    margin: 4px 0 0;
+    color: rgb(var(--c-ink));
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+
+  .featured-case-carousel__arrow,
+  .featured-case-carousel__controls button {
+    display: inline-grid;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border: 1px solid rgba(20, 20, 19, 0.15);
+    border-radius: 9999px;
+  }
+
+  .featured-case-carousel__arrow {
+    color: rgb(var(--c-ink) / 0.65);
+  }
+
+  .featured-case-carousel__arrow svg,
+  .featured-case-carousel__controls svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .featured-case-carousel__controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 0 20px 16px;
+  }
+
+  .featured-case-carousel__controls p {
+    min-width: 44px;
+    margin: 0;
+    color: rgb(var(--c-ink) / 0.7);
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .featured-case-carousel__controls button {
+    cursor: pointer;
+    background: rgb(var(--c-paper));
+    color: rgb(var(--c-ink));
+    transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+  }
+
+  .featured-case-carousel__controls button:hover {
+    border-color: rgb(var(--c-ink) / 0.3);
+    background: rgb(var(--c-mist));
+  }
+
+  .featured-case-carousel__controls button:active {
+    transform: translateY(1px);
+  }
+
+  .featured-case-carousel__controls button:focus-visible {
+    outline: 2px solid rgb(var(--c-copper));
+    outline-offset: 2px;
+  }
+</style>
+
+<script is:inline define:vars={{ carouselId }}>
+  (() => {
+    const root = document.getElementById(carouselId);
+    if (!(root instanceof HTMLElement)) return;
+
+    const slides = Array.from(root.querySelectorAll('[data-slide]'));
+    const previous = root.querySelector('[data-previous]');
+    const next = root.querySelector('[data-next]');
+    const position = root.querySelector('[data-position]');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let activeIndex = 0;
+    let timer = 0;
+
+    const show = (index) => {
+      activeIndex = (index + slides.length) % slides.length;
+      slides.forEach((slide, slideIndex) => {
+        const isActive = slideIndex === activeIndex;
+        slide.hidden = !isActive;
+        slide.setAttribute('aria-hidden', String(!isActive));
+        const link = slide.querySelector('a');
+        if (link instanceof HTMLAnchorElement) link.tabIndex = isActive ? 0 : -1;
+      });
+      if (position) position.textContent = String(activeIndex + 1);
+    };
+
+    const stop = () => window.clearTimeout(timer);
+    const schedule = () => {
+      stop();
+      if (reduceMotion.matches || slides.length < 2 || document.hidden) return;
+      timer = window.setTimeout(() => {
+        show(activeIndex + 1);
+        schedule();
+      }, 6500);
+    };
+
+    previous?.addEventListener('click', () => {
+      show(activeIndex - 1);
+      schedule();
+    });
+    next?.addEventListener('click', () => {
+      show(activeIndex + 1);
+      schedule();
+    });
+    root.addEventListener('pointerenter', stop);
+    root.addEventListener('pointerleave', schedule);
+    root.addEventListener('focusin', stop);
+    root.addEventListener('focusout', (event) => {
+      if (event.relatedTarget instanceof Node && root.contains(event.relatedTarget)) return;
+      schedule();
+    });
+    document.addEventListener('visibilitychange', schedule);
+    reduceMotion.addEventListener('change', schedule);
+    schedule();
+  })();
+</script>

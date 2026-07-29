@@ -29,3 +29,6 @@ build/
 # Cursor
 .cursor/
 .vercel
+
+# Local clinical media used only for development imports
+public/images/beforeandafter/

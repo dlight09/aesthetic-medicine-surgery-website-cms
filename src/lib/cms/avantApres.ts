@@ -40,6 +40,7 @@ export type AvantApresCaseMediaSet = {
   result_delay_value: number | null;
   result_delay_unit: 'days' | 'weeks' | 'months' | 'years' | null;
   result_delay_label: string | null;
+  media_mode: 'pair' | 'comparison';
   before_path: string;
   after_path: string;
   is_cover: boolean;
@@ -167,7 +168,12 @@ function normalizeMediaSets(payload: CreateOrUpdatePayload['media_sets']) {
     .map((item, idx) => ({
       set_order: typeof item.set_order === 'number' ? item.set_order : idx + 1,
       label: typeof item.label === 'string' ? item.label : null,
-      view_key: typeof item.view_key === 'string' ? item.view_key : null,
+      view_key:
+        item.media_mode === 'comparison'
+          ? 'comparison'
+          : typeof item.view_key === 'string'
+            ? item.view_key
+            : null,
       result_delay_value:
         typeof item.result_delay_value === 'number' ? item.result_delay_value : null,
       result_delay_unit:
@@ -189,6 +195,13 @@ function normalizeMediaSets(payload: CreateOrUpdatePayload['media_sets']) {
   if (!items.length) return [];
   if (!items.some((item) => item.is_cover)) items[0].is_cover = true;
   return items;
+}
+
+function asMediaSet(item: Record<string, unknown>): AvantApresCaseMediaSet {
+  return {
+    ...(item as unknown as Omit<AvantApresCaseMediaSet, 'media_mode'>),
+    media_mode: item.view_key === 'comparison' ? 'comparison' : 'pair',
+  };
 }
 
 function normalizeProcedures(payload: CreateOrUpdatePayload['procedures']) {
@@ -311,7 +324,7 @@ async function loadRelations(caseIds: string[]) {
   ((mediaSetsRes.error ? [] : mediaSetsRes.data) ?? []).forEach((row) => {
     const key = String(row.case_id);
     const list = mediaSetsByCase.get(key) ?? [];
-    list.push(row as AvantApresCaseMediaSet);
+    list.push(asMediaSet(row as Record<string, unknown>));
     mediaSetsByCase.set(key, list);
   });
 
@@ -352,6 +365,68 @@ async function buildCaseView(
   } as AvantApresCaseView;
 }
 
+async function loadGalleryRelations(caseIds: string[]) {
+  if (!caseIds.length) {
+    return {
+      patientContextByCase: new Map<string, AvantApresPatientContext>(),
+      coverMediaByCase: new Map<string, AvantApresCaseMediaSet>(),
+    };
+  }
+
+  const supabase = getSupabaseAdmin();
+  const [patientContextRes, coverMediaRes] = await Promise.all([
+    supabase.from(patientContextTable).select('*').in('case_id', caseIds),
+    supabase
+      .from(mediaSetsTable)
+      .select('*')
+      .in('case_id', caseIds)
+      .eq('is_cover', true)
+      .order('set_order', { ascending: true }),
+  ]);
+  if (patientContextRes.error && !isMissingTableError(patientContextRes.error, patientContextTable)) {
+    throw patientContextRes.error;
+  }
+  if (coverMediaRes.error && !isMissingTableError(coverMediaRes.error, mediaSetsTable)) {
+    throw coverMediaRes.error;
+  }
+
+  const patientContextByCase = new Map<string, AvantApresPatientContext>();
+  ((patientContextRes.error ? [] : patientContextRes.data) ?? []).forEach((row) => {
+    patientContextByCase.set(String(row.case_id), row as AvantApresPatientContext);
+  });
+  const coverMediaByCase = new Map<string, AvantApresCaseMediaSet>();
+  ((coverMediaRes.error ? [] : coverMediaRes.data) ?? []).forEach((row) => {
+    const media = asMediaSet(row as Record<string, unknown>);
+    if (!coverMediaByCase.has(media.case_id)) coverMediaByCase.set(media.case_id, media);
+  });
+  return { patientContextByCase, coverMediaByCase };
+}
+
+async function buildGalleryCaseView(
+  item: AvantApresCase,
+  relations: Awaited<ReturnType<typeof loadGalleryRelations>>,
+) {
+  const coverSet = relations.coverMediaByCase.get(item.id) ?? null;
+  const beforePath = coverSet?.before_path ?? item.before_path;
+  const afterPath = coverSet?.after_path ?? item.after_path;
+  const beforeUrl = beforePath ? await signedUrl(beforePath) : '';
+  const afterUrl =
+    afterPath === beforePath ? beforeUrl : afterPath ? await signedUrl(afterPath) : '';
+  const mediaSets = coverSet
+    ? [{ ...coverSet, beforeUrl, afterUrl }]
+    : [];
+
+  return {
+    ...item,
+    beforeUrl,
+    afterUrl,
+    patient_context: relations.patientContextByCase.get(item.id) ?? null,
+    procedures: [],
+    media_sets: mediaSets,
+    tags: [],
+  } as AvantApresCaseView;
+}
+
 export async function listCmsAvantApresCases() {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
@@ -376,21 +451,69 @@ export async function getCmsAvantApresCase(id: string) {
   return await buildCaseView(item, relations);
 }
 
-export async function listPublicAvantApresCases() {
+export type PublicAvantApresCasesPageOptions = {
+  interventionCategory?: string | null;
+  interventionSlug?: string | null;
+  offset?: number;
+  limit?: number;
+};
+
+export async function listPublicAvantApresCasesPage({
+  interventionCategory,
+  interventionSlug,
+  offset = 0,
+  limit,
+}: PublicAvantApresCasesPageOptions = {}) {
   try {
     const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
+    let query = supabase
       .from(tableName)
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('status', 'publie')
-      .eq('consent', true)
-      .order('updated_at', { ascending: false });
+      .eq('consent', true);
+    if (interventionCategory) query = query.eq('intervention_category', interventionCategory);
+    if (interventionSlug) query = query.eq('intervention_slug', interventionSlug);
+    query =
+      interventionCategory || interventionSlug
+        ? query.order('case_number', { ascending: true })
+        : query.order('updated_at', { ascending: false });
+    if (typeof limit === 'number') query = query.range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
 
     if (error) throw error;
 
     const cases = (data ?? []).map((row) => asCase(row as Record<string, unknown>));
-    const relations = await loadRelations(cases.map((item) => item.id));
-    return await Promise.all(cases.map((item) => buildCaseView(item, relations)));
+    const relations = await loadGalleryRelations(cases.map((item) => item.id));
+    return {
+      items: await Promise.all(cases.map((item) => buildGalleryCaseView(item, relations))),
+      total: count ?? 0,
+    };
+  } catch {
+    return { items: [], total: 0 };
+  }
+}
+
+export async function listPublicAvantApresCases(options?: PublicAvantApresCasesPageOptions) {
+  const page = await listPublicAvantApresCasesPage(options);
+  return page.items;
+}
+
+export async function listPublicAvantApresCaseReferences() {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('intervention_category, intervention_slug, case_number')
+      .eq('status', 'publie')
+      .eq('consent', true);
+    if (error) throw error;
+    return (data ?? []).map((item) => ({
+      intervention_category:
+        typeof item.intervention_category === 'string' ? item.intervention_category : null,
+      intervention_slug: typeof item.intervention_slug === 'string' ? item.intervention_slug : null,
+      case_number: typeof item.case_number === 'number' ? item.case_number : null,
+    }));
   } catch {
     return [];
   }

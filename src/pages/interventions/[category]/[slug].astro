@@ -205,14 +205,11 @@ if (dbItem) {
                   <div class="absolute inset-x-0 bottom-0 p-5 text-paper">
                     <div class="text-xs font-semibold uppercase tracking-wide text-paper/70">Avant / après</div>
                     <div class="mt-1 font-display text-2xl tracking-tight">
-                      {item.case_number ? `Cas ${String(item.case_number).padStart(2, '0')}` : item.title}
+                      {item.title || 'Résultat documenté'}
                     </div>
                   </div>
                 </div>
                 <div class="p-5">
-                  {item.case_number ? (
-                    <div class="text-sm text-ink/70">Cas {String(item.case_number).padStart(2, '0')}</div>
-                  ) : null}
                   {item.description ? (
                     <div class="mt-2 text-sm text-ink/70">{item.description}</div>
                   ) : null}
