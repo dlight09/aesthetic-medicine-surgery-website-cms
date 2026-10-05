@@ -7,7 +7,7 @@ import {
 } from '@/lib/cms/avantApres';
 
 function parseOptionalString(value: unknown) {
-  return typeof value === 'string' ? value : undefined;
+  return typeof value === 'string' ? value : value === null ? null : undefined;
 }
 
 function parseOptionalNumber(value: unknown) {
@@ -54,7 +54,7 @@ export const PUT: APIRoute = async (context) => {
       : body.intervention_slug === null
         ? null
         : undefined;
-  const payload = {
+  const parsedPayload = {
     title: typeof body.title === 'string' ? body.title.trim() : undefined,
     description: parseOptionalString(body.description),
     intervention_category: interventionCategory,
@@ -107,15 +107,18 @@ export const PUT: APIRoute = async (context) => {
     tags: Array.isArray(body.tags)
       ? body.tags.filter((t: unknown) => typeof t === 'string')
       : undefined,
+    replace_cover: body.replace_cover === true ? true : undefined,
   };
+  const payload = Object.fromEntries(
+    Object.entries(parsedPayload).filter(([, value]) => value !== undefined),
+  ) as Parameters<typeof updateAvantApresCase>[1];
 
   const existing = await getCmsAvantApresCase(id);
   if (!existing) return new Response('Not found', { status: 404 });
   const willPublish = (payload.status ?? existing.status) === 'publie';
   const hasConsent = payload.consent ?? existing.consent;
-  const consentDate = payload.consent_date ?? existing.consent_date;
-  if (willPublish && (!hasConsent || !consentDate)) {
-    return new Response('Dated consent is required before publication', { status: 422 });
+  if (willPublish && !hasConsent) {
+    return new Response('Consent is required before publication', { status: 422 });
   }
 
   const updated = await updateAvantApresCase(id, payload);

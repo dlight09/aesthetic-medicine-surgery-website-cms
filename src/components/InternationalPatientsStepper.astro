@@ -1,0 +1,219 @@
+---
+type Step = { title: string; text: string };
+const { steps } = Astro.props as { steps: Step[] };
+const id = `international-${crypto.randomUUID()}`;
+---
+
+<section class="international-patients" aria-labelledby={`${id}-title`} data-reveal-group="international" data-reveal-step="140">
+  <img
+    src="/images/international-patients-background.webp"
+    alt=""
+    width="1672"
+    height="941"
+    loading="lazy"
+    class="international-background"
+  />
+  <div class="international-veil" aria-hidden="true"></div>
+
+  <div class="international-content">
+    <header class="international-intro">
+      <p class="international-label">Patients internationaux</p>
+      <h2 id={`${id}-title`}>Votre intervention à Tunis, où que vous soyez</h2>
+      <p class="international-description">
+        Pour les patients résidant à l’étranger, chaque étape peut être anticipée afin de préparer le séjour chirurgical dans les
+        meilleures conditions, avant votre arrivée et jusqu’à votre retour.
+      </p>
+    </header>
+
+    <ol class="international-cards" aria-label="Les étapes de votre séjour">
+      {steps.map((step, index) => (
+        <li class="international-card reveal" data-reveal>
+          <p class="card-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</p>
+          <h3>{step.title}</h3>
+          <p class="card-text">{step.text}</p>
+        </li>
+      ))}
+    </ol>
+
+    <div class="international-footer">
+      <div>
+        <h3>Vous envisagez une intervention depuis l’étranger ?</h3>
+        <p>Transmettez votre demande pour une première évaluation de votre projet.</p>
+      </div>
+      <a href="/contact">Préparer mon séjour à Tunis <span aria-hidden="true">→</span></a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .international-patients {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: rgb(var(--c-mist));
+    color: rgb(var(--c-ink));
+  }
+
+  .international-background,
+  .international-veil {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .international-background {
+    z-index: -2;
+    object-fit: cover;
+    object-position: center;
+    opacity: 0.5;
+  }
+
+  .international-veil {
+    z-index: -1;
+    background: linear-gradient(90deg, rgb(var(--c-paper) / 0.92), rgb(var(--c-paper) / 0.78) 62%, rgb(var(--c-paper) / 0.68));
+  }
+
+  .international-content {
+    max-width: 72rem;
+    margin-inline: auto;
+    padding: 4rem 1rem 3rem;
+  }
+
+  .international-intro { text-align: center; }
+
+  .international-label {
+    margin: 0;
+    color: rgb(var(--c-copper-deep));
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .international-intro h2 {
+    max-width: 56rem;
+    margin: 1rem auto 0;
+    font-size: clamp(1.9rem, 3.6vw, 2.75rem);
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    line-height: 1.16;
+  }
+
+  .international-description {
+    max-width: 48rem;
+    margin: 1.25rem auto 0;
+    color: rgb(var(--c-ink) / 0.75);
+    font-size: 0.875rem;
+    line-height: 1.75;
+  }
+
+  .international-cards {
+    display: grid;
+    gap: 1rem;
+    margin: 2.75rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .international-card {
+    min-height: 16.5rem;
+    padding: 1.75rem 1.5rem;
+    border: 1px solid rgb(var(--c-ink) / 0.1);
+    border-radius: 1.5rem;
+    background: rgb(var(--c-paper) / 0.94);
+    box-shadow: 0 16px 36px rgb(var(--c-ink) / 0.06);
+    backdrop-filter: blur(5px);
+  }
+
+  .card-number {
+    margin: 0;
+    color: rgb(var(--c-copper-deep));
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .international-card h3 {
+    margin: 1.5rem 0 1.25rem;
+    font-size: 1.5rem;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.08;
+  }
+
+  .card-text {
+    margin: 0;
+    color: rgb(var(--c-ink) / 0.76);
+    font-size: 0.8125rem;
+    line-height: 1.75;
+  }
+
+  .international-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid rgb(var(--c-ink) / 0.18);
+  }
+
+  .international-footer h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+  }
+
+  .international-footer p {
+    margin: 0.5rem 0 0;
+    color: rgb(var(--c-ink) / 0.72);
+    font-size: 0.8125rem;
+  }
+
+  .international-footer a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.25rem;
+    background: rgb(var(--c-ink));
+    color: rgb(var(--c-paper));
+    font-size: 0.8125rem;
+    font-weight: 600;
+    transition: background-color 220ms ease;
+  }
+
+  .international-footer a:hover { background: rgb(var(--c-copper-deep)); }
+  .international-footer a:focus-visible { outline: 2px solid rgb(var(--c-copper-deep)); outline-offset: 4px; }
+
+  @media (min-width: 640px) {
+    .international-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (min-width: 1024px) {
+    .international-content { padding-block: 4.5rem 3rem; }
+    .international-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.reveal-ready) .international-card {
+      opacity: 0;
+      transform: none;
+      transition: opacity 760ms ease;
+    }
+
+    :global(.reveal-ready) .international-card.is-visible { opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .international-card,
+    .international-footer a { transition: none; }
+  }
+</style>

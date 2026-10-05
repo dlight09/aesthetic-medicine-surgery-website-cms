@@ -48,13 +48,14 @@ const interventionsByCategory = interventionCategories.map((category) => {
     }));
   return { ...category, entries };
 });
-const interventionTitleByRef = new Map(
-  interventions.map((entry) => [`${entry.category}::${entry.slug}`, entry.title]),
-);
 const formatDate = (value: string) =>
   new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 const formatCaseNumber = (value?: number | null) =>
   value ? `Cas ${String(value).padStart(2, '0')}` : '-';
+const isComparisonCase = (item: AvantApresCaseView) => {
+  const cover = item.media_sets.find((set) => set.is_cover) ?? item.media_sets[0] ?? null;
+  return cover?.media_mode === 'comparison';
+};
 
 const casesByRef = new Map<string, AvantApresCaseWithIntervention[]>();
 const unassignedCases = items.filter((item) => !item.intervention_category || !item.intervention_slug);
@@ -244,8 +245,10 @@ const interventionOptionsByCategory = new Map(
                       >
                         <div class="flex items-center gap-3">
                           <div class="flex gap-2">
-                            <img src={item.beforeUrl} alt="Avant" class="h-10 w-14 rounded-lg object-cover" />
-                            <img src={item.afterUrl} alt="Après" class="h-10 w-14 rounded-lg object-cover" />
+                            <img src={item.beforeUrl} alt={isComparisonCase(item) ? 'Avant et après' : 'Avant'} class="h-10 w-14 rounded-lg object-cover" />
+                            {!isComparisonCase(item) && (
+                              <img src={item.afterUrl} alt="Après" class="h-10 w-14 rounded-lg object-cover" />
+                            )}
                           </div>
                           <div>
                             <div class="font-semibold text-ink/90">{formatCaseNumber(item.case_number)}</div>
@@ -308,8 +311,10 @@ const interventionOptionsByCategory = new Map(
               >
                 <div class="flex items-center gap-3">
                   <div class="flex gap-2">
-                    <img src={item.beforeUrl} alt="Avant" class="h-10 w-14 rounded-lg object-cover" />
-                    <img src={item.afterUrl} alt="Après" class="h-10 w-14 rounded-lg object-cover" />
+                    <img src={item.beforeUrl} alt={isComparisonCase(item) ? 'Avant et après' : 'Avant'} class="h-10 w-14 rounded-lg object-cover" />
+                    {!isComparisonCase(item) && (
+                      <img src={item.afterUrl} alt="Après" class="h-10 w-14 rounded-lg object-cover" />
+                    )}
                   </div>
                   <div>
                     <div class="font-semibold text-ink/90">{formatCaseNumber(item.case_number)}</div>

@@ -1,290 +1,262 @@
 ---
-type CaseSlide = {
-  href: string;
-  title: string;
-  beforeUrl: string;
-  afterUrl: string;
-  isComparison: boolean;
+type GalleryImage = {
+  src: string;
+  alt: string;
 };
 
-const { items } = Astro.props as { items: CaseSlide[] };
-const carouselId = `featured-case-carousel-${crypto.randomUUID()}`;
+const { images } = Astro.props as { images: GalleryImage[] };
+const carouselId = `home-gallery-${crypto.randomUUID()}`;
+const repeatedImages = Array.from({ length: 3 }, (_, groupIndex) =>
+  images.map((image, imageIndex) => ({ ...image, groupIndex, imageIndex })),
+).flat();
 ---
 
-<section id={carouselId} class="featured-case-carousel" aria-roledescription="carrousel" aria-label="Résultats documentés">
-  <div class="featured-case-carousel__viewport">
-    {items.map((item, index) => (
-      <article class="featured-case-carousel__slide" data-slide aria-roledescription="diapositive" aria-label={`Résultat ${index + 1} sur ${items.length}`} hidden={index !== 0} aria-hidden={index !== 0 ? 'true' : 'false'}>
-        <a href={item.href} class="featured-case-carousel__link" tabindex={index === 0 ? 0 : -1}>
-          <div class:list={['featured-case-carousel__media', { 'featured-case-carousel__media--comparison': item.isComparison }]}>
-            {item.isComparison ? (
-              <img src={item.beforeUrl} alt="Photographie comparative avant et après intervention" loading={index === 0 ? 'eager' : 'lazy'} />
-            ) : (
-              <div class="featured-case-carousel__pair">
-                <img src={item.beforeUrl} alt="Photographie avant intervention" loading={index === 0 ? 'eager' : 'lazy'} />
-                <img src={item.afterUrl} alt="Photographie après intervention" loading="lazy" />
-              </div>
-            )}
-            <span class="featured-case-carousel__media-label">Avant / Après</span>
-          </div>
-          <div class="featured-case-carousel__caption">
-            <div>
-              <p>Photographies cliniques</p>
-              <h2>{item.title}</h2>
-            </div>
-            <span class="featured-case-carousel__arrow" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none"><path d="M8 16 16 8M9 8h7v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-            </span>
-          </div>
-        </a>
-      </article>
-    ))}
+<section id={carouselId} class="home-gallery" aria-labelledby={`${carouselId}-title`}>
+  <div class="home-gallery__intro">
+    <h2 id={`${carouselId}-title`}>Galerie photos</h2>
+    <p>Découvrez les actes de médecine et de chirurgie esthétique pratiqués par le Dr Sirine Soussi à Tunis.</p>
   </div>
 
-  {items.length > 1 ? (
-    <div class="featured-case-carousel__controls">
-      <button type="button" data-previous aria-label="Voir le résultat précédent">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-      </button>
-      <p><span data-position>1</span> <span aria-hidden="true">/</span> <span>{items.length}</span></p>
-      <button type="button" data-next aria-label="Voir le résultat suivant">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m10 6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-      </button>
+  <div class="home-gallery__carousel">
+    <div class="home-gallery__viewport" data-viewport aria-roledescription="carrousel" aria-label="Galerie de photographies cliniques">
+      <div class="home-gallery__track">
+        {repeatedImages.map((image) => {
+          const isPrimary = image.groupIndex === 1;
+          return (
+            <figure
+              class="home-gallery__slide"
+              data-slide
+              data-image-index={image.imageIndex}
+              aria-hidden={isPrimary ? undefined : 'true'}
+            >
+              <img
+                src={image.src}
+                alt={isPrimary ? image.alt : ''}
+                loading={isPrimary && image.imageIndex === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+              />
+            </figure>
+          );
+        })}
+      </div>
     </div>
-  ) : null}
+
+    {images.length > 1 && (
+      <>
+        <button class="home-gallery__control home-gallery__control--previous" type="button" data-previous aria-label="Voir la photo précédente">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M19 12H5m6-6-6 6 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <button class="home-gallery__control home-gallery__control--next" type="button" data-next aria-label="Voir la photo suivante">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </>
+    )}
+  </div>
+
+  <div class="home-gallery__footer">
+    <a href="/avant-apres">
+      Voir tous les résultats
+      <span aria-hidden="true">→</span>
+    </a>
+  </div>
 </section>
 
 <style>
-  .featured-case-carousel {
+  .home-gallery {
     overflow: hidden;
-    border: 1px solid rgba(20, 20, 19, 0.1);
-    border-radius: 24px;
-    background: rgb(var(--c-paper));
-    box-shadow: 0 24px 60px rgb(var(--c-ink) / 0.12);
+    padding: 4rem 0 5rem;
+    background: #090909;
+    color: #fff;
   }
 
-  .featured-case-carousel__slide[hidden] {
-    display: none;
-  }
-
-  .featured-case-carousel__link {
-    display: block;
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .featured-case-carousel__link:focus-visible {
-    outline: 2px solid rgb(var(--c-copper));
-    outline-offset: -4px;
-  }
-
-  .featured-case-carousel__media {
-    position: relative;
-    display: grid;
-    aspect-ratio: 5 / 4;
-    overflow: hidden;
-    place-items: center;
-    background: rgb(var(--c-mist) / 0.5);
-  }
-
-  .featured-case-carousel__media > img,
-  .featured-case-carousel__pair,
-  .featured-case-carousel__pair img {
-    width: 100%;
-    height: 100%;
-  }
-
-  .featured-case-carousel__media > img {
-    display: block;
-    object-fit: contain;
-  }
-
-  .featured-case-carousel__media--comparison {
-    aspect-ratio: auto;
-    min-height: 320px;
-  }
-
-  .featured-case-carousel__media--comparison > img {
-    height: auto;
-    max-height: 520px;
-    object-fit: contain;
-  }
-
-  .featured-case-carousel__pair {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .featured-case-carousel__pair img {
-    display: block;
-    min-width: 0;
-    object-fit: cover;
-  }
-
-  .featured-case-carousel__pair img:first-child {
-    filter: grayscale(1);
-    opacity: 0.88;
-  }
-
-  @media (min-width: 640px) {
-    .featured-case-carousel__media--comparison {
-      min-height: 420px;
-    }
-  }
-
-  .featured-case-carousel__media-label {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    padding: 5px 10px;
-    border-radius: 9999px;
-    background: rgb(var(--c-paper) / 0.94);
-    color: rgb(var(--c-ink));
-    font-family: 'Manrope', sans-serif;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .featured-case-carousel__caption {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 20px;
-  }
-
-  .featured-case-carousel__caption p {
-    margin: 0;
-    color: rgb(var(--c-ink) / 0.7);
-    font-size: 0.875rem;
-    font-weight: 700;
-    line-height: 1.4;
-  }
-
-  .featured-case-carousel__caption h2 {
-    margin: 4px 0 0;
-    color: rgb(var(--c-ink));
-    font-size: 1.25rem;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-    text-wrap: balance;
-  }
-
-  .featured-case-carousel__arrow,
-  .featured-case-carousel__controls button {
-    display: inline-grid;
-    flex: 0 0 auto;
-    width: 44px;
-    height: 44px;
-    place-items: center;
-    border: 1px solid rgba(20, 20, 19, 0.15);
-    border-radius: 9999px;
-  }
-
-  .featured-case-carousel__arrow {
-    color: rgb(var(--c-ink) / 0.65);
-  }
-
-  .featured-case-carousel__arrow svg,
-  .featured-case-carousel__controls svg {
-    width: 17px;
-    height: 17px;
-  }
-
-  .featured-case-carousel__controls {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    padding: 0 20px 16px;
-  }
-
-  .featured-case-carousel__controls p {
-    min-width: 44px;
-    margin: 0;
-    color: rgb(var(--c-ink) / 0.7);
-    font-family: 'Manrope', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 700;
+  .home-gallery__intro {
+    padding: 0 4%;
     text-align: center;
   }
 
-  .featured-case-carousel__controls button {
+  .home-gallery__intro h2 {
+    margin: 0;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 3.5vw, 3.75rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .home-gallery__intro p {
+    max-width: 42rem;
+    margin: 1.5rem auto 0;
+    color: rgb(255 255 255 / 0.78);
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    text-wrap: balance;
+  }
+
+  .home-gallery__carousel {
+    position: relative;
+    margin-top: 2.5rem;
+  }
+
+  .home-gallery__viewport {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    touch-action: pan-x pan-y;
+  }
+
+  .home-gallery__viewport::-webkit-scrollbar { display: none; }
+
+  .home-gallery__track {
+    --gallery-gap: 1.875rem;
+    display: flex;
+    gap: var(--gallery-gap);
+  }
+
+  .home-gallery__slide {
+    flex: 0 0 100%;
+    aspect-ratio: 4 / 5;
+    margin: 0;
+    overflow: hidden;
+    background: #151515;
+    scroll-snap-align: start;
+  }
+
+  .home-gallery__slide img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .home-gallery__control {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    display: grid;
+    width: 3rem;
+    height: 3rem;
+    padding: 0;
+    place-items: center;
+    border: 1px solid rgb(255 255 255 / 0.9);
+    border-radius: 9999px;
+    background: rgb(9 9 9 / 0.22);
+    color: #fff;
     cursor: pointer;
-    background: rgb(var(--c-paper));
-    color: rgb(var(--c-ink));
-    transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+    transform: translateY(-50%);
+    transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
   }
 
-  .featured-case-carousel__controls button:hover {
-    border-color: rgb(var(--c-ink) / 0.3);
-    background: rgb(var(--c-mist));
+  .home-gallery__control:hover { background: #fff; color: #090909; }
+  .home-gallery__control:active { transform: translateY(-50%) scale(0.96); }
+  .home-gallery__control:focus-visible { outline: 2px solid rgb(var(--c-copper)); outline-offset: 3px; }
+  .home-gallery__control svg { width: 1.25rem; height: 1.25rem; }
+  .home-gallery__control--previous { left: 4%; }
+  .home-gallery__control--next { right: 4%; }
+
+  .home-gallery__footer {
+    display: flex;
+    justify-content: center;
+    margin-top: 2.5rem;
+    padding-inline: 4%;
   }
 
-  .featured-case-carousel__controls button:active {
-    transform: translateY(1px);
+  .home-gallery__footer a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid rgb(255 255 255 / 0.55);
+    padding-bottom: 0.3rem;
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: border-color 180ms ease;
   }
 
-  .featured-case-carousel__controls button:focus-visible {
-    outline: 2px solid rgb(var(--c-copper));
-    outline-offset: 2px;
+  .home-gallery__footer a:hover { border-color: #fff; }
+  .home-gallery__footer a:focus-visible { outline: 2px solid rgb(var(--c-copper)); outline-offset: 4px; }
+  .home-gallery__footer span { transition: transform 180ms ease; }
+  .home-gallery__footer a:hover span { transform: translateX(0.25rem); }
+
+  @media (min-width: 768px) {
+    .home-gallery__intro p { margin-top: 2rem; font-size: 1rem; }
+    .home-gallery__track { --gallery-gap: 2.5rem; }
+    .home-gallery__slide { flex-basis: calc((100% - (2 * var(--gallery-gap))) / 3); }
+    .home-gallery__control { width: 3.5rem; height: 3.5rem; }
+  }
+
+  @media (min-width: 1280px) {
+    .home-gallery { padding: 5rem 0 7.5rem; }
+  }
+
+  @media (min-width: 1536px) {
+    .home-gallery__track { --gallery-gap: 4.375rem; }
+    .home-gallery__slide { flex-basis: calc((100% - (4 * var(--gallery-gap))) / 5); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-gallery__viewport { scroll-behavior: auto; }
+    .home-gallery__footer a,
+    .home-gallery__footer span { transition: none; }
   }
 </style>
 
-<script is:inline define:vars={{ carouselId }}>
+<script is:inline define:vars={{ carouselId, imageCount: images.length }}>
   (() => {
     const root = document.getElementById(carouselId);
-    if (!(root instanceof HTMLElement)) return;
+    const viewport = root?.querySelector('[data-viewport]');
+    if (!(root instanceof HTMLElement) || !(viewport instanceof HTMLElement) || imageCount < 2) return;
 
     const slides = Array.from(root.querySelectorAll('[data-slide]'));
     const previous = root.querySelector('[data-previous]');
     const next = root.querySelector('[data-next]');
-    const position = root.querySelector('[data-position]');
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let activeIndex = 0;
-    let timer = 0;
+    let scrollTimer = 0;
 
-    const show = (index) => {
-      activeIndex = (index + slides.length) % slides.length;
-      slides.forEach((slide, slideIndex) => {
-        const isActive = slideIndex === activeIndex;
-        slide.hidden = !isActive;
-        slide.setAttribute('aria-hidden', String(!isActive));
-        const link = slide.querySelector('a');
-        if (link instanceof HTMLAnchorElement) link.tabIndex = isActive ? 0 : -1;
+    const nearestSlideIndex = () => {
+      let nearestIndex = 0;
+      let nearestDistance = Number.POSITIVE_INFINITY;
+      slides.forEach((slide, index) => {
+        const distance = Math.abs(slide.offsetLeft - viewport.scrollLeft);
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestIndex = index;
+        }
       });
-      if (position) position.textContent = String(activeIndex + 1);
+      return nearestIndex;
     };
 
-    const stop = () => window.clearTimeout(timer);
-    const schedule = () => {
-      stop();
-      if (reduceMotion.matches || slides.length < 2 || document.hidden) return;
-      timer = window.setTimeout(() => {
-        show(activeIndex + 1);
-        schedule();
-      }, 6500);
+    const jumpTo = (index) => viewport.scrollTo({ left: slides[index].offsetLeft, behavior: 'auto' });
+    const normalizePosition = () => {
+      const index = nearestSlideIndex();
+      if (index < imageCount) jumpTo(index + imageCount);
+      if (index >= imageCount * 2) jumpTo(index - imageCount);
+    };
+    const move = (direction) => {
+      normalizePosition();
+      const targetIndex = nearestSlideIndex() + direction;
+      viewport.scrollTo({
+        left: slides[targetIndex].offsetLeft,
+        behavior: reduceMotion.matches ? 'auto' : 'smooth',
+      });
     };
 
-    previous?.addEventListener('click', () => {
-      show(activeIndex - 1);
-      schedule();
+    previous?.addEventListener('click', () => move(-1));
+    next?.addEventListener('click', () => move(1));
+    viewport.addEventListener('scroll', () => {
+      window.clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(normalizePosition, 140);
+    }, { passive: true });
+    window.addEventListener('resize', () => {
+      const logicalIndex = Number(slides[nearestSlideIndex()].dataset.imageIndex ?? 0);
+      window.requestAnimationFrame(() => jumpTo(imageCount + logicalIndex));
     });
-    next?.addEventListener('click', () => {
-      show(activeIndex + 1);
-      schedule();
-    });
-    root.addEventListener('pointerenter', stop);
-    root.addEventListener('pointerleave', schedule);
-    root.addEventListener('focusin', stop);
-    root.addEventListener('focusout', (event) => {
-      if (event.relatedTarget instanceof Node && root.contains(event.relatedTarget)) return;
-      schedule();
-    });
-    document.addEventListener('visibilitychange', schedule);
-    reduceMotion.addEventListener('change', schedule);
-    schedule();
+    window.requestAnimationFrame(() => jumpTo(imageCount));
   })();
 </script>

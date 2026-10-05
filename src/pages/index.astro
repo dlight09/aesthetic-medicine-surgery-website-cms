@@ -1,15 +1,25 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import BrandMark from '@/components/BrandMark.astro';
 import BrandLockup from '@/components/BrandLockup.astro';
+import FeaturedCaseCarousel from '@/components/FeaturedCaseCarousel.astro';
+import StatsBar from '@/components/StatsBar.astro';
+import InternationalPatientsStepper from '@/components/InternationalPatientsStepper.astro';
 import { site } from '@/lib/site';
-import { interventionCategories, interventionCategoryHref } from '@/lib/interventions';
-import type { InterventionCategoryKey } from '@/lib/interventions';
 
-const addressQuery = [...site.contact.addressLines, site.contact.city, site.contact.country]
-  .filter(Boolean)
-  .join(', ');
-const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`;
-const mapsEmbed = `https://www.google.com/maps?q=${encodeURIComponent(addressQuery)}&output=embed`;
+const homeGalleryImages = [
+  'case-01.webp',
+  'case-02.webp',
+  'case-03.webp',
+  'case-04.webp',
+  'case-05.webp',
+  'case-06.webp',
+  'case-07.webp',
+  'case-08.webp',
+].map((filename) => ({
+  src: `/images/photospagedacceuilgalerie/${filename}`,
+  alt: 'Photographie clinique comparative avant et après intervention',
+}));
 
 const metrics = [
   {
@@ -30,42 +40,38 @@ const metrics = [
   },
 ];
 
-const interventions: Array<{ key: InterventionCategoryKey; title: string; text: string }> = [
+const procedureMosaic = [
   {
-    key: 'visage',
-    title: 'Chirurgie du visage',
-    text: 'Rhinoplastie, blépharoplastie, otoplastie, lifting, lipofilling',
+    title: 'Mommy Makeover',
+    href: '/interventions',
+    image: { src: '/images/interventions/mommy-makeover.webp', width: 384, height: 380 },
+    layout: 'xl:col-start-1 xl:row-start-1',
   },
   {
-    key: 'seins',
-    title: 'Chirurgie des seins',
-    text: 'Augmentation, réduction, lifting, lipofilling mammaire',
+    title: 'Rajeunissement du visage',
+    href: '/interventions/visage',
+    image: { src: '/images/interventions/rajeunissement-du-visage.webp', width: 386, height: 390 },
+    layout: 'xl:col-start-2 xl:row-start-1',
   },
   {
-    key: 'silhouette',
-    title: 'Chirurgie de la silhouette',
-    text: 'Liposuccion, abdominoplastie, lifting des bras et cuisses',
+    title: "Chirurgie de l'abdomen",
+    href: '/interventions/silhouette/abdominoplastie',
+    image: { src: '/images/interventions/abdomen.webp', width: 900, height: 884 },
+    layout: 'md:col-span-2 xl:col-start-3 xl:row-start-1',
   },
   {
-    key: 'chirurgie-de-la-main',
-    title: 'Chirurgie de la main',
-    text: 'Canal carpien, tendons, malformations, microchirurgie',
+    title: 'Rhinoplastie',
+    href: '/interventions/visage/rhinoplastie',
+    image: { src: '/images/interventions/rhinoplastie.webp', width: 382, height: 410 },
+    layout: 'xl:col-start-1 xl:row-start-2',
   },
   {
-    key: 'medecine-esthetique',
-    title: 'Médecine esthétique',
-    text: 'Injections, acide hyaluronique, toxine botulique',
-  },
-  {
-    key: 'chirurgie-reparatrice',
-    title: 'Chirurgie réparatrice',
-    text: 'Tumeurs cutanées, cicatrices, brûlures et séquelles',
+    title: 'Seins',
+    href: '/interventions/seins',
+    image: { src: '/images/interventions/seins.webp', width: 380, height: 420 },
+    layout: 'xl:col-start-2 xl:row-start-2',
   },
 ];
-
-const interventionVisuals = Object.fromEntries(
-  interventionCategories.map((item) => [item.key, item.thumbnailSrc]),
-) as Record<InterventionCategoryKey, string>;
 
 const testimonials = [
   {
@@ -90,25 +96,48 @@ const testimonials = [
       "Cette femme a des mains de fée. On voit qu'elle aime la perfection et que tout soit carré, autant en salle d'opération que dans la chambre. Le fait de passer directement par elle sur WhatsApp est bien meilleur. Un grand merci.",
   },
 ];
+
+const internationalPatientSteps = [
+  {
+    title: 'Premier échange à distance',
+    text: 'Votre demande est étudiée en amont à partir de votre dossier, de vos photographies et de vos antécédents, afin d’évaluer votre projet avant tout déplacement.',
+  },
+  {
+    title: 'Consultation en ligne',
+    text: 'Lorsque l’indication est retenue, une consultation à distance permet d’échanger directement avec le Dr Soussi, de préciser le projet et de préparer votre venue à Tunis.',
+  },
+  {
+    title: 'Intervention & séjour à Tunis',
+    text: 'Votre intervention est organisée dans une clinique agréée à Tunis. La durée du séjour est adaptée au geste réalisé et aux suites postopératoires nécessaires.',
+  },
+  {
+    title: 'Suivi après votre retour',
+    text: 'Le suivi se poursuit après votre départ, avec des consultations à distance et des recommandations personnalisées pour accompagner votre récupération.',
+  },
+];
 ---
 
 <BaseLayout title="Accueil" description={site.description}>
   <div class="home-page">
-  <section class="relative isolate -mt-[4.5rem] overflow-hidden bg-ink text-paper">
+  <section class="relative isolate -mt-[4.5rem] overflow-hidden bg-ink text-paper" data-hero>
+    <script is:inline>
+      document.currentScript?.parentElement?.setAttribute('data-hero-pending', '');
+    </script>
     <img
-      src="/images/placeholders/hero-clinic-01.webp"
+      src="/images/cabinet-interior.webp"
       width="1280"
       height="960"
       alt="Cabinet du Dr Sirine Soussi aux Berges du Lac"
       loading="eager"
       fetchpriority="high"
-      class="absolute inset-0 -z-20 h-full w-full object-cover"
+      class="hero-media absolute inset-0 -z-20 h-full w-full object-cover"
+      data-hero-image
     />
-    <div class="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(18,18,17,0.52)_0%,rgba(18,18,17,0.68)_50%,rgba(18,18,17,0.50)_100%)]"></div>
-    <div class="absolute inset-0 -z-10 bg-[radial-gradient(46rem_26rem_at_50%_42%,rgba(190,119,76,0.22),transparent_68%),linear-gradient(to_top,rgba(18,18,17,0.48),transparent_46%)]"></div>
-    <div class="relative mx-auto flex min-h-[44rem] max-w-6xl items-center justify-center px-4 pb-16 pt-[8.5rem] text-center lg:min-h-[50rem] lg:pb-24 lg:pt-[9.5rem]" data-reveal-group="hero">
-      <div class="mx-auto max-w-4xl">
-        <h1 class="reveal mx-auto flex justify-center" aria-label={site.name} data-reveal>
+    <div class="hero-veil absolute inset-0 -z-10" aria-hidden="true"></div>
+    <div class="relative z-0 mx-auto flex min-h-[44rem] max-w-6xl items-center justify-center px-4 pb-16 pt-[8.5rem] text-center lg:min-h-[50rem] lg:pb-24 lg:pt-[9.5rem]">
+      <div class="relative mx-auto max-w-4xl lg:-translate-y-16">
+        <div class="hero-rule" aria-hidden="true"></div>
+        <h1 class="hero-title mx-auto flex justify-center" aria-label={site.name}>
           <span class="sm:hidden">
             <BrandLockup
               id="hero-brand-mobile"
@@ -117,7 +146,7 @@ const testimonials = [
               wordmarkClass="-ml-1"
               wordmarkSize="1.8rem"
               wordmarkWeight={400}
-              wordmarkFontFamily="'Playfair Display', Georgia, serif"
+              wordmarkFontFamily="'Cormorant Garamond', Georgia, serif"
               wordmarkLetterSpacing="-0.025em"
             />
           </span>
@@ -129,16 +158,16 @@ const testimonials = [
               markOffsetClass="mr-2 sm:mr-3"
               wordmarkSize="clamp(2rem, 4.6vw, 3.7rem)"
               wordmarkWeight={400}
-              wordmarkFontFamily="'Playfair Display', Georgia, serif"
+              wordmarkFontFamily="'Cormorant Garamond', Georgia, serif"
               wordmarkLetterSpacing="-0.025em"
             />
           </span>
         </h1>
-        <p class="reveal mx-auto mt-7 max-w-2xl text-xl leading-relaxed text-paper/88 sm:text-2xl" data-reveal>
-          Chirurgie plastique, esthétique, reconstructrice et chirurgie de la main
+        <p class="hero-subtitle mx-auto mt-7 max-w-3xl text-2xl leading-relaxed text-paper/90 sm:text-3xl">
+          Clinique de chirurgie esthétique en Tunisie
         </p>
-        <div class="reveal mt-8 flex flex-wrap justify-center gap-3" data-reveal>
-          <a href="/contact" class="btn btn-pill btn-lg btn-accent fx-cta-sheen">Prendre rendez-vous</a>
+        <div class="hero-cta mt-8 flex flex-wrap justify-center gap-3">
+          <a href="/contact" class="btn btn-pill btn-lg btn-accent fx-cta-sheen">Nous contacter</a>
         </div>
       </div>
     </div>
@@ -148,12 +177,25 @@ const testimonials = [
     <div class="mx-auto max-w-6xl border-y border-ink/10 px-4" data-reveal-group="mots">
       <div class="grid lg:grid-cols-[1.05fr_0.95fr]">
         <div class="py-12 lg:py-16 lg:pr-12">
-          <h2 class="section-heading intro-heading reveal max-w-3xl text-ink" data-reveal>Une pratique fondée sur l’écoute</h2>
+          <h2 class="section-heading intro-heading reveal max-w-3xl text-ink" data-reveal>Rencontrez Dr Sirine Soussi</h2>
+          <div class="reveal mt-5 border-l-2 border-copper pl-4" data-reveal>
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-ink/65">
+              Inscrite au Conseil national de l’Ordre des médecins
+            </p>
+            <p class="mt-1 text-sm text-ink/75">N° d’inscription : <strong class="font-semibold text-ink">22 356</strong></p>
+          </div>
           <div class="mt-7 space-y-5 text-base leading-8 text-ink/78 sm:text-lg">
             <p>
               Formée à Tunis puis à Paris - au sein des plus grandes cliniques de la capitale française - je suis revenue en Tunisie avec
               une conviction : que l'excellence chirurgicale n'a pas de frontières, et que chaque patient mérite une prise en charge
               rigoureuse, personnalisée et honnête.
+            </p>
+            <p>
+              En tant que chirurgienne plasticienne, mon objectif est avant tout de vous réconcilier avec votre corps. Je privilégie une
+              chirurgie discrète, raffinée et respectueuse de l’identité de chacun. Car chaque
+              personne est unique et il est primordial de conserver cette singularité grâce à des résultats naturels, subtils et
+              élégants, loin des standards figés et uniformisés. Chaque intervention est pensée sur mesure, en fonction de votre
+              morphologie, de votre histoire, de vos attentes et de votre personnalité.
             </p>
             <p>
               Ce qui me guide dans chaque consultation, c'est l'écoute. Comprendre ce que vous ressentez, évaluer ce qui est réalisable,
@@ -168,12 +210,12 @@ const testimonials = [
         <div class="border-t border-ink/10 py-8 lg:border-l lg:border-t-0 lg:py-16 lg:pl-12">
           <div class="reveal fx-image-pan overflow-hidden rounded-[1.5rem] border border-ink/10 bg-mist shadow-soft" data-reveal>
             <img
-              src="/images/placeholders/clinic.webp"
-              width="1280"
-              height="960"
-              alt="Cabinet du Dr Sirine Soussi"
+              src="/images/doctor/dr-sirine-soussi-profile.webp"
+              width="1206"
+              height="2125"
+              alt="Dr Sirine Soussi dans son cabinet"
               loading="lazy"
-              class="h-full min-h-[28rem] w-full object-cover sm:min-h-[34rem]"
+              class="h-full min-h-[28rem] w-full object-cover object-top sm:min-h-[34rem]"
             />
           </div>
         </div>
@@ -181,136 +223,197 @@ const testimonials = [
     </div>
   </section>
 
-  <section class="bg-mist/35">
-    <div class="mx-auto max-w-6xl border-b border-ink/10 px-4" data-reveal-group="chiffres">
-      <div class="border-b border-ink/10 py-10">
-        <h2 class="section-heading section-heading-compact reveal text-ink" data-reveal>Repères de parcours</h2>
-        <p class="reveal mt-4 max-w-xl text-sm leading-7 text-ink/68" data-reveal>
+  <section class="bg-ink text-paper">
+    <div class="mx-auto max-w-6xl px-4" data-reveal-group="chiffres">
+      <div class="border-b border-paper/15 py-10 text-center">
+        <h2 class="section-heading section-heading-compact reveal mx-auto max-w-4xl text-paper" data-reveal>Une expertise construite entre Tunis et Paris</h2>
+        <p class="reveal mx-auto mt-4 max-w-xl text-sm leading-7 text-paper/70" data-reveal>
           Quelques repères pour situer une pratique construite entre formation hospitalière, expérience internationale et activité clinique.
         </p>
       </div>
-      <div class="reveal" data-reveal>
-        <dl class="grid divide-y divide-ink/10 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
-          {metrics.map((item) => (
-            <div class="px-0 py-6 sm:px-5 lg:px-6">
-              <dt class="font-display text-4xl tracking-tight text-copper sm:text-5xl">{item.value}</dt>
-              <dd class="mt-3 max-w-[18rem] text-sm leading-7 text-ink/76">{item.label}</dd>
-            </div>
-          ))}
-        </dl>
+      <div class="py-8">
+        <StatsBar metrics={metrics} />
       </div>
     </div>
   </section>
 
   <section class="bg-paper">
-    <div class="mx-auto max-w-6xl border-b border-ink/10 px-4" data-reveal-group="interventions">
-      <div class="border-b border-ink/10 py-10">
-        <h2 class="section-heading section-heading-compact reveal text-ink" data-reveal>Interventions</h2>
-        <p class="reveal mt-4 max-w-xl text-sm leading-7 text-ink/68" data-reveal>
+    <div data-reveal-group="interventions">
+      <div class="mx-auto max-w-[96rem] px-3 py-10 text-left sm:px-4">
+        <h2 class="section-heading section-heading-compact reveal text-ink" data-reveal>Procédures chirurgicales</h2>
+        <p class="reveal mt-4 text-sm leading-7 text-ink/68 lg:whitespace-nowrap" data-reveal>
           Des indications discutées en consultation, avec une priorité donnée à la sécurité, au naturel et à la justesse du geste.
         </p>
       </div>
-      <div class="grid gap-4 py-8 md:grid-cols-2 xl:grid-cols-3">
-        {interventions.map((item) => (
+      <div class="mx-auto grid max-w-[96rem] gap-px px-3 pb-4 sm:px-4 md:grid-cols-2 xl:grid-cols-4">
+        {procedureMosaic.map((item) => (
           <a
-            href={interventionCategoryHref(item.key)}
-            class="reveal group fx-lift-soft fx-card-edge overflow-hidden rounded-[1.5rem] border border-ink/10 bg-mist/55 card-focus"
+            href={item.href}
+            class:list={[
+              'procedure-image reveal group relative isolate overflow-hidden bg-ink text-paper card-focus',
+              item.image.width < 500 ? 'aspect-[384/543]' : 'aspect-[1400/884] xl:aspect-auto',
+              item.layout,
+            ]}
             data-reveal
           >
-            <div class="relative aspect-[16/10] w-full overflow-hidden">
-              <img
-                src={interventionVisuals[item.key]}
-                width="1200"
-                height="900"
-                alt={item.title}
-                loading="lazy"
-                class="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]"
-              />
-              <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,19,0.45),transparent_62%)]"></div>
-            </div>
-            <div class="p-6">
-              <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-copper-deep">{item.title}</h3>
-              <p class="mt-3 text-sm leading-7 text-ink/76">{item.text}</p>
-              <div class="mt-4 text-sm font-semibold text-ink/78 transition group-hover:text-ink">Découvrir →</div>
-            </div>
+            <img
+              src={item.image.src}
+              width={item.image.width}
+              height={item.image.height}
+              alt=""
+              loading="lazy"
+              class="absolute inset-0 -z-10 h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.015]"
+            />
+            <span class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/85 via-ink/30 to-transparent px-5 pb-5 pt-20 sm:px-6 sm:pb-6">
+              <span class="block max-w-[13ch] font-display text-3xl leading-[0.95] tracking-tight text-paper transition duration-300 group-hover:-translate-y-0.5 sm:text-4xl">
+                {item.title}
+              </span>
+            </span>
+            <span class="absolute right-4 top-4 inline-flex size-11 items-center justify-center rounded-full border border-paper/55 bg-ink/10 text-xl text-paper backdrop-blur-[2px] transition duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:bg-paper group-hover:text-ink sm:right-5 sm:top-5" aria-hidden="true">↗</span>
           </a>
         ))}
+        <a
+          href="/interventions"
+          class="procedure-all reveal group relative isolate flex min-h-[28rem] overflow-hidden bg-ink p-8 text-paper card-focus sm:p-12 md:col-span-2 md:min-h-[32rem] xl:col-start-3 xl:row-start-2 xl:min-h-0"
+          data-reveal
+        >
+          <BrandMark
+            id="procedures-background-mark"
+            class="pointer-events-none absolute -bottom-20 right-6 -z-10 h-[92%] w-auto grayscale opacity-[0.055]"
+          />
+          <div class="flex w-full flex-col">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-sand sm:text-sm">Toutes les spécialités</p>
+            <div class="my-auto py-12">
+              <h3 class="max-w-[11ch] font-display text-5xl leading-[0.98] tracking-tight text-paper sm:text-6xl">
+                Découvrez toutes les interventions
+              </h3>
+              <span class="mt-8 inline-flex items-center gap-4 border-b border-paper/55 pb-1 text-sm font-semibold text-paper transition group-hover:border-paper">
+                Explorer les interventions
+                <span class="transition duration-300 group-hover:translate-x-1" aria-hidden="true">→</span>
+              </span>
+            </div>
+          </div>
+        </a>
       </div>
     </div>
   </section>
 
-  <section class="bg-ink text-paper">
-    <div class="mx-auto max-w-6xl border-b border-paper/12 px-4" data-reveal-group="avis">
-      <div class="grid gap-3 border-b border-paper/12 py-10 md:grid-cols-[1fr_auto] md:items-end">
-        <h2 class="section-heading section-heading-compact reveal text-paper" data-reveal>Retours de patients</h2>
-        <div class="reveal text-sm font-semibold tracking-[0.08em] text-paper/70 md:text-right" data-reveal>Avis Google vérifiés</div>
+  <InternationalPatientsStepper steps={internationalPatientSteps} />
+
+  <div data-reveal-group="galerie">
+    <FeaturedCaseCarousel images={homeGalleryImages} />
+  </div>
+
+  <section class="google-reviews" data-google-reviews aria-labelledby="google-reviews-title">
+    <div class="google-reviews__surface" data-reviews-surface>
+    <div class="mx-auto max-w-[84rem] px-4 sm:px-6">
+      <div class="border-b border-paper/50 py-8 text-center sm:py-10">
+        <h2 id="google-reviews-title" class="font-display text-4xl font-medium tracking-tight text-paper sm:text-5xl">Avis Google</h2>
       </div>
       <div class="grid lg:grid-cols-[1.08fr_0.92fr] lg:items-stretch">
         {testimonials.slice(0, 1).map((item) => (
-          <article class="reveal py-8 lg:pr-10" data-reveal>
-            <div class="rounded-[1.75rem] border border-ink/10 bg-mist/45 p-6 shadow-soft sm:p-8 lg:p-10">
-              <div class="text-lg font-semibold tracking-[0.18em] text-copper" role="img" aria-label="5 étoiles">{item.stars}</div>
-              <blockquote class="mt-5 text-xl leading-9 text-ink/84 sm:text-2xl sm:leading-10">
+          <article class="py-8 sm:py-10 lg:pr-12">
+            <div class="rounded-[2rem] bg-paper/45 p-7 sm:p-10 lg:p-12">
+              <div class="reviews-accent text-lg font-semibold tracking-[0.18em]" role="img" aria-label="5 étoiles">{item.stars}</div>
+              <blockquote class="mt-7 text-2xl leading-[1.55] text-paper sm:text-3xl sm:leading-[1.6]">
                 « {item.quote} »
               </blockquote>
-              <footer class="mt-7">
-                <div class="text-sm font-semibold uppercase tracking-[0.16em] text-ink/78">{item.title}</div>
-                <div class="mt-1 text-xs uppercase tracking-[0.14em] text-ink/64">{item.meta}</div>
+              <footer class="mt-9">
+                <div class="text-sm font-semibold uppercase tracking-[0.16em] text-paper sm:text-base">{item.title}</div>
+                <div class="mt-1 text-xs uppercase tracking-[0.14em] text-paper/85 sm:text-sm">{item.meta}</div>
               </footer>
             </div>
           </article>
         ))}
-        <div class="reveal border-t border-paper/12 py-8 lg:border-l lg:border-t-0 lg:pl-10" data-reveal>
-          <div class="grid divide-y divide-paper/12">
+        <div class="border-t border-paper/50 py-8 sm:py-10 lg:border-l lg:border-t-0 lg:pl-12">
+          <div class="grid divide-y divide-paper/50">
             {testimonials.slice(1).map((item) => (
-              <article class="py-5 first:pt-0 last:pb-0">
+              <article class="py-7 first:pt-0 last:pb-0">
                 <div class="flex flex-wrap items-baseline justify-between gap-2">
-                  <h3 class="text-sm font-semibold uppercase tracking-[0.14em] text-paper/82">{item.title}</h3>
-                  <div class="text-sm font-semibold tracking-[0.14em] text-copper" role="img" aria-label="5 étoiles">{item.stars}</div>
+                  <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-paper">{item.title}</h3>
+                  <div class="reviews-accent text-sm font-semibold tracking-[0.14em]" role="img" aria-label="5 étoiles">{item.stars}</div>
                 </div>
-                <p class="mt-3 text-sm leading-7 text-paper/80">« {item.quote} »</p>
-                <div class="mt-3 text-xs uppercase tracking-[0.12em] text-paper/64">{item.meta}</div>
+                <p class="mt-5 text-base leading-8 text-paper/80">« {item.quote} »</p>
+                <div class="mt-4 text-xs font-semibold uppercase tracking-[0.12em] text-paper/90">{item.meta}</div>
               </article>
             ))}
           </div>
         </div>
       </div>
+      <div class="flex justify-end border-t border-paper/50 py-6">
+        <a href={site.links.maps} target="_blank" rel="noreferrer" class="inline-flex items-center gap-2 border-b border-paper/35 pb-1 text-sm font-semibold text-paper/80 hover:border-paper hover:text-paper">
+          Voir d’autres avis sur Google
+          <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </div>
     </div>
   </section>
 
-  <section class="bg-paper text-ink">
-    <div class="mx-auto max-w-6xl border-b border-ink/10 px-4" data-reveal-group="cta-final">
-      <div class="grid gap-8 py-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:py-16">
-        <div>
-          <h2 class="section-heading section-heading-compact reveal text-ink" data-reveal>Prendre rendez-vous</h2>
-          <p class="reveal text-3xl italic leading-tight text-ink sm:text-4xl" data-reveal>
-            Je vous reçois en consultation au cabinet aux Berges du Lac 1, Tunis.
+  <section class="appointment-section relative isolate overflow-hidden bg-mist/55 text-ink">
+    <div class="relative mx-auto max-w-6xl px-4 py-14 lg:py-20" data-reveal-group="cta-final">
+      <div class="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch">
+        <div class="reveal relative isolate overflow-hidden rounded-[1.75rem] border border-ink/10 bg-paper/94 p-7 shadow-soft sm:p-9 lg:p-10" data-reveal>
+          <BrandMark
+            id="appointment-background-mark"
+            class="ambient-mark ambient-mark-reverse pointer-events-none absolute -bottom-20 -left-12 -z-10 h-[32rem] w-auto grayscale opacity-[0.035]"
+          />
+          <p class="text-sm font-semibold uppercase tracking-[0.18em] text-copper-deep">Prendre rendez-vous</p>
+          <h2 class="mt-4 font-display text-4xl leading-[0.98] tracking-tight text-ink sm:text-5xl">
+            <span class="block sm:whitespace-nowrap">Votre projet</span>
+            <span class="block">commence ici</span>
+          </h2>
+          <p class="mt-6 max-w-xl text-base leading-8 text-ink/76">
+            Je vous reçois en consultation aux Berges du Lac 1, dans un cadre confidentiel, avec une information claire et une prise en
+            charge personnalisée.
           </p>
-          <p class="reveal mt-5 max-w-2xl text-ink/78" data-reveal>
-            Une information médicale claire, une consultation structurée et une prise en charge personnalisée.
-          </p>
-          <div class="reveal mt-7 flex flex-wrap gap-3" data-reveal>
-            <a href="/contact" class="btn btn-pill btn-lg btn-primary fx-cta-sheen">Prendre rendez-vous</a>
-            <a href={mapsHref} target="_blank" rel="noreferrer" class="btn btn-pill btn-lg border border-ink/25 text-ink hover:bg-mist">Itinéraire</a>
+
+          <div class="mt-8 border-y border-ink/12 text-sm leading-6 text-ink/72">
+            <div class="py-4">
+              <p class="font-semibold text-ink">Adresse</p>
+              <a href={site.links.maps} target="_blank" rel="noreferrer" class="mt-1 inline-flex items-start gap-2 underline decoration-ink/25 underline-offset-4 transition hover:decoration-ink/70">
+                <span>{site.contact.addressLines.join(' · ')}, {site.contact.city}</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+            <div class="grid border-t border-ink/12 sm:grid-cols-2 sm:divide-x sm:divide-ink/12">
+              <div class="py-4 sm:pr-5">
+                <p class="font-semibold text-ink">Téléphone</p>
+                <a href={site.links.tel} class="mt-1 inline-block underline decoration-ink/25 underline-offset-4 transition hover:decoration-ink/70">{site.contact.phoneDisplay}</a>
+              </div>
+              <div class="border-t border-ink/12 py-4 sm:border-t-0 sm:pl-5">
+                <p class="font-semibold text-ink">Horaires</p>
+                <p class="mt-1">{site.contact.hoursLines.join(' · ')}</p>
+              </div>
+            </div>
           </div>
-          <address class="reveal mt-5 border-t border-ink/15 pt-4 text-xs leading-5 not-italic text-ink/70" data-reveal>
-            <a href={mapsHref} target="_blank" rel="noreferrer" class="inline-flex items-start gap-2 rounded-md underline decoration-ink/30 underline-offset-4 transition hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/50 focus-visible:ring-offset-2 focus-visible:ring-offset-paper">
-              <svg aria-hidden="true" viewBox="0 0 24 24" class="mt-0.5 size-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 21s7-5.1 7-12a7 7 0 0 0-14 0c0 6.9 7 12 7 12Z" />
-                <circle cx="12" cy="9" r="2.4" />
-              </svg>
-              {site.contact.addressLines.join(', ')}, {site.contact.city}
-            </a>
-          </address>
+
+          <div class="mt-8 flex flex-wrap gap-3">
+            <a href="/contact" class="btn btn-pill btn-lg btn-primary fx-cta-sheen">Prendre rendez-vous</a>
+            <a href={site.links.whatsapp} class="btn btn-pill btn-lg border border-ink/20 bg-paper text-ink hover:bg-mist">WhatsApp</a>
+          </div>
         </div>
-        <div class="reveal overflow-hidden rounded-[1.5rem] border border-ink/10 bg-mist shadow-soft" data-reveal>
-          <iframe
-            src={mapsEmbed}
-            title="Plan d'accès au cabinet du Dr Sirine Soussi"
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-            class="h-[20rem] w-full border-0 lg:h-[24rem]"
-          ></iframe>
+
+        <div class="reveal min-h-[28rem] overflow-hidden rounded-[1.75rem] border border-ink/10 bg-paper shadow-soft lg:min-h-full" data-reveal>
+          <a
+            href={site.links.maps}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Voir l'itinéraire vers le cabinet du Dr Sirine Soussi"
+            class="location-card group relative isolate block h-full overflow-hidden"
+          >
+            <img
+              src="/images/cabinet-location.webp"
+              width="1800"
+              height="1350"
+              alt="Cabinet du Dr Sirine Soussi aux Berges du Lac"
+              loading="lazy"
+              class="location-media absolute inset-0 z-0 h-full w-full object-cover"
+            />
+            <span class="location-chip absolute bottom-5 right-5 z-10 inline-flex items-center gap-2 rounded-full border border-paper/55 bg-paper/90 px-4 py-2 text-sm font-semibold text-ink shadow-soft backdrop-blur-sm">
+              Itinéraire <span aria-hidden="true">↗</span>
+            </span>
+          </a>
         </div>
       </div>
     </div>
@@ -319,29 +422,87 @@ const testimonials = [
 </BaseLayout>
 
 <style>
+  .google-reviews {
+    background: rgb(var(--c-paper));
+  }
+  .google-reviews__surface {
+    background: rgb(var(--c-ink));
+    color: rgb(var(--c-paper));
+  }
+  .google-reviews .reviews-accent { color: rgb(var(--c-sand) / 0.55); }
+  .google-reviews a:focus-visible { outline: 2px solid rgb(var(--c-sand)); outline-offset: 5px; }
+  @media (prefers-reduced-motion: reduce) {
+    .google-reviews__surface { clip-path: none !important; }
+  }
+  .hero-media {
+    filter: brightness(0.72) saturate(0.82);
+  }
+
+  .hero-veil {
+    pointer-events: none;
+    background: linear-gradient(180deg, rgb(var(--c-ink) / 0.15) 0%, rgb(var(--c-ink) / 0.72) 100%);
+  }
+
+  .hero-rule {
+    position: absolute;
+    top: -7rem;
+    left: calc(50% - 32px);
+    width: 64px;
+    height: 1px;
+    background: rgb(var(--c-copper));
+    pointer-events: none;
+  }
+
+  @keyframes hero-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .hero-title,
+  .hero-subtitle,
+  .hero-cta {
+    opacity: 1;
+  }
+
+  [data-hero-pending] .hero-title,
+  [data-hero-pending] .hero-subtitle,
+  [data-hero-pending] .hero-cta {
+    opacity: 0;
+  }
+
+  [data-hero-ready] .hero-title,
+  [data-hero-ready] .hero-subtitle,
+  [data-hero-ready] .hero-cta {
+    animation: hero-fade-in 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .hero-subtitle { animation-delay: 650ms; }
+  .hero-cta {
+    animation-duration: 700ms;
+    animation-delay: 1150ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-hero-pending] .hero-title,
+    [data-hero-pending] .hero-subtitle,
+    [data-hero-pending] .hero-cta {
+      opacity: 1;
+    }
+
+    .hero-title,
+    .hero-subtitle,
+    .hero-cta { animation: none; }
+  }
+
   .home-page :is(h1, h2) {
     font-weight: 400;
     line-height: 1.12;
     letter-spacing: -0.02em;
-    text-transform: none;
     text-wrap: balance;
   }
 
-  .home-page h3 {
-    font-size: 0.875rem;
-    font-weight: 600;
-    line-height: 1.45;
-  }
-
   .home-page p {
-    max-width: 65ch;
-    font-size: 1rem;
-    line-height: 1.72;
     text-wrap: pretty;
-  }
-
-  .home-page p + p {
-    margin-top: 1.5rem;
   }
 
   .section-label {
@@ -353,12 +514,11 @@ const testimonials = [
   }
 
   .section-heading {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: clamp(1.75rem, 3.6vw, 2.75rem);
     font-weight: 400;
     letter-spacing: -0.025em;
     line-height: 1.16;
-    text-transform: uppercase;
     text-wrap: balance;
   }
 
@@ -378,15 +538,28 @@ const testimonials = [
   @media (prefers-reduced-motion: no-preference) {
     .reveal-ready .reveal {
       opacity: 0;
-      transform: translateY(18px);
+      transform: translateY(12px);
       transition:
-        opacity 560ms ease,
-        transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+        opacity 540ms ease-out,
+        transform 680ms cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .reveal-ready .reveal.is-visible {
       opacity: 1;
       transform: translateY(0);
+    }
+
+    .reveal-ready .reveal .ambient-mark {
+      transform: translate3d(14px, 10px, 0) rotate(1.5deg);
+      transition: transform 1100ms cubic-bezier(0.22, 1, 0.36, 1) 180ms;
+    }
+
+    .reveal-ready .reveal .ambient-mark-reverse {
+      transform: translate3d(-14px, 10px, 0) rotate(-1.5deg);
+    }
+
+    .reveal-ready .reveal.is-visible .ambient-mark {
+      transform: translate3d(0, 0, 0) rotate(0);
     }
   }
 
@@ -450,9 +623,10 @@ const testimonials = [
     content: '';
     position: absolute;
     inset: 0;
+    pointer-events: none;
     background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, 0.26) 48%, transparent 74%);
     transform: translateX(-145%);
-    transition: transform 440ms ease;
+    transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   .fx-cta-sheen:hover::after,
@@ -468,15 +642,44 @@ const testimonials = [
     transform: translateY(-1px);
   }
 
+  .location-media {
+    transition: transform 840ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .location-chip {
+    transition:
+      transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      background-color 220ms ease,
+      border-color 220ms ease;
+  }
+
+  .location-card:hover .location-media,
+  .location-card:focus-visible .location-media {
+    transform: scale(1.022);
+  }
+
+  .location-card:hover .location-chip,
+  .location-card:focus-visible .location-chip {
+    background-color: rgb(var(--c-paper));
+    border-color: rgb(var(--c-paper));
+    transform: translateY(-2px);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .reveal,
     .reveal.is-visible,
-      .fx-lift-soft,
+    .ambient-mark,
+    .fx-lift-soft,
     .fx-card-edge::before,
     .fx-image-pan img,
+    .procedure-media,
+    .procedure-arrow,
     .metric-value,
     .fx-cta-sheen::after,
-    .fx-cta-secondary {
+    .fx-cta-secondary,
+    .location-media,
+    .location-chip {
+      animation: none;
       transition: none;
       transform: none;
       opacity: 1;
@@ -485,6 +688,56 @@ const testimonials = [
 </style>
 
 <script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  if (hero && !hero.hasAttribute('data-hero-initialized')) {
+    hero.setAttribute('data-hero-initialized', '');
+    const image = hero.querySelector<HTMLImageElement>('[data-hero-image]');
+    const resources: Promise<unknown>[] = [image?.decode() ?? Promise.resolve()];
+
+    if ('fonts' in document) resources.push(document.fonts.ready);
+
+    void Promise.allSettled(resources).then(() => {
+      requestAnimationFrame(() => {
+        hero.removeAttribute('data-hero-pending');
+        hero.setAttribute('data-hero-ready', '');
+      });
+    });
+  }
+
+  const reviews = document.querySelector<HTMLElement>('[data-google-reviews]');
+  if (reviews) {
+    const surface = reviews.querySelector<HTMLElement>('[data-reviews-surface]');
+    const media = gsap.matchMedia();
+    let entered = false;
+    media.add('(prefers-reduced-motion: no-preference)', () => {
+      if (entered || !surface) return;
+      // Same ascending inset wipe as the hero veil. Content travels with its
+      // opaque surface so light text is never exposed on the light fallback.
+      const reveal = gsap.fromTo(surface,
+        { clipPath: 'inset(100% 0 0 0)' },
+        {
+          clipPath: 'inset(0% 0 0 0)', duration: 1, ease: 'expo.out',
+          scrollTrigger: {
+            trigger: reviews, start: 'top 90%', once: true,
+            onEnter: () => { entered = true; },
+          },
+        });
+      const onFocus = () => {
+        entered = true;
+        reveal.progress(1);
+        reveal.scrollTrigger?.kill();
+      };
+      reviews.addEventListener('focusin', onFocus);
+      return () => reviews.removeEventListener('focusin', onFocus);
+    });
+    document.addEventListener('astro:before-swap', () => media.revert(), { once: true });
+  }
+
   const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   const revealItems = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
   const revealGroups = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal-group]'));
@@ -493,8 +746,9 @@ const testimonials = [
 
   revealGroups.forEach((group) => {
     const items = Array.from(group.querySelectorAll<HTMLElement>('[data-reveal]'));
+    const step = Number(group.dataset.revealStep) || 65;
     items.forEach((item, index) => {
-      item.style.transitionDelay = `${Math.min(index * 65, 260)}ms`;
+      item.style.transitionDelay = `${Math.min(index * step, 260)}ms`;
     });
   });
 

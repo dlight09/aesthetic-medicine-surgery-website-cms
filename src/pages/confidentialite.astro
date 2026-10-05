@@ -1,23 +1,57 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import { site } from '@/lib/site';
 ---
 
-<BaseLayout title="Confidentialite" description="Politique de confidentialite.">
-  <section class="mx-auto max-w-3xl px-4 py-14">
-    <h1 class="font-display text-4xl tracking-tight">Confidentialite</h1>
-    <div class="mt-8 space-y-6 text-ink/75">
-      <p>
-        Cette page decrit les principes generaux de traitement des donnees. Elle sera completee selon les outils utilises
-        (formulaire, analytics, etc.).
-      </p>
-      <div>
-        <div class="font-semibold text-ink">Donnees collectees</div>
-        <p>Par defaut: aucune collecte active si aucun formulaire n’est active (placeholder).</p>
-      </div>
-      <div>
-        <div class="font-semibold text-ink">Cookies</div>
-        <p>Si des outils de mesure d’audience sont ajoutes, une information et un choix seront mis en place.</p>
-      </div>
+<BaseLayout title="Confidentialité" description="Informations sur le traitement des données personnelles par le cabinet du Dr Sirine Soussi.">
+  <section class="mx-auto max-w-3xl px-4 py-14 sm:py-20">
+    <h1 class="font-display text-4xl tracking-tight sm:text-5xl">Confidentialité</h1>
+    <p class="mt-6 text-base leading-8 text-ink/75">
+      Cette page décrit les données traitées lorsque vous utilisez le formulaire de rendez-vous et les mesures prises pour limiter leur utilisation à votre demande.
+    </p>
+
+    <div class="mt-10 space-y-9 text-sm leading-7 text-ink/75 sm:text-base">
+      <section>
+        <h2 class="font-display text-2xl tracking-tight text-ink">Données collectées</h2>
+        <p class="mt-3">
+          Le formulaire recueille vos nom et prénom, adresse e-mail, numéro de téléphone, âge, poids, taille, statut tabagique, type de chirurgie envisagée, antécédents médicaux, chirurgicaux et gynécologiques, traitements quotidiens et message. Ces informations sont obligatoires pour transmettre une demande en ligne. Vous pouvez également joindre jusqu'à cinq photographies de manière facultative. Ces éléments peuvent contenir des données de santé sensibles : ne transmettez que les informations nécessaires à votre demande.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="font-display text-2xl tracking-tight text-ink">Finalité</h2>
+        <p class="mt-3">
+          Ces informations sont utilisées pour répondre à votre demande, préparer un premier échange et organiser une consultation si nécessaire. Elles ne sont pas utilisées pour publier des photographies dans la galerie Avant / Après. Une publication éventuelle relève d'un consentement distinct et documenté.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="font-display text-2xl tracking-tight text-ink">Accès et prestataires techniques</h2>
+        <p class="mt-3">
+          Les demandes et les éventuelles photographies sont accessibles à l'équipe autorisée du cabinet dans un espace d'administration. Le site utilise des prestataires techniques pour l'hébergement, la base de données et le stockage privé des fichiers. Les photographies envoyées avec une demande ne sont pas placées dans un espace public.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="font-display text-2xl tracking-tight text-ink">Conservation et suppression</h2>
+        <p class="mt-3">
+          Les données doivent être conservées uniquement pendant la durée nécessaire au traitement de la demande et aux obligations applicables au cabinet. Le calendrier définitif de conservation sera précisé avant la mise en production. Vous pouvez demander la suppression d'une demande qui n'a plus à être conservée.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="font-display text-2xl tracking-tight text-ink">Vos demandes</h2>
+        <p class="mt-3">
+          Pour demander l'accès, la rectification ou la suppression de vos informations, contactez le cabinet à <a href={site.links.email} class="font-semibold text-ink underline decoration-ink/30 underline-offset-4">{site.contact.email}</a>. Une vérification d'identité peut être demandée afin de protéger vos données.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="font-display text-2xl tracking-tight text-ink">Cookies</h2>
+        <p class="mt-3">
+          Si des outils de mesure d'audience ou de marketing nécessitant un consentement sont ajoutés, une information et un choix adaptés devront être mis en place avant leur activation.
+        </p>
+      </section>
     </div>
   </section>
 </BaseLayout>

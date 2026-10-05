@@ -5,6 +5,7 @@ import {
   interventionCategories,
   interventionCategoryKeys,
   interventionCategoryMeta,
+  getInterventionThumbnail,
   type InterventionCategoryKey
 } from '@/lib/interventions';
 import { listPublicInterventions } from '@/lib/cms/interventions';
@@ -22,30 +23,28 @@ if (!category) {
 
 type CardItem = { title: string; description: string; slug: string; category: InterventionCategoryKey; order?: number | null };
 
-let items: CardItem[] = [];
-try {
-  const rows = await listPublicInterventions(category);
-  items = rows
-    .map((r) => ({
-      title: r.title,
-      description: r.description,
-      slug: r.slug,
-      category: r.category,
-      order: r.order,
-    }))
-    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
-} catch {
-  // Fallback to repo content collection if Supabase is not configured.
-  const entries = (await getCollection('interventions'))
-    .filter((i) => i.data.category === category)
-    .sort((a, b) => (a.data.order ?? 999) - (b.data.order ?? 999));
-  items = entries.map((entry) => ({
+const localEntries = (await getCollection('interventions'))
+  .filter((i) => i.data.category === category)
+  .map((entry) => ({
     title: entry.data.title,
     description: entry.data.description,
     slug: entry.slug.split('/').filter(Boolean).slice(-1)[0] ?? entry.slug,
     category: entry.data.category,
     order: entry.data.order ?? null,
   }));
+
+let cmsEntries: CardItem[] = [];
+try {
+  const rows = await listPublicInterventions(category);
+  cmsEntries = rows.map((r) => ({
+    title: r.title,
+    description: r.description,
+    slug: r.slug,
+    category: r.category,
+    order: r.order,
+  }));
+} catch {
+  // Repository content keeps the category complete if the CMS is unavailable.
 }
 
 function leafSlug(full: string) {
@@ -54,7 +53,7 @@ function leafSlug(full: string) {
 }
 
 const title = interventionCategoryMeta[category]?.title ?? 'Interventions';
-const thumbSrc = interventionCategories.find((c) => c.key === category)?.thumbnailSrc;
+const categoryImage = interventionCategories.find((c) => c.key === category)?.presentationImage;
 const pageDescriptionByCategory: Partial<Record<InterventionCategoryKey, string>> = {
   'medecine-esthetique':
     'Médecine esthétique à Tunis : injections et soins de la peau, indications, déroulé, suites et questions fréquentes.',
@@ -87,9 +86,22 @@ const seoFallbackItems = Object.entries(seoInterventionPages)
     };
   });
 
-if (!items.length && seoFallbackItems.length) {
-  items = seoFallbackItems;
-}
+const canonicalSlug = (slug: string) =>
+  slug === 'blepharoplastie-paupieres' ? 'blepharoplastie' : leafSlug(slug);
+const seen = new Set<string>();
+const items = [...seoFallbackItems, ...localEntries, ...cmsEntries]
+  .filter((item) => {
+    const key = canonicalSlug(item.slug);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  })
+  .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
+const cardItems = items.map((item) => ({
+  ...item,
+  thumbnail: getInterventionThumbnail(leafSlug(item.slug)),
+}));
 ---
 
 <BaseLayout title={title} description={pageDescription}>
@@ -97,12 +109,12 @@ if (!items.length && seoFallbackItems.length) {
     <a href="/interventions" class="text-sm font-semibold text-ink/70 hover:text-ink">← Toutes les catégories</a>
     <h1 class="mt-3 font-display text-4xl tracking-tight">{title}</h1>
 
-    {thumbSrc ? (
+    {categoryImage ? (
       <div class="mt-7 overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft">
         <img
-          src={thumbSrc}
-          width="1200"
-          height="900"
+          src={categoryImage.src}
+          width={categoryImage.width}
+          height={categoryImage.height}
           alt=""
           loading="lazy"
           class="h-44 w-full object-cover sm:h-56"
@@ -124,16 +136,30 @@ if (!items.length && seoFallbackItems.length) {
       </div>
     ) : null}
 
-    {items.length ? (
+    {cardItems.length ? (
       <div class="mt-10 grid gap-4 sm:grid-cols-2">
-        {items.map((i) => (
+        {cardItems.map((i) => (
           <a
             href={`/interventions/${i.category}/${leafSlug(i.slug)}`}
-            class="rounded-3xl border border-ink/10 bg-mist p-7 shadow-soft transition hover:shadow-lift"
+            class="group overflow-hidden rounded-3xl border border-ink/10 bg-mist shadow-soft transition hover:shadow-lift"
           >
-            <div class="font-display text-2xl tracking-tight">{i.title}</div>
-            <div class="mt-2 text-ink/70">{i.description}</div>
-            <div class="mt-5 text-sm font-semibold">Lire la fiche →</div>
+            {i.thumbnail ? (
+              <div class="aspect-[4/3] overflow-hidden bg-ink/5">
+                <img
+                  src={i.thumbnail.src}
+                  width={i.thumbnail.width}
+                  height={i.thumbnail.height}
+                  alt=""
+                  loading="lazy"
+                  class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]"
+                />
+              </div>
+            ) : null}
+            <div class="p-7">
+              <div class="font-display text-2xl tracking-tight">{i.title}</div>
+              <div class="mt-2 text-ink/70">{i.description}</div>
+              <div class="mt-5 text-sm font-semibold">Lire la fiche →</div>
+            </div>
           </a>
         ))}
       </div>

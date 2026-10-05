@@ -32,3 +32,21 @@ build/
 
 # Local clinical media used only for development imports
 public/images/beforeandafter/
+
+# Original media sources; optimized derivatives are committed instead.
+public/images/photospagedacceuilgalerie/*.JPG
+public/images/photospagedacceuilgalerie/*.JPEG
+public/images/photospagedacceuilgalerie/*.jpg
+public/images/interventions/*.jpeg
+public/images/1857A587-72CF-4854-9CDB-5FEE9C4C931A.PNG
+public/images/AEE48F9D-B888-429F-9F4E-273B9E302030.jpg
+public/images/F820475F-4ED2-4743-B7D4-D469C7CEE1C5.PNG
+public/images/IMG_9759.jpeg
+public/images/IMG_9760.jpeg
+public/images/WhatsApp Image 2026-09-05 at 11.18.02.jpeg
+public/images/WhatsApp Image 2026-09-05 at 18.06.59.jpeg
+public/images/about/AB378DAC-6B96-446A-850A-D0751D41014D.jpg
+public/images/doctor/IMG_9700.jpg
+public/images/doctor/dr-sirine-soussi-home.webp
+public/images/international-patients-background.png
+public/images/blog/*.png

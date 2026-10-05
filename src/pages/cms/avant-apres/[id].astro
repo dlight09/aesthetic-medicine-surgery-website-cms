@@ -4,31 +4,26 @@ import { getCmsAvantApresCase, type AvantApresCaseView } from '@/lib/cms/avantAp
 import { interventionCategories } from '@/lib/interventions';
 import { listCmsInterventions } from '@/lib/cms/interventions';
 import { getCollection } from 'astro:content';
-import AdditionalMediaSetsEditor from '@/components/cms/AdditionalMediaSetsEditor.astro';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 const { id } = Astro.params;
 type AvantApresCaseWithIntervention = AvantApresCaseView & {
   intervention_category?: string | null;
   intervention_slug?: string | null;
-  description?: string | null;
   case_number?: number | null;
 };
 const item = (id ? await getCmsAvantApresCase(id) : null) as AvantApresCaseWithIntervention | null;
-if (!item) {
-  return Astro.redirect('/cms/avant-apres');
-}
+if (!item) return Astro.redirect('/cms/avant-apres');
 
 type InterventionLite = { title: string; slug: string; category: string; order?: number | null };
-
 let interventions: InterventionLite[] = [];
 try {
   const rows = await listCmsInterventions();
-  interventions = rows.map((r) => ({
-    title: r.title,
-    slug: r.slug,
-    category: r.category,
-    order: r.order,
+  interventions = rows.map((row) => ({
+    title: row.title,
+    slug: row.slug,
+    category: row.category,
+    order: row.order,
   }));
 } catch {
   const entries = await getCollection('interventions');
@@ -40,35 +35,20 @@ try {
   }));
 }
 
-const interventionsByCategory = interventionCategories.map((category) => {
-  const items = interventions
+const interventionsByCategory = interventionCategories.map((category) => ({
+  label: category.title,
+  items: interventions
     .filter((entry) => entry.category === category.key)
-    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
-    .map((entry) => ({
-      title: entry.title,
-      slug: entry.slug,
-      category: entry.category,
-    }));
-  return { label: category.title, key: category.key, items };
-});
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999)),
+}));
 const currentInterventionRef =
   item.intervention_category && item.intervention_slug
     ? `${item.intervention_category}::${item.intervention_slug}`
     : '';
-const proceduresText = item.procedures.map((proc) => proc.label).join('\n');
-const tagsText = item.tags.join(', ');
 const coverMediaSet = item.media_sets.find((set) => set.is_cover) ?? item.media_sets[0] ?? null;
-const extraMediaSets = item.media_sets
-  .filter((set) => !coverMediaSet || set.id !== coverMediaSet.id)
-  .map((set) => ({
-    label: set.label,
-    view_key: set.view_key,
-    result_delay_label: set.result_delay_label,
-    before_path: set.before_path,
-    after_path: set.after_path,
-    beforeUrl: set.beforeUrl,
-    afterUrl: set.afterUrl,
-  }));
+const isComparison = coverMediaSet?.media_mode === 'comparison';
+const coverBeforeUrl = coverMediaSet?.beforeUrl ?? item.beforeUrl;
+const coverAfterUrl = coverMediaSet?.afterUrl ?? item.afterUrl;
 ---
 
 <CmsLayout title="Edition cas">
@@ -81,128 +61,64 @@ const extraMediaSets = item.media_sets
 
       <form id="aa-form" class="mt-8 grid gap-5" data-id={item.id}>
         <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Description avant / après</span>
-          <textarea rows={3} class="cms-textarea" name="description">{item.description ?? ''}</textarea>
-        </label>
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Résumé public</span>
-          <textarea rows={2} class="cms-textarea" name="summary">{item.summary ?? ''}</textarea>
-        </label>
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Contexte clinique</span>
-          <textarea rows={3} class="cms-textarea" name="clinical_context">{item.clinical_context ?? ''}</textarea>
-        </label>
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Actes réalisés (1 par ligne)</span>
-          <textarea rows={4} class="cms-textarea" name="procedures_text">{proceduresText}</textarea>
-        </label>
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Tags (séparés par virgule)</span>
-          <input class="cms-input" name="tags_text" value={tagsText} />
-        </label>
-
-        <div class="grid gap-4 sm:grid-cols-3">
-          <label class="grid gap-2 text-sm">
-            <span class="font-semibold text-ink/80">Âge</span>
-            <input class="cms-input" type="number" min="0" max="120" name="patient_age" value={item.patient_context?.patient_age ?? ''} />
-          </label>
-          <label class="grid gap-2 text-sm">
-            <span class="font-semibold text-ink/80">Poids (kg)</span>
-            <input class="cms-input" type="number" min="0" step="0.1" name="weight_kg" value={item.patient_context?.weight_kg ?? ''} />
-          </label>
-          <label class="grid gap-2 text-sm">
-            <span class="font-semibold text-ink/80">Grossesses</span>
-            <input class="cms-input" type="number" min="0" name="pregnancies_count" value={item.patient_context?.pregnancies_count ?? ''} />
-          </label>
-        </div>
-
-        <div class="grid gap-4 sm:grid-cols-3">
-          <label class="grid gap-2 text-sm">
-            <span class="font-semibold text-ink/80">Sexe patient</span>
-            <select class="cms-select" name="patient_sex">
-              <option value="" selected={!item.patient_context?.patient_sex}>Non renseigné</option>
-              <option value="female" selected={item.patient_context?.patient_sex === 'female'}>Femme</option>
-              <option value="male" selected={item.patient_context?.patient_sex === 'male'}>Homme</option>
-            </select>
-          </label>
-          <label class="grid gap-2 text-sm">
-            <span class="font-semibold text-ink/80">Tabagisme</span>
-            <select class="cms-select" name="smoking_status">
-              <option value="" selected={!item.patient_context?.smoking_status}>Non renseigné</option>
-              <option value="non_smoker" selected={item.patient_context?.smoking_status === 'non_smoker'}>Non fumeur</option>
-              <option value="smoker" selected={item.patient_context?.smoking_status === 'smoker'}>Fumeur</option>
-              <option value="former" selected={item.patient_context?.smoking_status === 'former'}>Ancien fumeur</option>
-              <option value="unknown" selected={item.patient_context?.smoking_status === 'unknown'}>Inconnu</option>
-            </select>
-          </label>
-          <label class="grid gap-2 text-sm">
-            <span class="font-semibold text-ink/80">Délai résultat (label)</span>
-            <input class="cms-input" name="result_delay_label" value={coverMediaSet?.result_delay_label ?? ''} />
-          </label>
-        </div>
-
-        <div class="grid gap-3 sm:grid-cols-3">
-          <label class="inline-flex items-center gap-2 text-sm">
-            <input type="checkbox" class="h-4 w-4" name="post_bariatric" checked={item.patient_context?.post_bariatric === true} />
-            <span>Post-bariatrique</span>
-          </label>
-          <label class="inline-flex items-center gap-2 text-sm">
-            <input type="checkbox" class="h-4 w-4" name="revision_case" checked={item.patient_context?.revision_case === true} />
-            <span>Reprise</span>
-          </label>
-          <label class="inline-flex items-center gap-2 text-sm">
-            <input type="checkbox" class="h-4 w-4" name="prior_surgery" checked={item.patient_context?.prior_surgery === true} />
-            <span>Chirurgie antérieure</span>
-          </label>
-        </div>
-
-        <AdditionalMediaSetsEditor initialMediaSets={extraMediaSets} />
-        <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Intervention associée</span>
-          <select class="cms-select" name="intervention_ref">
-            <option value="">Aucune</option>
+          <select class="cms-select" name="intervention_ref" required>
+            <option value="">Sélectionner une intervention</option>
             {interventionsByCategory.map((group) => (
               <optgroup label={group.label}>
                 {group.items.map((entry) => (
-                  <option value={`${entry.category}::${entry.slug}`} selected={currentInterventionRef === `${entry.category}::${entry.slug}`}>
+                  <option
+                    value={`${entry.category}::${entry.slug}`}
+                    selected={currentInterventionRef === `${entry.category}::${entry.slug}`}
+                  >
                     {entry.title}
                   </option>
                 ))}
               </optgroup>
             ))}
           </select>
-          <span class="text-xs text-ink/50">Le titre du cas reprend l’intervention sélectionnée.</span>
+          <span class="text-xs text-ink/50">Le titre reprend l’intervention sélectionnée.</span>
         </label>
+
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Numéro du cas</span>
           <div class="cms-input flex items-center text-sm text-ink/70">
             {item.case_number ? `Cas ${String(item.case_number).padStart(2, '0')}` : '-'}
           </div>
-          <input type="hidden" name="case_number" value={item.case_number ?? ''} />
-          <span class="text-xs text-ink/50">Attribué automatiquement selon l’intervention.</span>
+          <span class="text-xs text-ink/50">Réattribué automatiquement si l’intervention change.</span>
         </label>
 
-        <div class="grid gap-4 sm:grid-cols-2">
-          <div class="rounded-2xl border border-ink/10 bg-mist p-4">
-            <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant</div>
-            <img data-preview="before" src={coverMediaSet?.beforeUrl ?? item.beforeUrl} alt="Avant" class="mt-3 h-32 w-full rounded-xl object-cover" />
-            <input type="file" accept="image/jpeg,image/png,image/webp" class="mt-3 block text-xs" data-upload="before" />
-            <div class="mt-2 text-[11px] text-ink/50">JPG/PNG, 10MB max.</div>
-            <div data-upload-status="before" class="mt-1 text-[11px] text-ink/60"></div>
-            <div data-upload-error="before" class="mt-1 text-[11px] text-rose-600"></div>
-            <input type="hidden" name="before_path" data-path="before" value={coverMediaSet?.before_path ?? item.before_path} />
-          </div>
-          <div class="rounded-2xl border border-ink/10 bg-mist p-4">
-            <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Après</div>
-            <img data-preview="after" src={coverMediaSet?.afterUrl ?? item.afterUrl} alt="Après" class="mt-3 h-32 w-full rounded-xl object-cover" />
-            <input type="file" accept="image/jpeg,image/png,image/webp" class="mt-3 block text-xs" data-upload="after" />
-            <div class="mt-2 text-[11px] text-ink/50">JPG/PNG, 10MB max.</div>
-            <div data-upload-status="after" class="mt-1 text-[11px] text-ink/60"></div>
-            <div data-upload-error="after" class="mt-1 text-[11px] text-rose-600"></div>
-            <input type="hidden" name="after_path" data-path="after" value={coverMediaSet?.after_path ?? item.after_path} />
+        <div class="rounded-2xl border border-ink/10 bg-mist p-4">
+          <div class="text-sm font-semibold text-ink/80">Image avant / après</div>
+          {isComparison ? (
+            <img src={coverBeforeUrl} alt="Composition avant et après" class="mt-3 h-56 w-full rounded-xl bg-paper object-contain" />
+          ) : (
+            <>
+              <div class="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                Ancien format en deux images. Il est conservé tant qu’aucune nouvelle composition fusionnée n’est envoyée.
+              </div>
+              <div class="mt-3 grid grid-cols-2 gap-3">
+                <img src={coverBeforeUrl} alt="Avant" class="h-40 w-full rounded-xl object-cover" />
+                <img src={coverAfterUrl} alt="Après" class="h-40 w-full rounded-xl object-cover" />
+              </div>
+            </>
+          )}
+
+          <div class="mt-4 border-t border-ink/10 pt-4">
+            <div class="text-xs font-semibold text-ink/70">Remplacer par une image fusionnée</div>
+            <input type="file" accept="image/jpeg,image/png,image/webp" class="mt-2 block text-xs" data-upload />
+            <img data-preview class="mt-3 hidden h-56 w-full rounded-xl bg-paper object-contain" alt="Nouvelle composition avant et après" />
+            <div class="mt-2 text-[11px] text-ink/50">JPG, PNG ou WebP, 10 Mo max. Les autres vues existantes seront conservées.</div>
+            <div data-upload-status class="mt-1 text-[11px] text-ink/60"></div>
+            <div data-upload-error class="mt-1 text-[11px] text-rose-600"></div>
+            <input type="hidden" name="comparison_path" data-path />
           </div>
         </div>
 
+        <label class="grid gap-2 text-sm">
+          <span class="font-semibold text-ink/80">Description courte</span>
+          <textarea rows={3} class="cms-textarea" name="description" maxlength="500">{item.description ?? ''}</textarea>
+        </label>
       </form>
     </section>
 
@@ -212,41 +128,15 @@ const extraMediaSets = item.media_sets
         <input type="checkbox" class="h-4 w-4" name="consent" form="aa-form" checked={item.consent} />
         <span>Consentement obtenu</span>
       </label>
-      <label class="mt-4 grid gap-2 text-sm">
-        <span class="font-semibold text-ink/80">Date du consentement</span>
-        <input class="cms-input" type="date" name="consent_date" form="aa-form" value={item.consent_date ?? ''} />
-      </label>
-      <label class="mt-4 grid gap-2 text-sm">
-        <span class="font-semibold text-ink/80">Référence interne</span>
-        <input class="cms-input" placeholder="Ref dossier" name="internal_ref" form="aa-form" value={item.internal_ref ?? ''} />
-      </label>
 
       <div class="mt-6 space-y-3">
-        <button
-          type="submit"
-          value="draft"
-          name="intent"
-          form="aa-form"
-          data-submit
-          class="btn btn-pill btn-md btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Enregistrer
+        <button type="submit" value="draft" form="aa-form" data-submit class="btn btn-pill btn-md btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60">
+          Enregistrer brouillon
         </button>
-        <button
-          type="submit"
-          value="publish"
-          name="intent"
-          form="aa-form"
-          data-submit
-          class="btn btn-pill btn-md btn-secondary w-full disabled:cursor-not-allowed disabled:opacity-60"
-        >
+        <button type="submit" value="publish" form="aa-form" data-submit class="btn btn-pill btn-md btn-secondary w-full disabled:cursor-not-allowed disabled:opacity-60">
           Publier
         </button>
-        <button
-          type="button"
-          data-delete
-          class="btn btn-pill btn-md w-full border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
-        >
+        <button type="button" data-delete class="btn btn-pill btn-md w-full border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100">
           Supprimer le cas
         </button>
       </div>
@@ -260,7 +150,7 @@ const extraMediaSets = item.media_sets
   <div class="cms-card-elevated mx-auto mt-28 w-[min(92vw,420px)] p-6">
     <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Suppression</div>
     <div class="mt-2 font-display text-2xl tracking-tight">Supprimer ce cas ?</div>
-  <p class="mt-3 text-sm text-ink/70">Cette action est définitive et retire le cas du site.</p>
+    <p class="mt-3 text-sm text-ink/70">Cette action est définitive et retire le cas du site.</p>
     <div class="mt-6 flex flex-wrap justify-end gap-3">
       <button type="button" data-cancel class="btn btn-pill btn-sm btn-secondary">Annuler</button>
       <button type="button" data-confirm class="btn btn-pill btn-sm btn-primary">Supprimer</button>
@@ -273,260 +163,155 @@ const extraMediaSets = item.media_sets
     const form = document.getElementById('aa-form');
     const error = document.getElementById('aa-error');
     const status = document.getElementById('aa-status');
+    if (!(form instanceof HTMLFormElement)) return;
+
+    const interventionSelect = form.querySelector('select[name="intervention_ref"]');
+    const uploadInput = form.querySelector('[data-upload]');
+    const pathInput = form.querySelector('[data-path]');
+    const uploadStatus = form.querySelector('[data-upload-status]');
+    const uploadError = form.querySelector('[data-upload-error]');
     const submitButtons = document.querySelectorAll('[data-submit]');
     const deleteButton = document.querySelector('[data-delete]');
     const confirmDialog = document.getElementById('aa-confirm');
-    const confirmBtn = confirmDialog?.querySelector('[data-confirm]');
-    const cancelBtn = confirmDialog?.querySelector('[data-cancel]');
-    const uploadState = { before: false, after: false };
-    if (!(form instanceof HTMLFormElement)) return;
+    const confirmButton = confirmDialog?.querySelector('[data-confirm]');
+    const cancelButton = confirmDialog?.querySelector('[data-cancel]');
 
-    const uploadInputs = form.querySelectorAll('[data-upload]');
-    const setSubmitDisabled = (disabled) => {
-      submitButtons.forEach((btn) => {
-        if (btn instanceof HTMLButtonElement) btn.disabled = disabled;
+    const setSubmittingDisabled = (disabled) => {
+      submitButtons.forEach((button) => {
+        if (button instanceof HTMLButtonElement) button.disabled = disabled;
       });
     };
 
-    const setUploadState = (kind, isUploading, message = '') => {
-      uploadState[kind] = isUploading;
-      const statusEl = form.querySelector(`[data-upload-status="${kind}"]`);
-      if (statusEl instanceof HTMLElement) statusEl.textContent = message;
-      setSubmitDisabled(uploadState.before || uploadState.after);
-    };
-
-    uploadInputs.forEach((input) => {
-      if (!(input instanceof HTMLInputElement)) return;
-      input.addEventListener('change', async () => {
-        const file = input.files?.[0];
-        const kind = input.dataset.upload;
-        if (!file || (kind !== 'before' && kind !== 'after')) return;
-        const errorEl = form.querySelector(`[data-upload-error="${kind}"]`);
-        if (errorEl instanceof HTMLElement) errorEl.textContent = '';
+    if (uploadInput instanceof HTMLInputElement) {
+      uploadInput.addEventListener('change', async () => {
+        const file = uploadInput.files?.[0];
+        if (!file) return;
+        if (uploadError instanceof HTMLElement) uploadError.textContent = '';
         if (file.size > 10 * 1024 * 1024) {
-          if (errorEl instanceof HTMLElement) errorEl.textContent = 'Fichier trop lourd (10MB max).';
-          input.value = '';
+          if (uploadError instanceof HTMLElement) uploadError.textContent = 'Fichier trop lourd (10 Mo max).';
+          uploadInput.value = '';
           return;
         }
         try {
-          if (error) error.textContent = '';
-          if (status) status.textContent = '';
-          setUploadState(kind, true, 'Upload en cours...');
-          const res = await fetch('/api/cms/avant-apres/upload-url', {
+          setSubmittingDisabled(true);
+          if (uploadStatus instanceof HTMLElement) uploadStatus.textContent = 'Upload en cours...';
+          const response = await fetch('/api/cms/avant-apres/upload-url', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileName: file.name, kind, contentType: file.type })
+            body: JSON.stringify({ fileName: file.name, kind: 'comparison', contentType: file.type }),
           });
-          if (!res.ok) throw new Error('upload-url');
-          const data = await res.json();
-          const uploadRes = await fetch(data.signedUrl, {
+          if (!response.ok) throw new Error('upload-url');
+          const data = await response.json();
+          const uploadResponse = await fetch(data.signedUrl, {
             method: 'PUT',
             headers: { 'Content-Type': file.type },
-            body: file
+            body: file,
           });
-          if (!uploadRes.ok) throw new Error('upload');
-
-          const pathInput = form.querySelector(`[data-path="${kind}"]`);
+          if (!uploadResponse.ok) throw new Error('upload');
           if (pathInput instanceof HTMLInputElement) pathInput.value = data.path;
-          const preview = form.querySelector(`[data-preview="${kind}"]`);
-          if (preview instanceof HTMLImageElement) preview.src = URL.createObjectURL(file);
-          setUploadState(kind, false, 'Upload terminé.');
-        } catch (err) {
-          setUploadState(kind, false, '');
-          if (errorEl instanceof HTMLElement) {
-            errorEl.textContent = "Erreur d'upload. Vérifiez votre connexion.";
+          const preview = form.querySelector('[data-preview]');
+          if (preview instanceof HTMLImageElement) {
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove('hidden');
           }
+          if (uploadStatus instanceof HTMLElement) uploadStatus.textContent = 'Upload terminé.';
+        } catch {
+          if (uploadStatus instanceof HTMLElement) uploadStatus.textContent = '';
+          if (uploadError instanceof HTMLElement) uploadError.textContent = "Erreur d'upload. Vérifiez votre connexion.";
+        } finally {
+          setSubmittingDisabled(false);
         }
       });
-    });
+    }
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      if (error) error.textContent = '';
-      if (status) status.textContent = 'Enregistrement...';
       const submitter = event.submitter;
-      const intent = submitter && submitter instanceof HTMLButtonElement ? submitter.value : 'draft';
+      const intent = submitter instanceof HTMLButtonElement ? submitter.value : 'draft';
       const formData = new FormData(form);
-      const interventionSelect = form.querySelector('select[name="intervention_ref"]');
-      const interventionLabel =
-        interventionSelect instanceof HTMLSelectElement
-          ? interventionSelect.selectedOptions[0]?.textContent?.trim() ?? ''
-          : '';
-      const payload = {
-        title: interventionLabel || item.title,
-        description: String(formData.get('description') ?? '').trim() || null,
-        summary: String(formData.get('summary') ?? '').trim() || null,
-        clinical_context: String(formData.get('clinical_context') ?? '').trim() || null,
-        intervention_category: null,
-        intervention_slug: null,
-        case_number: Number(String(formData.get('case_number') ?? '').trim()) || null,
-        consent: formData.get('consent') === 'on',
-        consent_date: String(formData.get('consent_date') ?? '').trim() || null,
-        internal_ref: String(formData.get('internal_ref') ?? '').trim() || null,
-        before_path: String(formData.get('before_path') ?? '').trim(),
-        after_path: String(formData.get('after_path') ?? '').trim(),
-        status: intent === 'publish' ? 'publie' : 'brouillon',
-        featured: false,
-      };
-
       const interventionRef = String(formData.get('intervention_ref') ?? '').trim();
-      if (interventionRef) {
-        const [cat, slug] = interventionRef.split('::');
-        payload.intervention_category = cat || null;
-        payload.intervention_slug = slug || null;
-      }
-
-      if (!interventionRef || !payload.title) {
+      const title = interventionSelect instanceof HTMLSelectElement
+        ? interventionSelect.selectedOptions[0]?.textContent?.trim() ?? ''
+        : '';
+      if (!interventionRef || !title) {
         if (error) error.textContent = 'Sélectionnez une intervention associée.';
-        if (status) status.textContent = '';
+        return;
+      }
+      const consent = formData.get('consent') === 'on';
+      if (intent === 'publish' && !consent) {
+        if (error) error.textContent = 'Le consentement est requis pour publier.';
         return;
       }
 
-      if (!payload.case_number) {
-        if (error) error.textContent = 'Numéro de cas indisponible. Réessayez.';
-        if (status) status.textContent = '';
-        return;
-      }
-
-      if (intent === 'publish' && (!payload.consent || !payload.consent_date)) {
-        if (error) error.textContent = 'Le consentement daté est requis pour publier.';
-        if (status) status.textContent = '';
-        return;
-      }
-
-      if (!payload.title || !payload.before_path || !payload.after_path) {
-        if (error) error.textContent = 'Intervention et photos avant/après obligatoires.';
-        if (status) status.textContent = '';
-        return;
-      }
-
-      const parseNumber = (raw) => {
-        const value = String(raw ?? '').trim();
-        if (!value) return null;
-        const n = Number(value);
-        return Number.isFinite(n) ? n : null;
+      const [interventionCategory, interventionSlug] = interventionRef.split('::');
+      const comparisonPath = String(formData.get('comparison_path') ?? '').trim();
+      const payload = {
+        title,
+        description: String(formData.get('description') ?? '').trim() || null,
+        intervention_category: interventionCategory,
+        intervention_slug: interventionSlug,
+        consent,
+        status: intent === 'publish' ? 'publie' : 'brouillon',
       };
-
-      const proceduresText = String(formData.get('procedures_text') ?? '');
-      const procedures = proceduresText
-        .split('\n')
-        .map((x) => x.trim())
-        .filter(Boolean)
-        .map((label, idx) => ({ label, procedure_order: idx + 1, is_primary: idx === 0 }));
-
-      const tags = String(formData.get('tags_text') ?? '')
-        .split(',')
-        .map((x) => x.trim().toLowerCase())
-        .filter(Boolean);
-
-      let extraMediaSets = [];
-      const mediaSetsRaw = String(formData.get('media_sets_json') ?? '').trim();
-      if (mediaSetsRaw) {
-        try {
-          const parsed = JSON.parse(mediaSetsRaw);
-          if (Array.isArray(parsed)) {
-            extraMediaSets = parsed
-              .map((item, idx) => ({
-                label: typeof item?.label === 'string' ? item.label : null,
-                view_key: typeof item?.view_key === 'string' ? item.view_key : null,
-                result_delay_label:
-                  typeof item?.result_delay_label === 'string' ? item.result_delay_label : null,
-                before_path: typeof item?.before_path === 'string' ? item.before_path : '',
-                after_path: typeof item?.after_path === 'string' ? item.after_path : '',
-                set_order: idx + 2,
-                is_cover: false,
-              }))
-              .filter((entry) => entry.before_path && entry.after_path);
-          }
-        } catch (jsonErr) {
-          if (error) error.textContent = 'JSON invalide dans "Autres vues".';
-          if (status) status.textContent = '';
-          return;
-        }
+      if (comparisonPath) {
+        payload.before_path = comparisonPath;
+        payload.after_path = comparisonPath;
+        payload.replace_cover = true;
+        payload.media_sets = [{
+          set_order: 1,
+          label: 'Vue principale',
+          media_mode: 'comparison',
+          before_path: comparisonPath,
+          after_path: comparisonPath,
+          is_cover: true,
+        }];
       }
-
-      const coverDelay = String(formData.get('result_delay_label') ?? '').trim() || null;
-
-      const richPayload = {
-        ...payload,
-        procedures,
-        tags,
-        patient_context: {
-          patient_sex: String(formData.get('patient_sex') ?? '').trim() || null,
-          patient_age: parseNumber(formData.get('patient_age')),
-          weight_kg: parseNumber(formData.get('weight_kg')),
-          smoking_status: String(formData.get('smoking_status') ?? '').trim() || null,
-          pregnancies_count: parseNumber(formData.get('pregnancies_count')),
-          post_bariatric: formData.get('post_bariatric') === 'on',
-          revision_case: formData.get('revision_case') === 'on',
-          prior_surgery: formData.get('prior_surgery') === 'on',
-          history_notes: null,
-        },
-        media_sets: [
-          {
-            set_order: 1,
-            label: 'Vue principale',
-            view_key: 'front',
-            result_delay_label: coverDelay,
-            before_path: payload.before_path,
-            after_path: payload.after_path,
-            is_cover: true,
-          },
-          ...extraMediaSets,
-        ],
-      };
 
       try {
+        if (error) error.textContent = '';
+        if (status) status.textContent = 'Enregistrement...';
+        setSubmittingDisabled(true);
         const caseId = form.dataset.id ?? '';
-        const res = await fetch(`/api/cms/avant-apres/${encodeURIComponent(caseId)}`, {
+        const response = await fetch(`/api/cms/avant-apres/${encodeURIComponent(caseId)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(richPayload)
+          body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error('save');
-        if (status) status.textContent = 'Enregistré.';
+        if (!response.ok) throw new Error('save');
         if (intent === 'publish') {
           window.location.href = '/cms/avant-apres?published=1';
           return;
         }
-      } catch (err) {
+        window.location.reload();
+      } catch {
         if (error) error.textContent = 'Erreur de sauvegarde.';
         if (status) status.textContent = '';
+        setSubmittingDisabled(false);
       }
     });
 
-    if (deleteButton instanceof HTMLButtonElement) {
-      deleteButton.addEventListener('click', async () => {
-        const caseId = form.dataset.id ?? '';
-        if (!caseId) return;
-        if (confirmDialog instanceof HTMLDialogElement) confirmDialog.showModal();
-      });
+    if (deleteButton instanceof HTMLButtonElement && confirmDialog instanceof HTMLDialogElement) {
+      deleteButton.addEventListener('click', () => confirmDialog.showModal());
     }
-
     if (confirmDialog instanceof HTMLDialogElement) {
       const close = () => confirmDialog.close();
-      if (cancelBtn instanceof HTMLElement) cancelBtn.addEventListener('click', close);
+      if (cancelButton instanceof HTMLElement) cancelButton.addEventListener('click', close);
       confirmDialog.addEventListener('click', (event) => {
         if (event.target === confirmDialog) close();
       });
     }
-
-    if (confirmBtn instanceof HTMLButtonElement) {
-      confirmBtn.addEventListener('click', async () => {
+    if (confirmButton instanceof HTMLButtonElement) {
+      confirmButton.addEventListener('click', async () => {
         const caseId = form.dataset.id ?? '';
         if (!caseId) return;
-        if (error) error.textContent = '';
-        if (status) status.textContent = 'Suppression...';
         try {
-          const res = await fetch(`/api/cms/avant-apres/${encodeURIComponent(caseId)}`, {
-            method: 'DELETE'
-          });
-          if (!res.ok) throw new Error('delete');
+          if (status) status.textContent = 'Suppression...';
+          const response = await fetch(`/api/cms/avant-apres/${encodeURIComponent(caseId)}`, { method: 'DELETE' });
+          if (!response.ok) throw new Error('delete');
           window.location.href = '/cms/avant-apres?deleted=1';
-        } catch (err) {
+        } catch {
           if (error) error.textContent = 'Erreur de suppression.';
           if (status) status.textContent = '';
-        } finally {
           if (confirmDialog instanceof HTMLDialogElement) confirmDialog.close();
         }
       });

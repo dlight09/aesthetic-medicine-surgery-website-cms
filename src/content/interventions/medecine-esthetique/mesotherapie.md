@@ -1,65 +1,40 @@
 ---
-title: Mesotherapie
-description: 'Mésothérapie en médecine esthétique : définition, indications, protocole, suites et limites à connaître.'
+title: 'Mésothérapie — Revitalisation & éclat du visage Tunis'
+description: >-
+  La mésothérapie est une technique d'injection de micro-doses de cocktails revitalisants dans le derme superficiel du visage. Vitamines, oligoéléments, acides aminés, acide hyaluronique fluide — ces actifs nourrissent la peau de l'intérieur, stimulent le métabolisme cellulaire et améliorent l'oxygénation des tissus. C'est le traitement anti-âge le plus naturel : on apporte à la peau ce dont elle manque pour retrouver son éclat et sa vitalité.
 category: medecine-esthetique
 order: 4
 ---
 
 ## En bref
 
-- Objectif : soutenir la qualité de peau par micro-injections superficielles.
-- Indication : définie selon l'état cutané et les objectifs.
-- Protocole : souvent en plusieurs séances avec suivi.
-- Suites habituelles : rougeurs ponctuelles, sensibilité locale possible.
-- Résultat : progressif et variable selon les patients.
+- Durée : 20–30 min
+- Anesthésie : Crème anesthésiante
+- Hospitalisation : Ambulatoire
+- Protocole : 3–4 séances
 
-## Objectif
+## 01  COMMENT AGIT LA MÉSOTHÉRAPIE ?
 
-La mésothérapie correspond à des micro-injections superficielles réalisées selon un protocole personnalisé. Elle peut contribuer à améliorer certains paramètres de peau lorsque l'indication est appropriée.
+La mésothérapie contourne la barrière cutanée pour déposer directement dans le derme superficiel des actifs qui ne peuvent pas pénétrer par voie topique. Ces micro-injections stimulent les fibroblastes (cellules productrices de collagène), améliorent la microcirculation locale et réhydratent les couches profondes de la peau. Le résultat est une peau revitalisée, plus lumineuse, avec une texture améliorée et un teint uniformisé.
 
-## Pour qui ?
+## 02  INDICATIONS & RÉSULTATS
 
-Cette technique peut être discutée pour des patients souhaitant une approche progressive de la qualité cutanée. L'indication repose sur l'examen clinique, les antécédents et les attentes.
+- Teint terne ou fatigué — luminosité et éclat retrouvés
+- Peau déshydratée — hydratation profonde et durable
+- Ridules fines superficielles — atténuées par la stimulation du collagène
+- Chute de cheveux (mésothérapie capillaire) — stimulation des follicules pileux
+- Préparation de la peau avant une chirurgie ou après une procédure laser
 
-## Contre-indications et précautions
+## 03  PROTOCOLE & SUITES
 
-- Infection ou inflammation de la zone : geste reporté.
-- Grossesse/allaitement : décision médicale individualisée.
-- Allergies, traitements en cours, maladies chroniques : informations à partager en consultation.
-- Les peaux sensibles nécessitent des précautions spécifiques.
+Un protocole standard comprend 4 séances espacées de 2 semaines, puis une séance mensuelle d'entretien. Légères rougeurs et petits points d'injection visibles quelques heures — disparaissent en 12 à 24 heures. Aucune éviction sociale.
 
-## Déroulé
+## 04  QUESTIONS FRÉQUENTES
 
-1. Consultation et confirmation de l'indication.
-2. Définition des zones et du protocole.
-3. Réalisation de la séance puis consignes adaptées.
+### La mésothérapie est-elle douloureuse ?
 
-## Suites
+Les micro-injections sont quasi-indolores avec l'application préalable d'une crème anesthésiante. Certaines zones (front, pommettes) peuvent être légèrement sensibles — la sensation est comparable à de légères picûres très rapides.
 
-De petites rougeurs, une sensibilité locale ou de discrets bleus peuvent être observés. Les suites varient selon la zone et la réactivité individuelle.
+### Quand voit-on les résultats ?
 
-## Risques / effets indésirables possibles
-
-Comme pour tout acte médical, des effets secondaires transitoires peuvent survenir. Les complications plus rares et les signes d'alerte sont expliqués avant le geste.
-
-## Résultat et durée
-
-Le résultat est progressif et non instantané. La durée de l'effet dépend du protocole, du terrain cutané et des habitudes de vie.
-
-## Alternatives
-
-Selon l'objectif clinique, d'autres options peuvent être discutées : soins topiques, autres techniques de médecine esthétique, ou abstention thérapeutique.
-
-## Questions fréquentes
-
-### Quelle différence avec un skinbooster ?
-
-Ces approches ne poursuivent pas exactement les mêmes objectifs ni les mêmes protocoles. Le choix dépend de l'examen clinique.
-
-### Est-ce douloureux ?
-
-La sensibilité est variable. Des mesures de confort peuvent être proposées selon la zone et votre tolérance.
-
-### Quand voit-on les effets ?
-
-L'évolution est progressive et se juge avec le recul des séances, selon votre réponse individuelle.
+Dès la première séance, la peau paraît plus lumineuse et reposée. Les effets s'améliorent progressivement au fil des séances. Le résultat optimal est perceptible après 3 à 4 séances.

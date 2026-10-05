@@ -3,18 +3,17 @@ import CmsLayout from '@/layouts/CmsLayout.astro';
 import { interventionCategories } from '@/lib/interventions';
 import { listCmsInterventions } from '@/lib/cms/interventions';
 import { getCollection } from 'astro:content';
-import AdditionalMediaSetsEditor from '@/components/cms/AdditionalMediaSetsEditor.astro';
 
 type InterventionLite = { title: string; slug: string; category: string; order?: number | null };
 
 let interventions: InterventionLite[] = [];
 try {
   const rows = await listCmsInterventions();
-  interventions = rows.map((r) => ({
-    title: r.title,
-    slug: r.slug,
-    category: r.category,
-    order: r.order,
+  interventions = rows.map((row) => ({
+    title: row.title,
+    slug: row.slug,
+    category: row.category,
+    order: row.order,
   }));
 } catch {
   const entries = await getCollection('interventions');
@@ -27,17 +26,12 @@ try {
 }
 
 const preselectedRef = Astro.url.searchParams.get('intervention_ref') ?? '';
-const interventionsByCategory = interventionCategories.map((category) => {
-  const items = interventions
+const interventionsByCategory = interventionCategories.map((category) => ({
+  label: category.title,
+  items: interventions
     .filter((entry) => entry.category === category.key)
-    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
-    .map((entry) => ({
-      title: entry.title,
-      slug: entry.slug,
-      category: entry.category,
-    }));
-  return { label: category.title, key: category.key, items };
-});
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999)),
+}));
 ---
 
 <CmsLayout title="Nouveau cas">
@@ -49,8 +43,8 @@ const interventionsByCategory = interventionCategories.map((category) => {
       <form id="aa-form" class="mt-8 grid gap-5">
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Intervention associée</span>
-          <select class="cms-select" name="intervention_ref">
-            <option value="">Aucune</option>
+          <select class="cms-select" name="intervention_ref" required>
+            <option value="">Sélectionner une intervention</option>
             {interventionsByCategory.map((group) => (
               <optgroup label={group.label}>
                 {group.items.map((item) => (
@@ -64,122 +58,33 @@ const interventionsByCategory = interventionCategories.map((category) => {
               </optgroup>
             ))}
           </select>
-          <span class="text-xs text-ink/50">Le titre du cas reprend l’intervention sélectionnée.</span>
+          <span class="text-xs text-ink/50">Le titre reprend l’intervention sélectionnée.</span>
         </label>
+
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Numéro du cas</span>
           <div class="cms-input flex items-center text-sm text-ink/70" data-case-display>-</div>
           <span class="text-xs text-ink/50">Attribué automatiquement selon l’intervention.</span>
         </label>
 
-        <div class="grid gap-4 sm:grid-cols-2">
-          <div class="rounded-2xl border border-ink/10 bg-mist p-4">
-            <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Avant</div>
-            <div data-placeholder="before" class="mt-3 flex h-32 items-center justify-center rounded-xl border border-dashed border-ink/20 bg-paper text-xs text-ink/40">
-              Aperçu
-            </div>
-            <img data-preview="before" class="mt-3 hidden h-32 w-full rounded-xl object-cover" alt="" />
-            <input type="file" accept="image/jpeg,image/png,image/webp" class="mt-3 block text-xs" data-upload="before" />
-            <div class="mt-2 text-[11px] text-ink/50">JPG/PNG, 10MB max.</div>
-            <div data-upload-status="before" class="mt-1 text-[11px] text-ink/60"></div>
-            <div data-upload-error="before" class="mt-1 text-[11px] text-rose-600"></div>
-            <input type="hidden" name="before_path" data-path="before" />
+        <div class="rounded-2xl border border-ink/10 bg-mist p-4">
+          <div class="text-sm font-semibold text-ink/80">Image avant / après fusionnée</div>
+          <p class="mt-1 text-xs text-ink/50">Une seule image contenant la composition avant et après.</p>
+          <div data-placeholder class="mt-3 flex h-56 items-center justify-center rounded-xl border border-dashed border-ink/20 bg-paper text-xs text-ink/40">
+            Aperçu de la composition
           </div>
-          <div class="rounded-2xl border border-ink/10 bg-mist p-4">
-            <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Après</div>
-            <div data-placeholder="after" class="mt-3 flex h-32 items-center justify-center rounded-xl border border-dashed border-ink/20 bg-paper text-xs text-ink/40">
-              Aperçu
-            </div>
-            <img data-preview="after" class="mt-3 hidden h-32 w-full rounded-xl object-cover" alt="" />
-            <input type="file" accept="image/jpeg,image/png,image/webp" class="mt-3 block text-xs" data-upload="after" />
-            <div class="mt-2 text-[11px] text-ink/50">JPG/PNG, 10MB max.</div>
-            <div data-upload-status="after" class="mt-1 text-[11px] text-ink/60"></div>
-            <div data-upload-error="after" class="mt-1 text-[11px] text-rose-600"></div>
-            <input type="hidden" name="after_path" data-path="after" />
-          </div>
+          <img data-preview class="mt-3 hidden h-56 w-full rounded-xl object-contain bg-paper" alt="Composition avant et après" />
+          <input type="file" accept="image/jpeg,image/png,image/webp" class="mt-3 block text-xs" data-upload required />
+          <div class="mt-2 text-[11px] text-ink/50">JPG, PNG ou WebP, 10 Mo max.</div>
+          <div data-upload-status class="mt-1 text-[11px] text-ink/60"></div>
+          <div data-upload-error class="mt-1 text-[11px] text-rose-600"></div>
+          <input type="hidden" name="comparison_path" data-path />
         </div>
 
         <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Description avant / après</span>
-          <textarea rows={3} class="cms-textarea" name="description"></textarea>
+          <span class="font-semibold text-ink/80">Description courte</span>
+          <textarea rows={3} class="cms-textarea" name="description" maxlength="500"></textarea>
         </label>
-
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Résumé public</span>
-          <textarea rows={2} class="cms-textarea" name="summary" placeholder="Résumé court affiché sur la fiche cas"></textarea>
-        </label>
-
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Contexte clinique</span>
-          <textarea rows={3} class="cms-textarea" name="clinical_context" placeholder="Contexte synthétique (antécédents, indications, précautions)"></textarea>
-        </label>
-
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Actes réalisés (1 par ligne)</span>
-          <textarea rows={4} class="cms-textarea" name="procedures_text" placeholder="Abdominoplastie\nCure de diastasis\nLiposuccion"></textarea>
-        </label>
-
-        <label class="grid gap-2 text-sm">
-          <span class="font-semibold text-ink/80">Tags (séparés par virgule)</span>
-          <input class="cms-input" name="tags_text" placeholder="post-bariatrique, reprise, fumeuse" />
-        </label>
-
-        <div class="grid gap-4 sm:grid-cols-3">
-          <label class="grid gap-2 text-sm">
-            <span class="font-semibold text-ink/80">Âge</span>
-            <input class="cms-input" type="number" min="0" max="120" name="patient_age" />
-          </label>
-          <label class="grid gap-2 text-sm">
-            <span class="font-semibold text-ink/80">Poids (kg)</span>
-            <input class="cms-input" type="number" min="0" step="0.1" name="weight_kg" />
-          </label>
-          <label class="grid gap-2 text-sm">
-            <span class="font-semibold text-ink/80">Grossesses</span>
-            <input class="cms-input" type="number" min="0" name="pregnancies_count" />
-          </label>
-        </div>
-
-        <div class="grid gap-4 sm:grid-cols-3">
-          <label class="grid gap-2 text-sm">
-            <span class="font-semibold text-ink/80">Sexe patient</span>
-            <select class="cms-select" name="patient_sex">
-              <option value="">Non renseigné</option>
-              <option value="female">Femme</option>
-              <option value="male">Homme</option>
-            </select>
-          </label>
-          <label class="grid gap-2 text-sm">
-            <span class="font-semibold text-ink/80">Tabagisme</span>
-            <select class="cms-select" name="smoking_status">
-              <option value="">Non renseigné</option>
-              <option value="non_smoker">Non fumeur</option>
-              <option value="smoker">Fumeur</option>
-              <option value="former">Ancien fumeur</option>
-              <option value="unknown">Inconnu</option>
-            </select>
-          </label>
-          <label class="grid gap-2 text-sm">
-            <span class="font-semibold text-ink/80">Délai résultat (label)</span>
-            <input class="cms-input" name="result_delay_label" placeholder="Ex: 3 mois" />
-          </label>
-        </div>
-
-        <div class="grid gap-3 sm:grid-cols-3">
-          <label class="inline-flex items-center gap-2 text-sm">
-            <input type="checkbox" class="h-4 w-4" name="post_bariatric" />
-            <span>Post-bariatrique</span>
-          </label>
-          <label class="inline-flex items-center gap-2 text-sm">
-            <input type="checkbox" class="h-4 w-4" name="revision_case" />
-            <span>Reprise</span>
-          </label>
-          <label class="inline-flex items-center gap-2 text-sm">
-            <input type="checkbox" class="h-4 w-4" name="prior_surgery" />
-            <span>Chirurgie antérieure</span>
-          </label>
-        </div>
-
-        <AdditionalMediaSetsEditor />
       </form>
     </section>
 
@@ -189,34 +94,12 @@ const interventionsByCategory = interventionCategories.map((category) => {
         <input type="checkbox" class="h-4 w-4" name="consent" form="aa-form" />
         <span>Consentement obtenu</span>
       </label>
-      <label class="mt-4 grid gap-2 text-sm">
-        <span class="font-semibold text-ink/80">Date du consentement</span>
-        <input class="cms-input" type="date" name="consent_date" form="aa-form" />
-      </label>
-      <label class="mt-4 grid gap-2 text-sm">
-        <span class="font-semibold text-ink/80">Référence interne</span>
-        <input class="cms-input" placeholder="Ref dossier" name="internal_ref" form="aa-form" />
-      </label>
 
       <div class="mt-6 space-y-3">
-        <button
-          type="submit"
-          value="draft"
-          name="intent"
-          form="aa-form"
-          data-submit
-          class="btn btn-pill btn-md btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
-        >
+        <button type="submit" value="draft" form="aa-form" data-submit class="btn btn-pill btn-md btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60">
           Enregistrer brouillon
         </button>
-        <button
-          type="submit"
-          value="publish"
-          name="intent"
-          form="aa-form"
-          data-submit
-          class="btn btn-pill btn-md btn-secondary w-full disabled:cursor-not-allowed disabled:opacity-60"
-        >
+        <button type="submit" value="publish" form="aa-form" data-submit class="btn btn-pill btn-md btn-secondary w-full disabled:cursor-not-allowed disabled:opacity-60">
           Publier
         </button>
       </div>
@@ -231,46 +114,40 @@ const interventionsByCategory = interventionCategories.map((category) => {
     const form = document.getElementById('aa-form');
     const error = document.getElementById('aa-error');
     const status = document.getElementById('aa-status');
-    const submitButtons = document.querySelectorAll('[data-submit]');
-    const uploadState = { before: false, after: false };
-      const caseDisplay = form.querySelector('[data-case-display]');
-    const interventionSelect = form.querySelector('select[name="intervention_ref"]');
     if (!(form instanceof HTMLFormElement)) return;
 
-    const uploadInputs = form.querySelectorAll('[data-upload]');
-    const setSubmitDisabled = (disabled) => {
-      submitButtons.forEach((btn) => {
-        if (btn instanceof HTMLButtonElement) btn.disabled = disabled;
+    const interventionSelect = form.querySelector('select[name="intervention_ref"]');
+    const caseDisplay = form.querySelector('[data-case-display]');
+    const uploadInput = form.querySelector('[data-upload]');
+    const pathInput = form.querySelector('[data-path]');
+    const uploadStatus = form.querySelector('[data-upload-status]');
+    const uploadError = form.querySelector('[data-upload-error]');
+    const submitButtons = document.querySelectorAll('[data-submit]');
+
+    const setSubmittingDisabled = (disabled) => {
+      submitButtons.forEach((button) => {
+        if (button instanceof HTMLButtonElement) button.disabled = disabled;
       });
     };
 
-    const setUploadState = (kind, isUploading, message = '') => {
-      uploadState[kind] = isUploading;
-      const statusEl = form.querySelector(`[data-upload-status="${kind}"]`);
-      if (statusEl instanceof HTMLElement) statusEl.textContent = message;
-      setSubmitDisabled(uploadState.before || uploadState.after);
-    };
-
     const refreshCaseNumber = async () => {
-      if (!(interventionSelect instanceof HTMLSelectElement)) return;
-      if (!(caseDisplay instanceof HTMLElement)) return;
-      const value = interventionSelect.value;
-      if (!value) {
+      if (!(interventionSelect instanceof HTMLSelectElement) || !(caseDisplay instanceof HTMLElement)) return;
+      if (!interventionSelect.value) {
         caseDisplay.textContent = '-';
         return;
       }
       try {
-        const res = await fetch('/api/cms/avant-apres');
-        if (!res.ok) throw new Error('fetch');
-        const items = await res.json();
-        const [cat, slug] = value.split('::');
+        const response = await fetch('/api/cms/avant-apres');
+        if (!response.ok) throw new Error('fetch');
+        const items = await response.json();
+        const [category, slug] = interventionSelect.value.split('::');
         const numbers = items
-          .filter((item) => item.intervention_category === cat && item.intervention_slug === slug)
+          .filter((item) => item.intervention_category === category && item.intervention_slug === slug)
           .map((item) => Number(item.case_number))
-          .filter((n) => Number.isFinite(n));
+          .filter((number) => Number.isFinite(number));
         const nextNumber = (numbers.length ? Math.max(...numbers) : 0) + 1;
         caseDisplay.textContent = `Cas ${String(nextNumber).padStart(2, '0')}`;
-      } catch (err) {
+      } catch {
         caseDisplay.textContent = '-';
       }
     };
@@ -280,202 +157,110 @@ const interventionsByCategory = interventionCategories.map((category) => {
       refreshCaseNumber();
     }
 
-    uploadInputs.forEach((input) => {
-      if (!(input instanceof HTMLInputElement)) return;
-      input.addEventListener('change', async () => {
-        const file = input.files?.[0];
-        const kind = input.dataset.upload;
-        if (!file || (kind !== 'before' && kind !== 'after')) return;
-        const errorEl = form.querySelector(`[data-upload-error="${kind}"]`);
-        if (errorEl instanceof HTMLElement) errorEl.textContent = '';
+    if (uploadInput instanceof HTMLInputElement) {
+      uploadInput.addEventListener('change', async () => {
+        const file = uploadInput.files?.[0];
+        if (!file) return;
+        if (uploadError instanceof HTMLElement) uploadError.textContent = '';
         if (file.size > 10 * 1024 * 1024) {
-          if (errorEl instanceof HTMLElement) errorEl.textContent = 'Fichier trop lourd (10MB max).';
-          input.value = '';
+          if (uploadError instanceof HTMLElement) uploadError.textContent = 'Fichier trop lourd (10 Mo max).';
+          uploadInput.value = '';
           return;
         }
         try {
-          if (error) error.textContent = '';
-          if (status) status.textContent = '';
-          setUploadState(kind, true, 'Upload en cours...');
-          const res = await fetch('/api/cms/avant-apres/upload-url', {
+          setSubmittingDisabled(true);
+          if (uploadStatus instanceof HTMLElement) uploadStatus.textContent = 'Upload en cours...';
+          const response = await fetch('/api/cms/avant-apres/upload-url', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileName: file.name, kind, contentType: file.type })
+            body: JSON.stringify({ fileName: file.name, kind: 'comparison', contentType: file.type }),
           });
-          if (!res.ok) throw new Error('upload-url');
-          const data = await res.json();
-          const uploadRes = await fetch(data.signedUrl, {
+          if (!response.ok) throw new Error('upload-url');
+          const data = await response.json();
+          const uploadResponse = await fetch(data.signedUrl, {
             method: 'PUT',
             headers: { 'Content-Type': file.type },
-            body: file
+            body: file,
           });
-          if (!uploadRes.ok) throw new Error('upload');
-
-          const pathInput = form.querySelector(`[data-path="${kind}"]`);
+          if (!uploadResponse.ok) throw new Error('upload');
           if (pathInput instanceof HTMLInputElement) pathInput.value = data.path;
-          const preview = form.querySelector(`[data-preview="${kind}"]`);
-          const placeholder = form.querySelector(`[data-placeholder="${kind}"]`);
+          const preview = form.querySelector('[data-preview]');
+          const placeholder = form.querySelector('[data-placeholder]');
           if (preview instanceof HTMLImageElement) {
             preview.src = URL.createObjectURL(file);
             preview.classList.remove('hidden');
           }
           if (placeholder instanceof HTMLElement) placeholder.classList.add('hidden');
-          setUploadState(kind, false, 'Upload terminé.');
-        } catch (err) {
-          setUploadState(kind, false, '');
-          if (errorEl instanceof HTMLElement) {
-            errorEl.textContent = "Erreur d'upload. Vérifiez votre connexion.";
-          }
+          if (uploadStatus instanceof HTMLElement) uploadStatus.textContent = 'Upload terminé.';
+        } catch {
+          if (uploadStatus instanceof HTMLElement) uploadStatus.textContent = '';
+          if (uploadError instanceof HTMLElement) uploadError.textContent = "Erreur d'upload. Vérifiez votre connexion.";
+        } finally {
+          setSubmittingDisabled(false);
         }
       });
-    });
+    }
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      if (error) error.textContent = '';
-      if (status) status.textContent = 'Enregistrement...';
       const submitter = event.submitter;
-      const intent = submitter && submitter instanceof HTMLButtonElement ? submitter.value : 'draft';
+      const intent = submitter instanceof HTMLButtonElement ? submitter.value : 'draft';
       const formData = new FormData(form);
-      const interventionSelect = form.querySelector('select[name="intervention_ref"]');
-      const interventionLabel =
-        interventionSelect instanceof HTMLSelectElement
-          ? interventionSelect.selectedOptions[0]?.textContent?.trim() ?? ''
-          : '';
-      const payload = {
-        title: interventionLabel,
-        description: String(formData.get('description') ?? '').trim() || null,
-        summary: String(formData.get('summary') ?? '').trim() || null,
-        clinical_context: String(formData.get('clinical_context') ?? '').trim() || null,
-        intervention_category: null,
-        intervention_slug: null,
-        consent: formData.get('consent') === 'on',
-        consent_date: String(formData.get('consent_date') ?? '').trim() || null,
-        internal_ref: String(formData.get('internal_ref') ?? '').trim() || null,
-        before_path: String(formData.get('before_path') ?? '').trim(),
-        after_path: String(formData.get('after_path') ?? '').trim(),
-        status: intent === 'publish' ? 'publie' : 'brouillon',
-        featured: false,
-      };
-
       const interventionRef = String(formData.get('intervention_ref') ?? '').trim();
-      if (interventionRef) {
-        const [cat, slug] = interventionRef.split('::');
-        payload.intervention_category = cat || null;
-        payload.intervention_slug = slug || null;
-      }
-
-      if (!interventionRef || !payload.title) {
+      const comparisonPath = String(formData.get('comparison_path') ?? '').trim();
+      const title = interventionSelect instanceof HTMLSelectElement
+        ? interventionSelect.selectedOptions[0]?.textContent?.trim() ?? ''
+        : '';
+      if (!interventionRef || !title) {
         if (error) error.textContent = 'Sélectionnez une intervention associée.';
-        if (status) status.textContent = '';
+        return;
+      }
+      if (!comparisonPath) {
+        if (error) error.textContent = 'Ajoutez une image avant / après fusionnée.';
+        return;
+      }
+      const consent = formData.get('consent') === 'on';
+      if (intent === 'publish' && !consent) {
+        if (error) error.textContent = 'Le consentement est requis pour publier.';
         return;
       }
 
-      if (intent === 'publish' && (!payload.consent || !payload.consent_date)) {
-        if (error) error.textContent = 'Le consentement daté est requis pour publier.';
-        if (status) status.textContent = '';
-        return;
-      }
-
-      if (!payload.title || !payload.before_path || !payload.after_path) {
-        if (error) error.textContent = 'Intervention et photos avant/après obligatoires.';
-        if (status) status.textContent = '';
-        return;
-      }
-
-      const parseNumber = (raw) => {
-        const value = String(raw ?? '').trim();
-        if (!value) return null;
-        const n = Number(value);
-        return Number.isFinite(n) ? n : null;
-      };
-
-      const proceduresText = String(formData.get('procedures_text') ?? '');
-      const procedures = proceduresText
-        .split('\n')
-        .map((x) => x.trim())
-        .filter(Boolean)
-        .map((label, idx) => ({ label, procedure_order: idx + 1, is_primary: idx === 0 }));
-
-      const tags = String(formData.get('tags_text') ?? '')
-        .split(',')
-        .map((x) => x.trim().toLowerCase())
-        .filter(Boolean);
-
-      let extraMediaSets = [];
-      const mediaSetsRaw = String(formData.get('media_sets_json') ?? '').trim();
-      if (mediaSetsRaw) {
-        try {
-          const parsed = JSON.parse(mediaSetsRaw);
-          if (Array.isArray(parsed)) {
-            extraMediaSets = parsed
-              .map((item, idx) => ({
-                label: typeof item?.label === 'string' ? item.label : null,
-                view_key: typeof item?.view_key === 'string' ? item.view_key : null,
-                result_delay_label:
-                  typeof item?.result_delay_label === 'string' ? item.result_delay_label : null,
-                before_path: typeof item?.before_path === 'string' ? item.before_path : '',
-                after_path: typeof item?.after_path === 'string' ? item.after_path : '',
-                set_order: idx + 2,
-                is_cover: false,
-              }))
-              .filter((item) => item.before_path && item.after_path);
-          }
-        } catch (jsonErr) {
-          if (error) error.textContent = 'JSON invalide dans "Autres vues".';
-          if (status) status.textContent = '';
-          return;
-        }
-      }
-
-      const coverDelay = String(formData.get('result_delay_label') ?? '').trim() || null;
-
-      const richPayload = {
-        ...payload,
-        procedures,
-        tags,
-        patient_context: {
-          patient_sex: String(formData.get('patient_sex') ?? '').trim() || null,
-          patient_age: parseNumber(formData.get('patient_age')),
-          weight_kg: parseNumber(formData.get('weight_kg')),
-          smoking_status: String(formData.get('smoking_status') ?? '').trim() || null,
-          pregnancies_count: parseNumber(formData.get('pregnancies_count')),
-          post_bariatric: formData.get('post_bariatric') === 'on',
-          revision_case: formData.get('revision_case') === 'on',
-          prior_surgery: formData.get('prior_surgery') === 'on',
-          history_notes: null,
-        },
-        media_sets: [
-          {
-            set_order: 1,
-            label: 'Vue principale',
-            view_key: 'front',
-            result_delay_label: coverDelay,
-            before_path: payload.before_path,
-            after_path: payload.after_path,
-            is_cover: true,
-          },
-          ...extraMediaSets,
-        ],
+      const [interventionCategory, interventionSlug] = interventionRef.split('::');
+      const payload = {
+        title,
+        description: String(formData.get('description') ?? '').trim() || null,
+        intervention_category: interventionCategory,
+        intervention_slug: interventionSlug,
+        consent,
+        before_path: comparisonPath,
+        after_path: comparisonPath,
+        status: intent === 'publish' ? 'publie' : 'brouillon',
+        media_sets: [{
+          set_order: 1,
+          label: 'Vue principale',
+          media_mode: 'comparison',
+          before_path: comparisonPath,
+          after_path: comparisonPath,
+          is_cover: true,
+        }],
       };
 
       try {
-        const res = await fetch('/api/cms/avant-apres', {
+        if (error) error.textContent = '';
+        if (status) status.textContent = 'Enregistrement...';
+        setSubmittingDisabled(true);
+        const response = await fetch('/api/cms/avant-apres', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(richPayload)
+          body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error('save');
-        const data = await res.json();
-        if (status) status.textContent = 'Enregistré.';
-        if (intent === 'publish') {
-          window.location.href = '/cms/avant-apres?published=1';
-          return;
-        }
-        window.location.href = `/cms/avant-apres/${data.id}`;
-      } catch (err) {
+        if (!response.ok) throw new Error('save');
+        const data = await response.json();
+        window.location.href = intent === 'publish' ? '/cms/avant-apres?published=1' : `/cms/avant-apres/${data.id}`;
+      } catch {
         if (error) error.textContent = 'Erreur de sauvegarde.';
         if (status) status.textContent = '';
+        setSubmittingDisabled(false);
       }
     });
   })();

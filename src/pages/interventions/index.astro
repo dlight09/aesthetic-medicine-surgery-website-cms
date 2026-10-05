@@ -1,40 +1,250 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { interventionCategories, interventionCategoryHref } from '@/lib/interventions';
+import { listPublicInterventions } from '@/lib/cms/interventions';
+import {
+  interventionCategories,
+  interventionCategoryFallbackList,
+  interventionCategoryHref,
+  type InterventionCategoryKey,
+} from '@/lib/interventions';
+import { seoInterventionPages } from '@/lib/interventions/seoPages';
+
+type InterventionEntry = {
+  category: InterventionCategoryKey;
+  href: string;
+  label: string;
+  order: number;
+  slug: string;
+};
+
+function leafSlug(value: string) {
+  const parts = value.split('/').filter(Boolean);
+  return parts.at(-1) ?? value;
+}
+
+function normalize(value: string) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+const categoryByLabel = new Map(
+  interventionCategories.map((category) => [normalize(category.title), category.key]),
+);
+
+const localEntries: InterventionEntry[] = (await getCollection('interventions')).map((entry) => {
+  const slug = leafSlug(entry.slug);
+  return {
+    category: entry.data.category,
+    href: `/interventions/${entry.data.category}/${slug}`,
+    label: entry.data.title,
+    order: entry.data.order ?? 999,
+    slug,
+  };
+});
+
+let cmsEntries: InterventionEntry[] = [];
+try {
+  cmsEntries = (await listPublicInterventions()).map((entry) => {
+    const slug = leafSlug(entry.slug);
+    return {
+      category: entry.category,
+      href: `/interventions/${entry.category}/${slug}`,
+      label: entry.title,
+      order: entry.order ?? 999,
+      slug,
+    };
+  });
+} catch {
+  // Local and SEO content keep the public index usable if the CMS is unavailable.
+}
+
+const seoEntries: InterventionEntry[] = Object.entries(seoInterventionPages).flatMap(
+  ([slug, page]) => {
+    const category = categoryByLabel.get(normalize(page.categoryLabel));
+    if (!category) return [];
+    return [{
+      category,
+      href: `/interventions/${category}/${slug}`,
+      label: page.breadcrumb.split('›').at(-1)?.trim() || page.h1,
+      order: 999,
+      slug,
+    }];
+  },
+);
+
+const groups = interventionCategories.map((category) => {
+  const seen = new Set<string>();
+  const canonicalSlug = (slug: string) =>
+    slug === 'blepharoplastie-paupieres' ? 'blepharoplastie' : slug;
+  const entries = [...seoEntries, ...localEntries, ...cmsEntries]
+    .filter((entry) => entry.category === category.key)
+    .filter((entry) => {
+      const key = canonicalSlug(entry.slug);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((a, b) => a.order - b.order);
+
+  return {
+    ...category,
+    href: interventionCategoryHref(category.key),
+    entries,
+    fallback: entries.length ? [] : interventionCategoryFallbackList[category.key] ?? [],
+  };
+});
 ---
 
-<BaseLayout title="Interventions" description="Chirurgie et medecine esthetique: categories et fiches d’information.">
-  <section class="mx-auto max-w-6xl px-4 py-14">
-    <h1 class="font-display text-4xl tracking-tight">Interventions</h1>
-    <p class="mt-4 max-w-2xl text-ink/75">
-      Cette page rassemble les categories d’interventions. L’objectif est d’aider chaque patient a identifier
-      l’intervention adaptee, a comprendre le deroule et les suites, et a poser les bonnes questions en consultation.
-    </p>
+<BaseLayout
+  title="Interventions"
+  description="Chirurgie et médecine esthétique : découvrez les interventions proposées par catégorie."
+>
+  <main class="mx-auto max-w-7xl px-4 pb-24 pt-10 sm:px-6 sm:pt-14">
+    <header class="border-y border-ink/25">
+      <div class="flex items-center justify-between gap-6 border-b border-ink/15 py-5 text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-ink/65">
+        <span>Chirurgie & médecine esthétique</span>
+        <span class="hidden sm:inline">Dr Sirine Soussi · Tunis</span>
+      </div>
+      <div class="grid lg:grid-cols-12">
+        <div class="flex flex-col justify-center py-10 lg:col-span-7 lg:pr-12 lg:py-16 xl:pr-16">
+          <h1 class="font-display text-5xl leading-[0.88] tracking-[-0.045em] sm:text-7xl lg:text-[6.5rem]">
+            Interventions
+          </h1>
+          <p class="mt-7 max-w-2xl text-base leading-8 text-ink/70 sm:text-lg">
+            Découvrez les interventions de chirurgie plastique, reconstructrice et esthétique proposées par le Dr Sirine Soussi. Sélectionnez une catégorie pour consulter les techniques et leurs indications.
+          </p>
+        </div>
+        <figure class="relative -mx-4 min-h-80 overflow-hidden bg-mist sm:-mx-6 sm:min-h-[26rem] lg:col-span-5 lg:mx-0 lg:min-h-[34rem] lg:border-l lg:border-ink/20">
+          <img
+            src="/images/rendez-vous-dr-sirine-soussi.webp"
+            width="1346"
+            height="1169"
+            alt="Dr Sirine Soussi au bloc opératoire"
+            loading="eager"
+            class="absolute inset-0 h-full w-full object-cover object-center"
+          />
+        </figure>
+      </div>
+    </header>
 
-    <div class="mt-10 grid gap-4 sm:grid-cols-2">
-      {interventionCategories.map((c) => (
-        <a
-          href={interventionCategoryHref(c.key)}
-          class="group overflow-hidden rounded-3xl border border-ink/10 bg-mist shadow-soft transition hover:shadow-lift"
-        >
-          <div class="relative aspect-[4/3] w-full">
-            <img
-              src={c.thumbnailSrc}
-              width="1200"
-              height="900"
-              alt=""
-              loading="lazy"
-              class="h-full w-full object-cover"
-            />
-            <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,19,0.40),transparent_60%)]"></div>
-          </div>
-          <div class="p-7">
-            <div class="font-display text-2xl tracking-tight">{c.title}</div>
-            <div class="mt-2 text-ink/70">{c.description}</div>
-            <div class="mt-5 text-sm font-semibold text-ink/80 transition group-hover:text-ink">Voir →</div>
-          </div>
-        </a>
-      ))}
-    </div>
-  </section>
+    <section aria-labelledby="category-index-title" class="mt-14 sm:mt-16">
+      <div class="mb-5 flex items-end justify-between gap-4">
+        <h2 id="category-index-title" class="font-display text-4xl tracking-tight sm:text-5xl">Catégories d’interventions</h2>
+        <p class="hidden text-xs font-semibold uppercase tracking-[0.18em] text-ink/60 sm:block">Cliquez pour afficher les interventions</p>
+      </div>
+
+      <div class="border-b border-ink/25">
+        {groups.map((group, index) => {
+          const itemCount = group.entries.length || group.fallback.length;
+          return (
+            <details
+              id={`categorie-${group.key}`}
+              name="intervention-category"
+              class="category-disclosure group border-t border-ink/25"
+              data-category-disclosure
+            >
+              <summary class="grid min-h-28 cursor-pointer list-none grid-cols-[3rem_minmax(0,1fr)_2.75rem] items-center gap-3 py-6 outline-none transition-colors hover:bg-mist/35 focus-visible:bg-mist/55 sm:grid-cols-[4rem_minmax(0,1fr)_auto_3rem] sm:gap-6 sm:px-2 lg:min-h-36 lg:px-4">
+                <span class="font-display text-2xl text-copper/75 sm:text-3xl" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span>
+                  <h3 class="font-display text-4xl leading-none tracking-[-0.025em] sm:text-5xl lg:text-6xl">{group.title}</h3>
+                  <span class="mt-2 block max-w-xl text-sm leading-6 text-ink/65 sm:text-base">{group.description}</span>
+                </span>
+                <span class="hidden text-right text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-ink/55 sm:block">
+                  {itemCount} {itemCount > 1 ? 'interventions' : 'intervention'}
+                </span>
+                <span class="flex h-10 w-10 items-center justify-center rounded-full border border-ink/25 text-2xl font-light leading-none transition duration-300 group-open:rotate-45 group-open:bg-ink group-open:text-paper" aria-hidden="true">+</span>
+              </summary>
+
+              <div class="category-panel border-t border-ink/20 bg-mist/55">
+                <div class="grid lg:grid-cols-12">
+                  <div class="px-5 py-8 sm:px-8 sm:py-10 lg:col-span-7 lg:px-10 lg:py-12">
+                    <p class="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-copper-deep">Interventions proposées</p>
+                    {group.entries.length ? (
+                      <nav aria-label={`Interventions : ${group.title}`} class="mt-5 grid gap-x-8 sm:grid-cols-2">
+                        {group.entries.map((entry, entryIndex) => (
+                          <a href={entry.href} class="group/link flex min-h-14 items-center justify-between gap-4 border-b border-ink/20 py-3 text-sm font-medium text-ink/85 transition hover:border-ink/55 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-copper/50">
+                            <span><span class="mr-3 font-display text-lg text-copper/70">{String(entryIndex + 1).padStart(2, '0')}</span>{entry.label}</span>
+                            <span class="shrink-0 transition group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5" aria-hidden="true">↗</span>
+                          </a>
+                        ))}
+                      </nav>
+                    ) : (
+                      <ul class="mt-5 grid gap-x-8 sm:grid-cols-2">
+                        {group.fallback.map((label, entryIndex) => (
+                          <li class="flex min-h-14 items-center justify-between gap-4 border-b border-ink/20 py-3 text-sm text-ink/70">
+                            <span><span class="mr-3 font-display text-lg text-copper/70">{String(entryIndex + 1).padStart(2, '0')}</span>{label}</span>
+                            <span class="text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-ink/45">À venir</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <a href={group.href} class="mt-8 inline-flex min-h-11 items-center gap-3 border-b border-ink pb-1 text-xs font-semibold uppercase tracking-[0.16em] transition hover:opacity-65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-copper/50">
+                      Découvrir la catégorie <span aria-hidden="true">→</span>
+                    </a>
+                  </div>
+
+                  <figure class="relative min-h-72 overflow-hidden bg-ink lg:col-span-5 lg:min-h-[31rem]">
+                    <img
+                      src={group.presentationImage.src}
+                      width={group.presentationImage.width}
+                      height={group.presentationImage.height}
+                      alt=""
+                      loading="lazy"
+                      class="absolute inset-0 h-full w-full object-cover transition duration-700 group-open:scale-[1.025]"
+                    />
+                    <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/35 via-transparent to-transparent"></div>
+                    <figcaption class="absolute bottom-5 left-5 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-paper/85 sm:bottom-7 sm:left-7">
+                      {group.title}
+                    </figcaption>
+                  </figure>
+                </div>
+              </div>
+            </details>
+          );
+        })}
+      </div>
+    </section>
+  </main>
 </BaseLayout>
+
+<script>
+  const disclosures = Array.from(
+    document.querySelectorAll<HTMLDetailsElement>('[data-category-disclosure]'),
+  );
+
+  disclosures.forEach((disclosure) => {
+    disclosure.addEventListener('toggle', () => {
+      if (!disclosure.open) return;
+      disclosures.forEach((other) => {
+        if (other !== disclosure) other.open = false;
+      });
+    });
+  });
+</script>
+
+<style>
+  .category-disclosure > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .category-disclosure[open] .category-panel {
+    animation: reveal-category 300ms ease-out both;
+  }
+
+  @keyframes reveal-category {
+    from {
+      opacity: 0;
+      transform: translateY(-0.5rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>

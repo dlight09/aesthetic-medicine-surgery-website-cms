@@ -12,7 +12,7 @@ export default {
         mist: 'rgb(var(--c-mist) / <alpha-value>)'
       },
       fontFamily: {
-        display: ['Andale Mono', 'AndaleMono', 'monospace'],
+        display: ['Cormorant Garamond', 'Georgia', 'serif'],
         body: ['Manrope', 'sans-serif']
       },
       boxShadow: {

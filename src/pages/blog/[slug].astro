@@ -1,11 +1,17 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
 import BlogBlocks from '@/components/BlogBlocks.astro';
+import { formatFrenchPunctuation } from '@/lib/typography';
 import { getPublicBlogPostBySlug } from '@/lib/cms/blog';
 import { listPublicInterventions } from '@/lib/cms/interventions';
-import { listLinkedInterventionSlugsForBlog } from '@/lib/cms/blog';
+import { listPublicLinkedInterventionSlugsForBlog } from '@/lib/cms/blog';
 import { isCmsAuthed } from '@/lib/cms/auth';
+import { getInterventionThumbnail, interventionCategories } from '@/lib/interventions';
+import {
+  getApprovedBlogPreviewInterventionSlugs,
+  getApprovedBlogPreviewPost,
+  useApprovedBlogPreview,
+} from '@/lib/blogPreview';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 
@@ -14,49 +20,53 @@ if (!slug) return Astro.redirect('/blog');
 
 const cmsAuthed = isCmsAuthed(Astro);
 
-let dbPost: Awaited<ReturnType<typeof getPublicBlogPostBySlug>> = null;
-try {
-  dbPost = await getPublicBlogPostBySlug({ slug, includeDraft: cmsAuthed });
-} catch {
-  dbPost = null;
+let dbPost: Awaited<ReturnType<typeof getPublicBlogPostBySlug>> = useApprovedBlogPreview
+  ? getApprovedBlogPreviewPost(slug)
+  : null;
+if (!useApprovedBlogPreview) {
+  try {
+    dbPost = await getPublicBlogPostBySlug({ slug, includeDraft: cmsAuthed });
+  } catch {
+    dbPost = null;
+  }
 }
 
-const contentEntries = await getCollection('blog');
-const entry =
-  !dbPost
-    ? contentEntries.find((p) => p.slug === slug && !p.data.draft)
-    : null;
+if (!dbPost) return Astro.redirect('/blog');
 
-if (!dbPost && !entry) return Astro.redirect('/blog');
-
-const title = dbPost?.seo_title || dbPost?.title || entry?.data.title;
-const description = dbPost?.seo_description || dbPost?.description || entry?.data.description;
-const pageTitle = dbPost?.title || entry?.data.title;
+const title = dbPost.seo_title || dbPost.title;
+const description = dbPost.seo_description || dbPost.description;
+const pageTitle = dbPost.title;
+const displayTitle = formatFrenchPunctuation(pageTitle);
 const dateLabel = dbPost?.published_at
-  ? new Date(dbPost.published_at).toLocaleDateString('fr-FR')
-  : entry
-    ? entry.data.date.toLocaleDateString('fr-FR')
-    : '';
-
-const rendered = entry ? await entry.render() : null;
-const Content = rendered?.Content;
+  ? new Date(dbPost.published_at).toLocaleDateString('fr-FR', { dateStyle: 'long' })
+  : '';
+const publishedDate = dbPost.published_at?.slice(0, 10) ?? '';
+const coverBlock = dbPost.content_blocks.find((block) => block.type === 'image');
+const bodyBlocks = coverBlock ? dbPost.content_blocks.filter((block) => block !== coverBlock) : dbPost.content_blocks;
 
 // Linked interventions (from join table)
-let linkedInterventions: { title: string; href: string; description: string }[] = [];
+let linkedInterventions: { title: string; href: string; description: string; imageSrc: string; imageAlt: string }[] = [];
 if (dbPost) {
   try {
-    const slugs = await listLinkedInterventionSlugsForBlog(dbPost.slug);
+    const slugs = useApprovedBlogPreview
+      ? getApprovedBlogPreviewInterventionSlugs(dbPost.slug)
+      : await listPublicLinkedInterventionSlugsForBlog(dbPost.slug);
     if (slugs.length) {
       const all = await listPublicInterventions();
       const map = new Map(all.map((i) => [i.slug, i]));
       linkedInterventions = slugs
         .map((s) => map.get(s))
         .filter(Boolean)
-        .map((i) => ({
-          title: i!.title,
-          description: i!.description,
-          href: `/interventions/${i!.category}/${i!.slug}`,
-        }));
+        .map((i) => {
+          const categoryImage = interventionCategories.find((category) => category.key === i!.category)?.thumbnailSrc;
+          return {
+            title: i!.title,
+            description: i!.description,
+            href: `/interventions/${i!.category}/${i!.slug}`,
+            imageSrc: i!.hero_image_src || getInterventionThumbnail(i!.slug)?.src || categoryImage || '/images/thumbnails/visage.webp',
+            imageAlt: i!.hero_image_alt || i!.title,
+          };
+        });
     }
   } catch {
     linkedInterventions = [];
@@ -64,42 +74,75 @@ if (dbPost) {
 }
 ---
 
-<BaseLayout title={title} description={description} noindex={dbPost?.status === 'brouillon' && cmsAuthed}>
-  <section class="mx-auto max-w-3xl px-4 py-14">
-    <a href="/blog" class="text-sm font-semibold text-ink/70 hover:text-ink">← Blog</a>
-    <h1 class="mt-3 font-display text-4xl tracking-tight">{pageTitle}</h1>
-    <p class="mt-2 text-sm text-ink/60">{dateLabel}</p>
-    <p class="mt-4 text-lg text-ink/75">{description}</p>
-
-    {dbPost ? (
-      <div class="mt-10">
-        <BlogBlocks blocks={dbPost.content_blocks ?? []} />
+<BaseLayout
+  title={title}
+  description={description}
+  noindex={dbPost?.status === 'brouillon' && cmsAuthed}
+  ogImage={coverBlock?.url}
+  ogImageAlt={coverBlock?.alt}
+  ogType="article"
+>
+  <article class="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
+    <div class="flex items-center justify-between border-y border-ink/25 py-3 text-[0.65rem] font-semibold uppercase tracking-[0.2em]">
+      <a href="/blog" class="inline-flex min-h-8 items-center text-ink/65 transition hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-copper/50">← Le journal</a>
+      <span class="text-ink/45">Dr Sirine Soussi</span>
+    </div>
+    <header class="-mx-4 grid gap-8 border-b border-ink/25 bg-mist/45 px-4 py-9 sm:-mx-6 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:py-14">
+      <h1 class="text-balance font-display text-6xl leading-[0.9] tracking-[-0.035em] sm:text-7xl lg:col-span-8 lg:text-[5.8rem]">{displayTitle}</h1>
+      <div class="flex flex-col justify-between border-t border-ink/25 pt-5 lg:col-span-4 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+        <p class="text-lg leading-8 text-ink/75">{description}</p>
+        <div class="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-semibold uppercase tracking-[0.13em] text-ink/60">
+          <span class="text-ink">Dr Sirine Soussi</span>
+          {publishedDate ? <span aria-hidden="true" class="text-ink/35">/</span> : null}
+          {publishedDate ? <time datetime={publishedDate}>{dateLabel}</time> : null}
+          <span aria-hidden="true" class="text-ink/35">/</span>
+          <span>Tunis</span>
+        </div>
       </div>
-    ) : (
-      <article class="prose-med mt-10 max-w-none">
-        {Content ? <Content /> : null}
-      </article>
-    )}
+    </header>
+
+    {coverBlock ? (
+      <figure class="border-b border-ink/25 py-8 sm:py-10">
+        <div class="aspect-[16/9] overflow-hidden bg-mist">
+          <img
+            src={coverBlock.url}
+            alt={coverBlock.alt}
+            class:list={['h-full w-full', slug === 'deep-plane-facelift-tunisie' ? 'object-contain' : 'object-cover']}
+            loading="eager"
+          />
+        </div>
+        {coverBlock.caption ? <figcaption class="mt-3 max-w-3xl text-xs leading-5 text-ink/60">{coverBlock.caption}</figcaption> : null}
+      </figure>
+    ) : null}
+
+    <div class="mx-auto mt-14 max-w-3xl text-[1.05rem] leading-8 sm:mt-20">
+      <BlogBlocks blocks={bodyBlocks} />
+    </div>
 
     {linkedInterventions.length ? (
-      <div class="mt-12">
-        <div class="flex items-end justify-between gap-3">
-          <h2 class="font-display text-2xl tracking-tight">Interventions concernées</h2>
+      <section class="mx-auto mt-16 max-w-4xl border-t border-ink/30 pt-6">
+        <div class="flex items-baseline justify-between gap-3">
+          <h2 class="font-display text-3xl tracking-tight">Interventions concernées</h2>
+          <span class="text-xs font-semibold uppercase tracking-[0.15em] text-ink/45">Pour aller plus loin</span>
         </div>
-        <div class="mt-5 grid gap-4 sm:grid-cols-2">
+        <div class="mt-5 border-t border-ink/15">
           {linkedInterventions.slice(0, 4).map((i) => (
-            <a href={i.href} class="rounded-3xl border border-ink/10 bg-paper p-6 shadow-soft transition hover:shadow-lift">
-              <div class="font-display text-xl tracking-tight">{i.title}</div>
-              <div class="mt-2 text-sm text-ink/70">{i.description}</div>
-              <div class="mt-4 text-sm font-semibold">Voir l’intervention →</div>
+            <a href={i.href} class="group grid gap-4 border-b border-ink/15 py-5 transition card-focus sm:grid-cols-[7rem_1fr_1.35fr_auto] sm:items-center sm:gap-6">
+              <div class="aspect-[4/3] overflow-hidden bg-mist">
+                <img src={i.imageSrc} alt={i.imageAlt} class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" loading="lazy" />
+              </div>
+              <div class="font-display text-2xl leading-tight tracking-tight transition group-hover:opacity-65">{i.title}</div>
+              <div class="text-sm leading-7 text-ink/70">{i.description}</div>
+              <div class="text-sm font-semibold" aria-hidden="true">↗</div>
             </a>
           ))}
         </div>
-      </div>
+      </section>
     ) : null}
 
-    <div class="mt-10 rounded-3xl border border-ink/10 bg-paper p-6 text-sm text-ink/70">
-      Information generale - ne remplace pas une consultation.
-    </div>
-  </section>
+    <aside class="mx-auto mt-12 max-w-3xl border-y border-copper-deep/40 py-5 text-sm leading-7 text-ink/70">
+      <span class="mr-3 text-xs font-semibold uppercase tracking-[0.16em] text-copper-deep">Note médicale</span>
+      Cet article ne remplace pas une consultation médicale personnalisée.
+    </aside>
+  </article>
 </BaseLayout>

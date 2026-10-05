@@ -17,8 +17,12 @@ html {
 }
 
 .public-site {
-  --c-paper: 255 255 240;
-  --c-mist: 232 205 151;
+  --c-ink: 67 59 57;
+  --c-paper: 250 249 246;
+  --c-sand: 224 188 179;
+  --c-copper: 128 111 102;
+  --c-copper-deep: 128 111 102;
+  --c-mist: 237 237 229;
   background: rgb(var(--c-paper));
 }
 
@@ -29,7 +33,7 @@ h4,
 h5,
 h6,
 .font-display {
-  font-family: 'Andale Mono', AndaleMono, monospace;
+  font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 500;
 }
 

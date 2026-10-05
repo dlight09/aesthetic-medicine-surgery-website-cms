@@ -2,24 +2,24 @@
 name: Dr Sirine Soussi
 description: A precise, calm, premium French medical website for plastic, aesthetic, reconstructive, and hand surgery.
 colors:
-  ink: "#141413"
-  paper: "#FFFFF0"
-  sand: "#dac5a9"
-  copper: "#be774c"
-  copper-deep: "#87482d"
-  mist: "#E8CD97"
+  ink: "#433B39"
+  paper: "#FAF9F6"
+  sand: "#E0BCB3"
+  copper: "#806F66"
+  copper-deep: "#806F66"
+  mist: "#EDEDE5"
 typography:
   display:
-    fontFamily: "Andale Mono, AndaleMono, monospace"
-    fontWeight: 400
+    fontFamily: "Cormorant Garamond, Georgia, serif"
+    fontWeight: 500
     lineHeight: 1.1
     letterSpacing: "-0.02em"
   brand-wordmark:
-    fontFamily: "Andale Mono, AndaleMono, monospace"
-    fontWeight: 300
+    fontFamily: "Cormorant Garamond, Georgia, serif"
+    fontWeight: 400
     letterSpacing: "-0.035em"
   doctrine-quote:
-    fontFamily: "Literata, Georgia, serif"
+    fontFamily: "Cormorant Garamond, Georgia, serif"
     fontWeight: 500
     lineHeight: 1.08
     letterSpacing: "-0.025em"
@@ -28,7 +28,7 @@ typography:
     fontWeight: 300
     lineHeight: 1.6
   label:
-    fontFamily: "Andale Mono, AndaleMono, monospace"
+    fontFamily: "Manrope, sans-serif"
     fontWeight: 600
     letterSpacing: "0.18em"
 rounded:
@@ -105,23 +105,23 @@ The palette is warm precision: deep ink for authority, paper and mist for calm s
 
 ## 3. Typography
 
-**Display Font:** Andale Mono with monospace fallback.
+**Display Font:** Cormorant Garamond with Georgia fallback.
 **Body Font:** Manrope with sans-serif fallback.
-**Doctrine Quote Font:** Literata Italic with Georgia fallback.
-**Brand Wordmark:** Andale Mono, set lighter in large identity moments.
+**Doctrine Quote Font:** Cormorant Garamond Italic with Georgia fallback.
+**Brand Wordmark:** Cormorant Garamond, set lighter in large identity moments.
 
-**Character:** Andale Mono gives headings, interface labels, and wordmarks a precise clinical voice; Manrope keeps patient information calm and highly readable. Italic Literata is reserved for authored medical-position statements.
+**Character:** Cormorant Garamond gives headings and wordmarks a refined editorial voice; Manrope keeps patient information and interface labels calm and highly readable. Italic display type is reserved for authored medical-position statements.
 
 ### Hierarchy
 - **Display** (400, fluid, sentence case, `1.08-1.12` line-height): Use for public page and section titles. Balance line breaks; do not force uppercase.
-- **Brand Wordmark** (300 in hero, 400 in utility contexts): Use the profile mark with `DR SIRINE SOUSSI` only through `BrandLockup.astro`.
+- **Brand Wordmark** (400): Use the profile mark with `DR SIRINE SOUSSI` only through `BrandLockup.astro`.
 - **Doctrine Quote** (500 italic, large, `1.08` line-height): Use for authored medical-position statements such as the Dr Soussi profile quote.
 - **Title** (400-600, sentence case unless metadata): Use inside cards, menu panels, CMS summaries, and intervention lists.
 - **Body** (300-400, `1rem`, `1.6-1.72` line-height): Use Manrope for patient education and consultation copy; cap long prose at `65ch` and use `text-wrap: pretty`.
 - **Label** (600, small size, uppercase, `0.08em-0.2em` tracking): Use sparingly for proof chips, navigation metadata, and short category labels.
 
 ### Named Rules
-**The Quote Scarcity Rule.** Literata italic is for authored medical-position statements only. Reusing it everywhere turns precision into costume.
+**The Quote Scarcity Rule.** Display italics are for authored medical-position statements only. Reusing them everywhere turns precision into costume.
 
 **The Label Discipline Rule.** Uppercase tracked labels are allowed as a named house style, but not above every section by default. If the label does not add orientation or trust, remove it.
 
@@ -158,7 +158,7 @@ Elevation is ambient, not glossy. The system uses broad, low-opacity shadows plu
 - **Internal Padding:** Public cards default around `24px`; CMS cards use `24px` with denser row patterns where needed.
 
 ### Inputs / Fields
-- **Style:** Paper background, thin ink-alpha border, rounded corners (`12px-16px`), and compact Outfit text.
+- **Style:** Paper background, thin ink-alpha border, rounded corners (`12px-16px`), and compact Manrope text.
 - **Focus:** Copper-tinted ring or glow with sufficient contrast; never rely on border color alone.
 - **Error / Disabled:** Error states should be explicit in copy and color; disabled states must remain readable.
 

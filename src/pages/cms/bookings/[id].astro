@@ -2,6 +2,7 @@
 import CmsLayout from '@/layouts/CmsLayout.astro';
 import { getBookingPhotoUrls, getBookingRequest } from '@/lib/cms/bookings';
 import { isCmsAuthed } from '@/lib/cms/auth';
+import { interventionCategoryMeta, type InterventionCategoryKey } from '@/lib/interventions';
 
 const { id } = Astro.params;
 if (!isCmsAuthed(Astro)) return Astro.redirect('/cms/login');
@@ -9,6 +10,10 @@ const booking = id ? await getBookingRequest(id) : null;
 if (!booking) return Astro.redirect('/cms/bookings');
 const photoUrls = await getBookingPhotoUrls(booking.photo_paths);
 const formatDate = (value: string) => new Intl.DateTimeFormat('fr-TN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+const formatPreferredDate = (value: string) => new Intl.DateTimeFormat('fr-TN', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${value}T00:00:00Z`));
+const interventionLabel = booking.intervention_category
+  ? interventionCategoryMeta[booking.intervention_category as InterventionCategoryKey]?.title ?? booking.intervention_category
+  : 'Non renseigné';
 ---
 
 <CmsLayout title="Demande">
@@ -19,6 +24,14 @@ const formatDate = (value: string) => new Intl.DateTimeFormat('fr-TN', { dateSty
       <p class="mt-2 text-sm text-ink/60">Reference: {booking.id}</p>
 
       <div class="mt-8 grid gap-4 sm:grid-cols-2">
+        <div class="rounded-2xl border border-ink/10 bg-mist p-4 text-sm">
+          <div class="text-xs uppercase tracking-wide text-ink/50">Âge</div>
+          <div class="mt-2 font-semibold text-ink/90">{booking.age === null ? 'Non renseigné' : `${booking.age} ans`}</div>
+        </div>
+        <div class="rounded-2xl border border-ink/10 bg-mist p-4 text-sm">
+          <div class="text-xs uppercase tracking-wide text-ink/50">Date souhaitée</div>
+          <div class="mt-2 font-semibold text-ink/90">{booking.desired_date ? formatPreferredDate(booking.desired_date) : 'Non renseignée'}</div>
+        </div>
         <div class="rounded-2xl border border-ink/10 bg-mist p-4 text-sm">
           <div class="text-xs uppercase tracking-wide text-ink/50">Telephone</div>
           <a href={`tel:${booking.phone.replace(/\s/g, '')}`} class="mt-2 block font-semibold text-ink/90 underline underline-offset-4">{booking.phone}</a>
@@ -35,6 +48,44 @@ const formatDate = (value: string) => new Intl.DateTimeFormat('fr-TN', { dateSty
           <div class="text-xs uppercase tracking-wide text-ink/50">Consentement</div>
           <div class="mt-2 font-semibold text-ink/90">Recueilli le {formatDate(booking.consent_at)}</div>
         </div>
+       </div>
+
+      <div class="mt-8 grid gap-4 sm:grid-cols-2">
+        <div class="rounded-2xl border border-ink/10 bg-mist p-4 text-sm">
+          <div class="text-xs uppercase tracking-wide text-ink/50">Poids</div>
+          <div class="mt-2 font-semibold text-ink/90">{booking.weight_kg === null ? 'Non renseigné' : `${booking.weight_kg} kg`}</div>
+        </div>
+        <div class="rounded-2xl border border-ink/10 bg-mist p-4 text-sm">
+          <div class="text-xs uppercase tracking-wide text-ink/50">Taille</div>
+          <div class="mt-2 font-semibold text-ink/90">{booking.height_cm === null ? 'Non renseignée' : `${booking.height_cm} cm`}</div>
+        </div>
+      </div>
+
+      <div class="mt-8 grid gap-4 sm:grid-cols-2">
+        <div class="rounded-2xl border border-ink/10 bg-mist p-4 text-sm">
+          <div class="text-xs uppercase tracking-wide text-ink/50">Tabagisme</div>
+          <div class="mt-2 font-semibold text-ink/90">{booking.smoking_status === null ? 'Non renseigné' : booking.smoking_status === 'yes' ? 'Oui' : 'Non'}</div>
+        </div>
+      </div>
+
+      <div class="mt-8 space-y-6">
+        <div>
+           <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Antécédents médicaux, chirurgicaux et gynécologiques</div>
+          <p class="mt-2 whitespace-pre-wrap rounded-2xl border border-ink/10 bg-mist/45 p-5 text-sm leading-relaxed text-ink/80">{booking.medical_history || 'Non renseignées'}</p>
+        </div>
+        {booking.previous_surgeries ? <div>
+          <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Chirurgies antérieures</div>
+          <p class="mt-2 whitespace-pre-wrap rounded-2xl border border-ink/10 bg-mist/45 p-5 text-sm leading-relaxed text-ink/80">{booking.previous_surgeries || 'Non renseignées'}</p>
+        </div> : null}
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Médicaments pris quotidiennement</div>
+          <p class="mt-2 whitespace-pre-wrap rounded-2xl border border-ink/10 bg-mist/45 p-5 text-sm leading-relaxed text-ink/80">{booking.daily_medications || 'Non renseignés'}</p>
+        </div>
+      </div>
+
+      <div class="mt-8 rounded-2xl border border-ink/10 bg-mist p-4 text-sm">
+        <div class="text-xs uppercase tracking-wide text-ink/50">Type de chirurgie envisagée</div>
+        <div class="mt-2 font-semibold text-ink/90">{interventionLabel}</div>
       </div>
 
       <div class="mt-8">
@@ -57,7 +108,7 @@ const formatDate = (value: string) => new Intl.DateTimeFormat('fr-TN', { dateSty
          <div class="mt-2 rounded-xl border border-ink/10 bg-mist px-3 py-2 text-sm font-semibold capitalize text-ink/80">{booking.status}</div>
       </div>
 
-       <div class="mt-6 text-xs text-ink/60">Les photos jointes sont accessibles uniquement dans cet espace administrateur.</div>
+       {photoUrls.length > 0 && <div class="mt-6 text-xs text-ink/60">Les photos jointes sont accessibles uniquement dans cet espace administrateur.</div>}
     </aside>
   </div>
 </CmsLayout>

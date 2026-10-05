@@ -1,5 +1,9 @@
 export type BlogBlock =
   | {
+      type: 'paragraph';
+      text: string;
+    }
+  | {
       type: 'section';
       heading: string;
       text: string;
@@ -71,6 +75,13 @@ export function coerceBlogBlocks(value: unknown): BlogBlock[] | null {
   for (const raw of value as any[]) {
     if (!raw || typeof raw !== 'object') continue;
     const type = String(raw.type ?? '').trim();
+
+    if (type === 'paragraph') {
+      const text = String(raw.text ?? raw.body ?? '').trim();
+      if (!text) continue;
+      out.push({ type: 'paragraph', text });
+      continue;
+    }
 
     if (type === 'section') {
       const heading = String(raw.heading ?? '').trim();

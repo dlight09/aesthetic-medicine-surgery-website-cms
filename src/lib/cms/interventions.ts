@@ -1,6 +1,6 @@
 import type { InterventionCategoryKey } from '@/lib/interventions';
 import type { SeoInterventionPageData } from '@/lib/interventions/seoPages';
-import { getSupabaseAdmin } from './supabase';
+import { getSupabaseAdmin, getSupabasePublicRead } from './supabase';
 import type { InterventionContentBlock } from './interventionBlocks';
 import type { InterventionTemplateKind } from './interventionSeoTemplate';
 
@@ -46,7 +46,7 @@ export async function getCmsInterventionBySlug(slug: string) {
 }
 
 export async function listPublicInterventions(category?: InterventionCategoryKey) {
-  const supabase = getSupabaseAdmin();
+  const supabase = getSupabasePublicRead();
   let query = supabase.from(tableName).select('*').eq('status', 'publie');
   if (category) query = query.eq('category', category);
   const { data, error } = await query
@@ -62,7 +62,7 @@ export async function getPublicInterventionBySlug(params: {
   includeDraft?: boolean;
 }) {
   const { slug, category, includeDraft } = params;
-  const supabase = getSupabaseAdmin();
+  const supabase = getSupabasePublicRead();
   let query = supabase.from(tableName).select('*').eq('slug', slug).eq('category', category);
   if (!includeDraft) query = query.eq('status', 'publie');
   const { data, error } = await query.maybeSingle();

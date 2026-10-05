@@ -1,57 +1,53 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
-import {
-  listPublicAvantApresCaseReferences,
-  listPublicAvantApresCasesPage,
-  type AvantApresCaseView,
-} from '@/lib/cms/avantApres';
+import { listPublicAvantApresCasesPage, type AvantApresCaseView } from '@/lib/cms/avantApres';
 import { interventionCategories } from '@/lib/interventions';
 import { listPublicInterventions } from '@/lib/cms/interventions';
-import FeaturedCaseCarousel from '@/components/FeaturedCaseCarousel.astro';
 
 Astro.response.headers.set('Cache-Control', 'no-store');
+
 const interventionCategory = Astro.url.searchParams.get('intervention_category');
 const interventionSlug = Astro.url.searchParams.get('intervention_slug');
+
 type AvantApresCaseWithIntervention = AvantApresCaseView & {
   intervention_category?: string | null;
   intervention_slug?: string | null;
   description?: string | null;
   case_number?: number | null;
 };
-const pageSize = 12;
-type AvantApresCaseReference = Pick<
-  AvantApresCaseWithIntervention,
-  'intervention_category' | 'intervention_slug' | 'case_number'
->;
-let allCaseReferences: AvantApresCaseReference[] = [];
-let totalCases = 0;
+type InterventionLite = { title: string; category: string; slug: string; order?: number | null };
+
 let cases: AvantApresCaseWithIntervention[] = [];
 try {
-  const [page, references] = await Promise.all([
-    listPublicAvantApresCasesPage({
+  const pageSize = 100;
+  let offset = 0;
+  let total = 0;
+  do {
+    const page = await listPublicAvantApresCasesPage({
       interventionCategory,
       interventionSlug,
+      offset,
       limit: pageSize,
-    }),
-    listPublicAvantApresCaseReferences(),
-  ]);
-  cases = page.items as AvantApresCaseWithIntervention[];
-  totalCases = page.total;
-  allCaseReferences = references as AvantApresCaseReference[];
+    });
+    cases.push(...(page.items as AvantApresCaseWithIntervention[]));
+    total = page.total;
+    offset += page.items.length;
+    if (!page.items.length) break;
+  } while (offset < total);
 } catch {
   cases = [];
-  allCaseReferences = [];
 }
-
-if (interventionCategory || interventionSlug) cases = cases.sort((a, b) => (a.case_number ?? 999) - (b.case_number ?? 999));
-
-type InterventionLite = { title: string; category: string; slug: string; order?: number | null };
 
 let interventions: InterventionLite[] = [];
 try {
   const rows = await listPublicInterventions();
-  interventions = rows.map((r) => ({ title: r.title, category: r.category, slug: r.slug, order: r.order }));
+  interventions = rows.map((row) => ({
+    title: row.title,
+    category: row.category,
+    slug: row.slug,
+    order: row.order,
+  }));
 } catch {
   const entries = await getCollection('interventions');
   interventions = entries.map((entry) => ({
@@ -62,75 +58,38 @@ try {
   }));
 }
 
-const interventionsByCategory = interventionCategories.map((category) => {
-  const entries = interventions
-    .filter((entry) => entry.category === category.key)
-    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
-    .map((entry) => ({
-      title: entry.title,
-      slug: entry.slug,
-      category: entry.category,
-    }));
-  return { ...category, entries };
-});
-
-const categoryLabelByKey = new Map<string, string>(
-  interventionCategories.map((category) => [category.key, category.title]),
+const categoryMetaByKey = new Map<string, (typeof interventionCategories)[number] & { order: number }>(
+  interventionCategories.map((category, index) => [category.key, { ...category, order: index }]),
 );
 const interventionMetaByRef = new Map(
   interventions.map((entry) => [
     `${entry.category}::${entry.slug}`,
-    { title: entry.title, href: `/interventions/${entry.category}/${entry.slug}` },
+    {
+      ...entry,
+      href: `/interventions/${entry.category}/${entry.slug}`,
+    },
   ]),
 );
 
-const matchingIntervention =
-  interventionCategory && interventionSlug
-    ? interventions.find((entry) => entry.category === interventionCategory && entry.slug === interventionSlug)
-    : null;
-const interventionTitle = matchingIntervention?.title;
-const interventionHref = matchingIntervention
-  ? `/interventions/${matchingIntervention.category}/${interventionSlug}`
-  : null;
-
-const casesByRef = new Map<string, AvantApresCaseReference[]>();
-allCaseReferences.forEach((item) => {
-  if (!item.intervention_category || !item.intervention_slug) return;
-  const ref = `${item.intervention_category}::${item.intervention_slug}`;
-  const list = casesByRef.get(ref) ?? [];
-  list.push(item);
-  casesByRef.set(ref, list);
-});
-casesByRef.forEach((list, key) => {
-  casesByRef.set(
-    key,
-    list.sort((a, b) => (a.case_number ?? 999) - (b.case_number ?? 999)),
-  );
-});
-
-const categoryFilters = interventionCategories
-  .map((category) => {
-    const count = allCaseReferences.filter((item) => item.intervention_category === category.key).length;
-    return { ...category, count };
-  })
-  .filter((category) => category.count > 0);
-
-const interventionFilters = interventionCategory
-  ? interventionsByCategory
-      .find((category) => category.key === interventionCategory)
-      ?.entries.filter((entry) => (casesByRef.get(`${entry.category}::${entry.slug}`)?.length ?? 0) > 0) ?? []
-  : [];
+const slugify = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
 
 const caseCards = cases.map((item) => {
   const interventionMeta =
     item.intervention_category && item.intervention_slug
       ? interventionMetaByRef.get(`${item.intervention_category}::${item.intervention_slug}`) ?? null
       : null;
-  const categoryTitle = item.intervention_category
-    ? categoryLabelByKey.get(item.intervention_category) ?? item.intervention_category
+  const categoryMeta = item.intervention_category
+    ? categoryMetaByKey.get(item.intervention_category) ?? null
     : null;
+  const coverSet = item.media_sets?.find((set) => set.is_cover) ?? item.media_sets?.[0] ?? null;
   const contextChips: string[] = [];
-  if (item.media_sets?.[0]?.result_delay_label) contextChips.push(item.media_sets[0].result_delay_label);
+  if (coverSet?.result_delay_label) contextChips.push(coverSet.result_delay_label);
   if (item.patient_context?.smoking_status === 'non_smoker') contextChips.push('Non fumeuse');
   if (item.patient_context?.smoking_status === 'smoker') contextChips.push('Fumeuse');
   if (item.patient_context?.post_bariatric) contextChips.push('Post-bariatrique');
@@ -139,325 +98,302 @@ const caseCards = cases.map((item) => {
   return {
     ...item,
     interventionMeta,
-    categoryTitle,
-    publicTitle: interventionMeta?.title ?? item.title ?? categoryTitle ?? 'Résultat documenté',
+    categoryKey: item.intervention_category ?? 'autres-resultats',
+    categoryTitle: categoryMeta?.title ?? item.intervention_category ?? 'Autres résultats',
+    categoryDescription: categoryMeta?.description ?? null,
+    categoryOrder: categoryMeta?.order ?? 999,
+    procedureKey: item.intervention_slug ?? `autres-${slugify(item.title || 'resultat-documente')}`,
+    procedureTitle: interventionMeta?.title ?? item.title ?? 'Résultat documenté',
+    procedureOrder: interventionMeta?.order ?? 999,
+    publicTitle: item.title || interventionMeta?.title || 'Résultat documenté',
     contextChips,
-    isComparison: (item.media_sets?.find((set) => set.is_cover) ?? item.media_sets?.[0])?.media_mode === 'comparison',
+    isComparison: coverSet?.media_mode === 'comparison',
   };
 });
-const featuredCases = caseCards.slice(0, 6).map((item) => ({
-  href: `/avant-apres/${item.id}`,
-  title: item.publicTitle,
-  beforeUrl: item.beforeUrl,
-  afterUrl: item.afterUrl,
-  isComparison: item.isComparison,
-}));
+
+type CaseCard = (typeof caseCards)[number];
+type ProcedureGroup = {
+  key: string;
+  title: string;
+  order: number;
+  href: string | null;
+  cases: CaseCard[];
+};
+type CategoryGroup = {
+  key: string;
+  title: string;
+  description: string | null;
+  order: number;
+  procedures: ProcedureGroup[];
+  count: number;
+};
+
+const categoryGroupsByKey = new Map<string, CategoryGroup>();
+for (const item of caseCards) {
+  let categoryGroup = categoryGroupsByKey.get(item.categoryKey);
+  if (!categoryGroup) {
+    categoryGroup = {
+      key: item.categoryKey,
+      title: item.categoryTitle,
+      description: item.categoryDescription,
+      order: item.categoryOrder,
+      procedures: [],
+      count: 0,
+    };
+    categoryGroupsByKey.set(item.categoryKey, categoryGroup);
+  }
+
+  let procedureGroup = categoryGroup.procedures.find((group) => group.key === item.procedureKey);
+  if (!procedureGroup) {
+    procedureGroup = {
+      key: item.procedureKey,
+      title: item.procedureTitle,
+      order: item.procedureOrder,
+      href: item.interventionMeta?.href ?? null,
+      cases: [],
+    };
+    categoryGroup.procedures.push(procedureGroup);
+  }
+  procedureGroup.cases.push(item);
+  categoryGroup.count += 1;
+}
+
+const categoryGroups = Array.from(categoryGroupsByKey.values())
+  .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title, 'fr'))
+  .map((category) => ({
+    ...category,
+    id: `categorie-${slugify(category.key)}`,
+    procedures: category.procedures
+      .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title, 'fr'))
+      .map((procedure) => ({
+        ...procedure,
+        id: `procedure-${slugify(category.key)}-${slugify(procedure.key)}`,
+        cases: procedure.cases.sort(
+          (a, b) =>
+            (a.case_number ?? Number.MAX_SAFE_INTEGER) -
+              (b.case_number ?? Number.MAX_SAFE_INTEGER) ||
+            a.publicTitle.localeCompare(b.publicTitle, 'fr'),
+        ),
+      })),
+  }));
+
+const selectedIntervention =
+  interventionCategory && interventionSlug
+    ? interventionMetaByRef.get(`${interventionCategory}::${interventionSlug}`) ?? null
+    : null;
+const hasActiveFilter = Boolean(interventionCategory || interventionSlug);
 const hasPreviewCases = caseCards.some((item) => item.id.startsWith('preview-'));
 ---
 
-<BaseLayout title="Avant/Après" description="Galerie Avant/Après (lorsque disponible) avec consentement et mentions.">
-  <section class="relative overflow-hidden bg-paper">
-    <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-mist to-transparent"></div>
-    <div class="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
-      <div>
-        <p class="text-sm font-semibold text-copper-deep">Résultats documentés</p>
-        <h1 class="mt-4 max-w-[12ch] text-balance font-display text-4xl leading-tight tracking-tight text-ink sm:text-6xl">Avant & après</h1>
-        <p class="mt-6 max-w-xl text-lg leading-relaxed text-ink/75">
-          Des cas sélectionnés pour illustrer une prise en charge individualisée. Chaque indication, geste et résultat s’apprécient au cas par cas.
+<BaseLayout
+  title="Avant/Après"
+  description="Galerie de résultats avant et après publiés avec consentement. Chaque résultat est propre au patient."
+>
+  <div class="bg-paper">
+    <section class="border-b border-ink/10">
+      <div class="mx-auto max-w-5xl px-4 py-16 text-center sm:py-24">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-copper-deep">Résultats documentés</p>
+        <h1 class="mx-auto mt-5 max-w-3xl text-balance font-display text-4xl leading-none tracking-tight text-ink sm:text-6xl">
+          Galerie avant & après
+        </h1>
+        <p class="mx-auto mt-7 max-w-3xl text-pretty text-base leading-relaxed text-ink/75 sm:text-lg">
+          Découvrez une sélection de résultats classés par catégorie et par intervention. Ces cas illustrent
+          des prises en charge individualisées : ils ne permettent pas de prévoir le résultat d’une autre personne.
         </p>
-        <div class="mt-8 flex flex-wrap gap-3">
-          {caseCards.length ? <a href="#cas" class="btn btn-pill btn-lg btn-primary">Voir les cas</a> : null}
-          <a href="/contact" class:list={['btn btn-pill btn-lg', caseCards.length ? 'btn-secondary' : 'btn-primary']}>Prendre rendez-vous</a>
-        </div>
-      </div>
-
-      {featuredCases.length ? (
-        <FeaturedCaseCarousel items={featuredCases} />
-      ) : (
-        <div class="rounded-3xl border border-ink/10 bg-mist/70 p-8 shadow-soft">
-          <p class="text-sm leading-relaxed text-ink/70">Les cas publiés apparaîtront ici une fois la sélection finalisée.</p>
-        </div>
-      )}
-    </div>
-  </section>
-
-  <section class="bg-mist/55 py-12 sm:py-14">
-    <div class="mx-auto grid max-w-6xl gap-6 px-4 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
-      <h2 class="max-w-[16ch] text-balance font-display text-2xl leading-tight tracking-tight text-ink">Voir des résultats avec justesse</h2>
-      <div class="rounded-3xl border border-ink/10 bg-paper px-6 py-5 shadow-soft sm:px-7">
-        <p class="text-sm leading-relaxed text-ink/80">Toute publication est réalisée avec <a href="/consentement" class="link underline underline-offset-4">consentement</a>. Les résultats varient selon l’anatomie, l’indication et les suites propres à chaque patient.</p>
-        <p class="mt-3 text-sm leading-relaxed text-ink/70">Ces photographies illustrent des prises en charge précises. Elles ne constituent ni une garantie de résultat ni un avis médical personnalisé.</p>
-      </div>
-      {hasPreviewCases ? (
-        <p class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-800 lg:col-start-2">
-          Certaines images sont des extraits PDF utilisés temporairement en prévisualisation, en attendant les photos haute définition.
+        <p class="mx-auto mt-4 max-w-3xl text-sm leading-relaxed text-ink/65">
+          Toutes les photographies sont publiées avec le <a
+            href="/consentement"
+            class="link underline underline-offset-4">consentement</a
+          > des patients. Les résultats varient selon l’anatomie, l’indication et les suites propres à chacun.
         </p>
-      ) : null}
-    </div>
-  </section>
+      </div>
+    </section>
 
-  <section id="cas" class="bg-paper py-16 sm:py-20">
-    <div class="mx-auto max-w-6xl px-4">
-      <header class="max-w-3xl">
-        <h2 class="text-balance font-display text-3xl tracking-tight text-ink sm:text-4xl">Explorer les résultats</h2>
-        {interventionTitle && interventionHref ? (
-          <p class="mt-4 text-sm leading-relaxed text-ink/70">
-            Résultats associés à <a class="link underline underline-offset-4" href={interventionHref}>{interventionTitle}</a>. <a class="link underline underline-offset-4" href="/avant-apres">Voir tous les résultats</a>.
-          </p>
-        ) : null}
-      </header>
-
-      {categoryFilters.length ? (
-        <nav class="mt-10 border-y border-ink/10 py-5" aria-label="Filtrer les cas par catégorie">
-          <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm font-semibold">
-            <a href="/avant-apres" class:list={['rounded-md py-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper', !interventionCategory ? 'text-ink' : 'text-ink/65 hover:text-ink']}>Tout voir</a>
-            {categoryFilters.map((category) => (
-              <a href={`/avant-apres?intervention_category=${category.key}`} class:list={['rounded-md py-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper', interventionCategory === category.key ? 'text-ink' : 'text-ink/65 hover:text-ink']}>
-                {category.title}
+    {categoryGroups.length ? (
+      <nav class="border-b border-ink/10 bg-mist/45" aria-label="Accéder aux catégories de résultats">
+        <div class="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+          <p class="text-center text-xs font-semibold uppercase tracking-[0.18em] text-ink/55">Explorer par catégorie</p>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {categoryGroups.map((category) => (
+              <a
+                href={`#${category.id}`}
+                class="group flex min-h-20 items-center justify-between gap-4 rounded-2xl border border-ink/10 bg-paper px-5 py-4 transition hover:border-ink/25 hover:shadow-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/40"
+              >
+                <span class="font-display text-2xl tracking-tight text-ink">{category.title}</span>
+                <span class="flex items-center gap-3 text-xs font-semibold text-ink/55">
+                  {category.count} {category.count > 1 ? 'cas' : 'cas'}
+                  <span aria-hidden="true" class="text-lg transition-transform group-hover:translate-y-0.5">↓</span>
+                </span>
               </a>
             ))}
           </div>
-          {interventionCategory && interventionFilters.length ? (
-            <div class="mt-5 flex flex-wrap gap-2">
-              <a href={`/avant-apres?intervention_category=${interventionCategory}`} class:list={['btn btn-pill btn-sm min-h-11', !interventionSlug ? 'btn-primary' : 'btn-secondary']}>Tous</a>
-              {interventionFilters.map((entry) => (
-                <a href={`/avant-apres?intervention_category=${entry.category}&intervention_slug=${entry.slug}`} class:list={['btn btn-pill btn-sm min-h-11', interventionSlug === entry.slug ? 'btn-primary' : 'btn-secondary']}>
-                  {entry.title}
-                </a>
-              ))}
-            </div>
+          {hasActiveFilter ? (
+            <p class="mt-6 text-center text-sm text-ink/70">
+              Vue filtrée{selectedIntervention ? ` : ${selectedIntervention.title}` : ''}.{' '}
+              <a href="/avant-apres" class="link underline underline-offset-4">Afficher toute la galerie</a>
+            </p>
           ) : null}
-        </nav>
-      ) : null}
+        </div>
+      </nav>
+    ) : null}
 
-      {caseCards.length ? (
-        <section id="aa-case-grid" class="mt-10 grid gap-6 md:grid-cols-2 md:gap-8" aria-busy="false">
-          {caseCards.map((item) => (
-          <a href={`/avant-apres/${item.id}`} class="group card-focus overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft transition-shadow duration-300 hover:shadow-lift">
-            {item.isComparison ? (
-              <div class="relative bg-mist/50">
-                <img src={item.beforeUrl} alt="Photographie comparative avant et après intervention" class="h-80 w-full object-contain sm:h-96" loading="lazy" />
-                <span class="absolute left-4 top-4 rounded-full bg-paper/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/80">Avant / Après</span>
-              </div>
-            ) : (
-              <div class="grid aspect-[5/4] grid-cols-2">
-                  <div class="relative overflow-hidden border-r border-paper/30">
-                    <img
-                      src={item.beforeUrl}
-                      alt="Avant"
-                      class="h-full w-full object-cover grayscale opacity-85 transition duration-700 group-hover:grayscale-0 group-hover:opacity-100"
-                      loading="lazy"
-                    />
-                    <span class="absolute left-4 top-4 rounded-full bg-paper/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/80">Avant</span>
-                  </div>
-                  <div class="relative overflow-hidden">
-                    <img src={item.afterUrl} alt="Après" class="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]" loading="lazy" />
-                    <span class="absolute left-4 top-4 rounded-full bg-paper/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/80">Après</span>
-                  </div>
-                </div>
-            )}
+    {hasPreviewCases ? (
+      <div class="mx-auto max-w-6xl px-4 pt-8">
+        <p class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-800">
+          Certaines images sont des extraits PDF utilisés temporairement en prévisualisation, en attendant les photos haute définition.
+        </p>
+      </div>
+    ) : null}
 
-            <div class="flex items-start justify-between gap-4 p-6">
-              <div>
-                <h3 class="text-balance font-display text-[clamp(1.35rem,2vw,1.65rem)] tracking-tight">{item.publicTitle}</h3>
-                {item.description ? <p class="mt-3 max-w-[44ch] text-sm leading-relaxed text-ink/70">{item.description}</p> : null}
-                {item.contextChips.length ? (
-                  <div class="mt-3 flex flex-wrap gap-2">
-                    {item.contextChips.slice(0, 4).map((chip) => (
-                      <span class="rounded-full border border-ink/10 bg-mist/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-ink/65">
-                        {chip}
-                      </span>
+    {categoryGroups.length ? (
+      <div class="mx-auto max-w-6xl px-4 py-16 sm:py-24">
+        {categoryGroups.map((category, categoryIndex) => (
+          <section
+            id={category.id}
+            class:list={['scroll-mt-24', categoryIndex ? 'mt-24 border-t border-ink/10 pt-20 sm:mt-32 sm:pt-24' : '']}
+            aria-labelledby={`${category.id}-title`}
+          >
+            <header class="max-w-3xl">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-copper-deep">Catégorie</p>
+              <h2 id={`${category.id}-title`} class="mt-3 text-balance font-display text-4xl tracking-tight text-ink sm:text-5xl">
+                {category.title}
+              </h2>
+              {category.description ? <p class="mt-4 text-base leading-relaxed text-ink/70">{category.description}</p> : null}
+            </header>
+
+            {category.procedures.length > 1 ? (
+              <nav class="mt-8 flex gap-2 overflow-x-auto pb-2 no-scrollbar" aria-label={`Interventions : ${category.title}`}>
+                {category.procedures.map((procedure) => (
+                  <a href={`#${procedure.id}`} class="btn btn-pill btn-sm min-h-11 shrink-0 btn-secondary">
+                    {procedure.title}
+                  </a>
+                ))}
+              </nav>
+            ) : null}
+
+            <div class="mt-12 space-y-20">
+              {category.procedures.map((procedure) => (
+                <section id={procedure.id} class="scroll-mt-24" aria-labelledby={`${procedure.id}-title`}>
+                  <div class="mb-7 flex flex-wrap items-end justify-between gap-3 border-b border-ink/10 pb-4">
+                    <h3 id={`${procedure.id}-title`} class="font-display text-3xl tracking-tight text-ink sm:text-4xl">
+                      {procedure.title}
+                    </h3>
+                    {procedure.href ? (
+                      <a class="link text-sm underline underline-offset-4" href={procedure.href}>Découvrir l’intervention</a>
+                    ) : null}
+                  </div>
+
+                  <div class="grid gap-7 md:grid-cols-2 md:gap-8">
+                    {procedure.cases.map((item) => (
+                      <article class="group overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft transition-shadow hover:shadow-lift">
+                        <a
+                          href={`/avant-apres/${item.id}`}
+                          class="block focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-copper/50"
+                          aria-label={`Voir le cas : ${item.publicTitle}`}
+                        >
+                          {item.isComparison ? (
+                            <div class="relative flex aspect-[5/4] items-center justify-center overflow-hidden bg-mist/55">
+                              <img
+                                src={item.beforeUrl}
+                                alt="Photographie comparative avant et après intervention"
+                                class="h-full w-full object-contain"
+                                loading="lazy"
+                              />
+                              <span class="absolute left-3 top-3 rounded-full bg-paper/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/75 sm:left-4 sm:top-4">
+                                Avant / Après
+                              </span>
+                            </div>
+                          ) : (
+                            <div class="grid aspect-[5/4] grid-cols-2 bg-mist/55">
+                              <div class="relative overflow-hidden border-r border-paper/50">
+                                <img src={item.beforeUrl} alt="Avant" class="h-full w-full object-cover" loading="lazy" />
+                                <span class="absolute left-3 top-3 rounded-full bg-paper/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/75 sm:left-4 sm:top-4 sm:px-3">
+                                  Avant
+                                </span>
+                              </div>
+                              <div class="relative overflow-hidden">
+                                <img
+                                  src={item.afterUrl}
+                                  alt="Après"
+                                  class="h-full w-full object-cover transition duration-700 group-hover:scale-[1.02]"
+                                  loading="lazy"
+                                />
+                                <span class="absolute left-3 top-3 rounded-full bg-paper/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/75 sm:left-4 sm:top-4 sm:px-3">
+                                  Après
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          <div class="flex items-start justify-between gap-4 p-5 sm:p-6">
+                            <div>
+                              {item.case_number ? (
+                                <p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-copper-deep">Cas n° {item.case_number}</p>
+                              ) : null}
+                              <h4 class:list={['text-balance font-display text-2xl tracking-tight text-ink', item.case_number ? 'mt-2' : '']}>
+                                {item.publicTitle}
+                              </h4>
+                              {item.description ? <p class="mt-3 text-sm leading-relaxed text-ink/70">{item.description}</p> : null}
+                              {item.contextChips.length ? (
+                                <div class="mt-4 flex flex-wrap gap-2">
+                                  {item.contextChips.slice(0, 4).map((chip) => (
+                                    <span class="rounded-full border border-ink/10 bg-mist/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink/65">
+                                      {chip}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : null}
+                            </div>
+                            <span class="mt-1 inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-ink/15 text-ink/55 transition group-hover:border-ink/35 group-hover:text-ink" aria-hidden="true">
+                              <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4">
+                                <path d="M8 16 16 8M9 8h7v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                              </svg>
+                            </span>
+                          </div>
+                        </a>
+                      </article>
                     ))}
                   </div>
-                ) : null}
-              </div>
-              <span class="mt-1 inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-ink/15 text-ink/55 transition group-hover:border-ink/35 group-hover:text-ink">
-                <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" aria-hidden="true">
-                  <path d="M8 16 16 8M9 8h7v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-                </svg>
-              </span>
+                </section>
+              ))}
             </div>
-          </a>
+          </section>
         ))}
-      </section>
-      <div id="aa-load-more-wrap" class:list={['mt-10 flex flex-col items-center gap-4', { hidden: caseCards.length >= totalCases }]}>
-        <p id="aa-results-count" class="text-sm text-ink/70">{caseCards.length} résultats affichés sur {totalCases}</p>
-        <p id="aa-load-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
-        <button
-          id="aa-load-more"
-          type="button"
-          class="btn btn-pill btn-md min-h-11 btn-secondary disabled:cursor-wait disabled:opacity-60"
-          data-offset={caseCards.length}
-          data-total={totalCases}
-          data-limit={pageSize}
-          data-category={interventionCategory ?? ''}
-          data-slug={interventionSlug ?? ''}
-        >
-          Charger plus de résultats
-        </button>
+
+        <aside class="mt-20 rounded-3xl border border-ink/10 bg-mist/60 px-6 py-7 sm:mt-28 sm:px-8" aria-label="Information importante">
+          <p class="text-sm leading-relaxed text-ink/75">
+            Ces photographies illustrent des cas précis et ne constituent ni une garantie de résultat ni un avis médical personnalisé.
+            Une consultation est nécessaire pour évaluer votre situation et discuter des options adaptées.
+          </p>
+        </aside>
       </div>
     ) : (
-      <section class="mt-12 rounded-3xl border border-ink/10 bg-mist p-10 text-ink/75">
-        {interventionTitle ? (
-          <div>
-            Aucun cas publié pour cette intervention pour le moment.
-            <div class="mt-3">
-              <a class="link" href="/avant-apres">Voir tous les cas</a>
-            </div>
-          </div>
-        ) : (
-          <>Galerie en cours de préparation.</>
-        )}
+      <section class="mx-auto max-w-6xl px-4 py-16 sm:py-24">
+        <div class="rounded-3xl border border-ink/10 bg-mist/60 p-8 text-center sm:p-12">
+          <h2 class="font-display text-3xl tracking-tight text-ink">
+            {hasActiveFilter ? 'Aucun cas publié dans cette sélection' : 'Galerie en cours de préparation'}
+          </h2>
+          <p class="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-ink/70">
+            {hasActiveFilter
+              ? 'Aucun résultat consenti et publié ne correspond actuellement à cette catégorie ou à cette intervention.'
+              : 'Les cas apparaîtront ici une fois leur sélection finalisée et leur consentement de publication confirmé.'}
+          </p>
+          {hasActiveFilter ? <a href="/avant-apres" class="btn btn-pill btn-md btn-secondary mt-6">Voir toute la galerie</a> : null}
+        </div>
       </section>
     )}
 
-      <section class="mt-20 overflow-hidden rounded-3xl border border-ink/10 bg-ink px-8 py-14 text-paper shadow-lift sm:px-12">
-      <div class="max-w-3xl">
-        <h2 class="font-display text-4xl leading-tight tracking-tight">Commencez votre parcours en consultation</h2>
-        <p class="mt-4 max-w-2xl text-sm leading-relaxed text-paper/80">
-          Une évaluation personnalisée permet de confirmer l'indication, d'expliquer les options et de définir un plan adapté à vos objectifs.
-        </p>
-        <div class="mt-8 flex flex-wrap gap-3">
-          <a href="/contact" class="btn btn-pill btn-lg bg-paper text-ink hover:bg-paper/90">Prendre rendez-vous</a>
-          <a href="/interventions" class="btn btn-pill btn-lg border border-paper/35 bg-transparent text-paper hover:bg-paper/10">
-            Voir les interventions
-          </a>
+    <section class="bg-ink text-paper">
+      <div class="mx-auto max-w-6xl px-4 py-14 sm:py-16">
+        <div class="flex flex-col items-start justify-between gap-8 sm:flex-row sm:items-end">
+          <div class="max-w-2xl">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-paper/60">Consultation personnalisée</p>
+            <h2 class="mt-3 text-balance font-display text-3xl leading-tight tracking-tight sm:text-4xl">Parler de votre projet avec le Dr Soussi</h2>
+            <p class="mt-4 text-sm leading-relaxed text-paper/75">L’indication, les possibilités et les limites sont évaluées individuellement en consultation.</p>
+          </div>
+          <a href="/contact" class="btn btn-pill btn-lg shrink-0 bg-paper text-ink hover:bg-paper/90">Prendre rendez-vous</a>
         </div>
       </div>
-      </section>
-    </div>
-  </section>
+    </section>
+  </div>
 </BaseLayout>
-
-<script is:inline>
-  (() => {
-    const grid = document.getElementById('aa-case-grid');
-    const button = document.getElementById('aa-load-more');
-    const wrap = document.getElementById('aa-load-more-wrap');
-    const count = document.getElementById('aa-results-count');
-    const status = document.getElementById('aa-load-status');
-    if (!(grid instanceof HTMLElement) || !(button instanceof HTMLButtonElement)) return;
-
-    const createLabel = (text) => {
-      const label = document.createElement('span');
-      label.className = 'absolute left-4 top-4 rounded-full bg-paper/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/80';
-      label.textContent = text;
-      return label;
-    };
-
-    const createImage = (src, alt, className) => {
-      const image = document.createElement('img');
-      image.src = src;
-      image.alt = alt;
-      image.loading = 'lazy';
-      image.className = className;
-      return image;
-    };
-
-    const createCard = (item) => {
-      const card = document.createElement('a');
-      card.href = `/avant-apres/${encodeURIComponent(item.id)}`;
-      card.className = 'group card-focus overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft transition-shadow duration-300 hover:shadow-lift';
-      const coverSet = item.media_sets?.find((set) => set.is_cover) ?? item.media_sets?.[0];
-      const isComparison = coverSet?.media_mode === 'comparison';
-      const media = document.createElement('div');
-
-      if (isComparison) {
-        media.className = 'relative bg-mist/50';
-        media.append(createImage(item.beforeUrl, 'Photographie comparative avant et après intervention', 'h-80 w-full object-contain sm:h-96'));
-        media.append(createLabel('Avant / Après'));
-      } else {
-        media.className = 'grid aspect-[5/4] grid-cols-2';
-        const before = document.createElement('div');
-        before.className = 'relative overflow-hidden border-r border-paper/30';
-        before.append(createImage(item.beforeUrl, 'Avant', 'h-full w-full object-cover grayscale opacity-85'));
-        before.append(createLabel('Avant'));
-        const after = document.createElement('div');
-        after.className = 'relative overflow-hidden';
-        after.append(createImage(item.afterUrl, 'Après', 'h-full w-full object-cover'));
-        after.append(createLabel('Après'));
-        media.append(before, after);
-      }
-
-      const content = document.createElement('div');
-      content.className = 'flex items-start justify-between gap-4 p-6';
-      const details = document.createElement('div');
-      const title = document.createElement('h3');
-      title.className = 'text-balance font-display text-[clamp(1.35rem,2vw,1.65rem)] tracking-tight';
-      title.textContent = item.title || 'Résultat documenté';
-      details.append(title);
-      if (item.description) {
-        const description = document.createElement('p');
-        description.className = 'mt-3 max-w-[44ch] text-sm leading-relaxed text-ink/70';
-        description.textContent = item.description;
-        details.append(description);
-      }
-      const chips = [];
-      if (coverSet?.result_delay_label) chips.push(coverSet.result_delay_label);
-      if (item.patient_context?.smoking_status === 'non_smoker') chips.push('Non fumeuse');
-      if (item.patient_context?.smoking_status === 'smoker') chips.push('Fumeuse');
-      if (item.patient_context?.post_bariatric) chips.push('Post-bariatrique');
-      if (item.patient_context?.revision_case) chips.push('Reprise');
-      if (chips.length) {
-        const chipList = document.createElement('div');
-        chipList.className = 'mt-3 flex flex-wrap gap-2';
-        chips.slice(0, 4).forEach((chip) => {
-          const chipElement = document.createElement('span');
-          chipElement.className = 'rounded-full border border-ink/10 bg-mist/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-ink/65';
-          chipElement.textContent = chip;
-          chipList.append(chipElement);
-        });
-        details.append(chipList);
-      }
-      const arrow = document.createElement('span');
-      arrow.className = 'mt-1 inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-ink/15 text-ink/55';
-      arrow.setAttribute('aria-hidden', 'true');
-      arrow.innerHTML = '<svg viewBox="0 0 24 24" fill="none" class="h-4 w-4"><path d="M8 16 16 8M9 8h7v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
-      content.append(details, arrow);
-      card.append(media, content);
-      return card;
-    };
-
-    button.addEventListener('click', async () => {
-      const offset = Number(button.dataset.offset ?? '0');
-      const total = Number(button.dataset.total ?? '0');
-      const limit = Number(button.dataset.limit ?? '12');
-      const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
-      if (button.dataset.category) params.set('intervention_category', button.dataset.category);
-      if (button.dataset.slug) params.set('intervention_slug', button.dataset.slug);
-      button.disabled = true;
-      button.textContent = 'Chargement…';
-      grid.setAttribute('aria-busy', 'true');
-      if (status instanceof HTMLElement) status.textContent = 'Chargement de résultats supplémentaires.';
-      try {
-        const response = await fetch(`/api/public/avant-apres?${params}`);
-        if (!response.ok) throw new Error('request failed');
-        const page = await response.json();
-        const items = Array.isArray(page.items) ? page.items : [];
-        items.forEach((item) => grid.append(createCard(item)));
-        const nextOffset = offset + items.length;
-        button.dataset.offset = String(nextOffset);
-        if (count instanceof HTMLElement) count.textContent = `${nextOffset} résultats affichés sur ${total}`;
-        if (status instanceof HTMLElement) {
-          status.textContent = items.length
-            ? `${items.length} résultats ajoutés. ${nextOffset} résultats affichés sur ${total}.`
-            : 'Aucun résultat supplémentaire disponible.';
-        }
-        if (!items.length || nextOffset >= total) {
-          if (wrap instanceof HTMLElement) wrap.hidden = true;
-          return;
-        }
-        button.disabled = false;
-        button.textContent = 'Charger plus de résultats';
-      } catch {
-        button.disabled = false;
-        button.textContent = 'Réessayer';
-        if (status instanceof HTMLElement) {
-          status.textContent = 'Impossible de charger plus de résultats. Réessayez.';
-        }
-      } finally {
-        grid.setAttribute('aria-busy', 'false');
-      }
-    });
-  })();
-</script>

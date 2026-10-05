@@ -41,7 +41,6 @@ export const POST: APIRoute = async (context) => {
 
   const status = body.status === 'publie' ? 'publie' : 'brouillon';
   const consent = Boolean(body.consent);
-  const consentDate = parseOptionalString(body.consent_date);
   const interventionCategory =
     typeof body.intervention_category === 'string' && body.intervention_category.trim()
       ? body.intervention_category
@@ -55,8 +54,8 @@ export const POST: APIRoute = async (context) => {
     return new Response('An intervention is required', { status: 400 });
   }
 
-  if (status === 'publie' && (!consent || !consentDate)) {
-    return new Response('Dated consent is required before publication', { status: 422 });
+  if (status === 'publie' && !consent) {
+    return new Response('Consent is required before publication', { status: 422 });
   }
 
   const payload = {
@@ -67,7 +66,7 @@ export const POST: APIRoute = async (context) => {
     case_number: null,
     status: status as 'brouillon' | 'publie',
     consent,
-    consent_date: consentDate,
+    consent_date: null,
     internal_ref: parseOptionalString(body.internal_ref),
     before_path,
     after_path,
@@ -75,7 +74,7 @@ export const POST: APIRoute = async (context) => {
     summary: parseOptionalString(body.summary),
     clinical_context: parseOptionalString(body.clinical_context),
     result_overview: parseOptionalString(body.result_overview),
-    featured: Boolean(body.featured),
+    featured: typeof body.featured === 'boolean' ? body.featured : undefined,
     patient_context:
       body.patient_context && typeof body.patient_context === 'object'
         ? {

@@ -1,0 +1,18 @@
+---
+type Props = {
+  id: string;
+  class?: string;
+};
+
+const { id, class: className = '' } = Astro.props;
+const clipId = `${id}-clip`;
+---
+
+<svg aria-hidden="true" viewBox="30 8 66 140" class={className}>
+  <defs>
+    <clipPath id={clipId}>
+      <path d="M30 8H70V20H105V90H90V108H57V148H30Z" />
+    </clipPath>
+  </defs>
+  <image href="/images/dr-soussi-logo.svg" width="265.11249" height="165.89375" clip-path={`url(#${clipId})`} />
+</svg>

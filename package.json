@@ -8,6 +8,7 @@
     "preview": "astro preview",
     "check": "astro check",
     "format": "prettier --write .",
+    "import:avant-apres:curated": "node --env-file=.env.local scripts/import-curated-avant-apres.mjs",
     "import:avant-apres:samples": "node --env-file=.env.local scripts/import-avant-apres-samples.mjs",
     "import:avant-apres:remaining": "node --env-file=.env.local scripts/import-remaining-avant-apres.mjs"
   },
@@ -15,6 +16,7 @@
     "@supabase/supabase-js": "^2.49.1",
     "astro": "^5.3.0",
     "cookie": "^1.1.1",
+    "gsap": "^3.15.0",
     "markdown-it": "^14.1.1"
   },
   "devDependencies": {

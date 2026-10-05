@@ -21,7 +21,7 @@ export const site = {
     whatsappE164: '+21652233333',
     email: 'dr.sirine.soussi@gmail.com',
     addressLines: [
-      '11 Rue du Lac Turkana',
+      '1.1 Rue du Lac Turkana',
       'Berges du Lac 1, Tunis',
     ],
     hoursLines: ['Sur rendez-vous', 'Consultation individuelle'],
@@ -32,10 +32,13 @@ export const site = {
     tel: 'tel:+21652233333',
     whatsapp: 'https://wa.me/21652233333',
     email: 'mailto:dr.sirine.soussi@gmail.com',
+    maps: 'https://maps.app.goo.gl/LcTcf3bbCtPNa6px6',
+    mapsEmbed: 'https://www.google.com/maps?cid=17448948987352639458&output=embed',
   },
 };
 
 export function buildTitle(pageTitle?: string) {
   if (!pageTitle) return site.name;
+  if (pageTitle.toLocaleLowerCase('fr').includes(site.name.toLocaleLowerCase('fr'))) return pageTitle;
   return `${pageTitle} | ${site.name}`;
 }

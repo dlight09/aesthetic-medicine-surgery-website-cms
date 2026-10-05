@@ -1,12 +1,8 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import BrandMark from '@/components/BrandMark.astro';
+import { interventionCategories } from '@/lib/interventions';
 import { site } from '@/lib/site';
-
-const addressQuery = [...site.contact.addressLines, site.contact.city, site.contact.country]
-  .filter(Boolean)
-  .join(', ');
-const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`;
-const mapsEmbed = `https://www.google.com/maps?q=${encodeURIComponent(addressQuery)}&output=embed`;
 
 const processSteps = [
   {
@@ -33,34 +29,49 @@ const processSteps = [
 ---
 
 <BaseLayout title="Rendez-vous" description="Prendre rendez-vous: telephone, WhatsApp, adresse, horaires et informations de consultation.">
-  <section class="relative overflow-hidden bg-ink">
-    <img
-      src="/images/hero-clinic-01.webp"
-      width="1536"
-      height="1024"
-      alt="Espace de consultation du cabinet"
-      loading="eager"
-      class="absolute inset-0 h-full w-full object-cover opacity-45"
-    />
-    <div class="absolute inset-0 bg-ink/72"></div>
-    <div class="relative mx-auto max-w-6xl px-4 py-14 sm:py-20 lg:py-24">
-      <div class="max-w-2xl text-paper">
-        <span class="text-xs font-semibold uppercase tracking-[0.2em] text-paper/70">Première demande</span>
-        <h1 class="mt-5 font-display text-4xl tracking-tight text-paper sm:text-5xl">Rendez-vous</h1>
-        <p class="mt-5 max-w-xl text-base leading-relaxed text-paper/82 sm:text-lg">
-          Contactez directement le cabinet pour une première demande et l’organisation d’une consultation adaptée à votre situation.
-        </p>
+  <section class="overflow-hidden bg-ink text-paper">
+    <div class="mx-auto grid max-w-[90rem] lg:grid-cols-[0.9fr_1.1fr]">
+      <div class="relative isolate flex items-center overflow-hidden px-4 py-14 sm:px-8 sm:py-20 lg:px-12 lg:py-24 xl:px-16">
+        <BrandMark
+          id="contact-hero-background-mark"
+          class="pointer-events-none absolute -bottom-40 -left-20 h-[38rem] w-auto invert opacity-[0.045]"
+        />
+        <div class="relative z-10 max-w-xl">
+          <span class="mb-8 block h-px w-16 bg-copper"></span>
+          <span class="text-xs font-semibold uppercase tracking-[0.2em] text-paper/70">Première demande</span>
+          <h1 class="mt-5 font-display text-5xl leading-none tracking-tight text-paper sm:text-6xl lg:text-7xl">Rendez-vous</h1>
+          <p class="mt-7 max-w-lg text-base leading-8 text-paper/78 sm:text-lg">
+            Contactez directement le cabinet pour une première demande et l’organisation d’une consultation adaptée à votre situation.
+          </p>
+        </div>
       </div>
 
-      <section class="mt-10 max-w-3xl rounded-3xl border border-paper/20 bg-paper p-5 text-ink shadow-lift sm:p-8">
-        <div class="border-b border-ink/10 pb-6">
-          <h2 class="font-display text-2xl tracking-tight">Envoyer une demande</h2>
-          <p class="mt-2 max-w-2xl text-sm leading-relaxed text-ink/75">Décrivez brièvement votre demande et joignez les photos utiles à sa compréhension. Elles restent strictement accessibles à l’équipe du cabinet.</p>
+      <div class="relative aspect-[1346/1169] overflow-hidden border-paper/10 bg-[#d3d5d8] lg:border-l">
+        <img
+          src="/images/rendez-vous-dr-sirine-soussi.webp"
+          width="1346"
+          height="1169"
+          alt="Dr Sirine Soussi au bloc opératoire"
+          loading="eager"
+          fetchpriority="high"
+          class="absolute inset-0 h-full w-full object-contain object-center"
+        />
+        <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/15 via-transparent to-transparent lg:bg-gradient-to-r lg:from-ink/20 lg:via-transparent lg:to-transparent"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="relative bg-mist/35 px-4 pb-8 sm:pb-12">
+      <section class="relative z-10 mx-auto -mt-8 max-w-4xl rounded-[2rem] border border-ink/10 bg-paper/95 p-5 text-ink shadow-lift backdrop-blur-sm sm:-mt-12 sm:p-8 lg:-mt-16 lg:p-10">
+        <div class="border-b border-ink/10 pb-7">
+          <span class="text-xs font-semibold uppercase tracking-[0.18em] text-copper-deep">Demande de consultation</span>
+          <h2 class="mt-3 font-display text-3xl leading-tight tracking-tight">Envoyez une demande</h2>
+          <p class="mt-3 max-w-2xl text-sm leading-7 text-ink/70">Décrivez brièvement votre demande. Le cabinet vous répondra de manière confidentielle.</p>
         </div>
 
-        <form id="booking-form" class="mt-8 space-y-8" novalidate>
+        <form id="booking-form" class="mt-9 space-y-9" novalidate>
           <fieldset class="space-y-5">
-            <legend class="font-display text-lg tracking-tight text-ink">Vos coordonnées</legend>
+            <legend class="font-display text-xl tracking-tight text-ink"><span class="mr-2 text-copper-deep">01</span> Vos coordonnées</legend>
             <div class="grid gap-5 sm:grid-cols-2">
               <label class="grid gap-2 text-sm font-semibold text-ink/85">
                 <span class="booking-label">Nom et prénom <b aria-hidden="true">*</b></span>
@@ -76,20 +87,63 @@ const processSteps = [
               <input name="phone" type="tel" autocomplete="tel" required class="booking-input" />
             </label>
           </fieldset>
-          <fieldset class="space-y-5 border-t border-ink/10 pt-7">
-            <legend class="font-display text-lg tracking-tight text-ink">Votre demande</legend>
-            <label class="mt-5 grid gap-2 text-sm font-semibold text-ink/85">
-              <span class="booking-label">Votre message <b aria-hidden="true">*</b></span>
+          <fieldset class="space-y-5 border-t border-ink/10 pt-8">
+            <legend class="font-display text-xl tracking-tight text-ink"><span class="mr-2 text-copper-deep">02</span> Votre demande</legend>
+            <div class="grid gap-5 sm:grid-cols-2">
+              <label class="grid gap-2 text-sm font-semibold text-ink/85">
+                <span class="booking-label">Âge <b aria-hidden="true">*</b></span>
+                <input name="age" type="number" min="1" max="120" step="1" inputmode="numeric" required class="booking-input" />
+              </label>
+              <label class="grid gap-2 text-sm font-semibold text-ink/85">
+                <span class="booking-label">Poids <b aria-hidden="true">*</b></span>
+                <input name="weightKg" type="number" min="1" max="500" step="0.1" inputmode="decimal" required class="booking-input" />
+              </label>
+            </div>
+            <div class="grid gap-5 sm:grid-cols-2">
+              <label class="grid gap-2 text-sm font-semibold text-ink/85">
+                <span class="booking-label">Taille <b aria-hidden="true">*</b></span>
+                <input name="heightCm" type="number" min="1" max="300" step="0.1" inputmode="decimal" required class="booking-input" />
+              </label>
+              <label class="grid gap-2 text-sm font-semibold text-ink/85">
+                <span class="booking-label">Tabac <b aria-hidden="true">*</b></span>
+                <select name="smokingStatus" required class="booking-input">
+                  <option value="">Sélectionnez une réponse</option>
+                  <option value="yes">Oui</option>
+                  <option value="no">Non</option>
+                </select>
+              </label>
+            </div>
+            <label class="grid gap-2 text-sm font-semibold text-ink/85">
+              <span class="booking-label !whitespace-normal">Type de chirurgie ou acte médical <b aria-hidden="true">*</b></span>
+              <select name="interventionCategory" required class="booking-input">
+                <option value="">Sélectionnez une réponse</option>
+                {interventionCategories.map((category) => <option value={category.key}>{category.title}</option>)}
+              </select>
+            </label>
+            <label class="grid gap-2 text-sm font-semibold text-ink/85">
+              <span class="booking-label">Date souhaitée <span class="font-normal text-ink/60">(facultatif)</span></span>
+              <input name="desiredDate" type="date" class="booking-input" />
+            </label>
+            <label class="grid gap-2 text-sm font-semibold text-ink/85">
+              <span class="booking-label !whitespace-normal">Antécédents médicaux, chirurgicaux et gynécologiques <b aria-hidden="true">*</b></span>
+              <textarea name="medicalHistory" rows="4" required class="booking-input resize-y" placeholder="Indiquez vos antécédents ou écrivez « Néant »."></textarea>
+            </label>
+            <label class="grid gap-2 text-sm font-semibold text-ink/85">
+              <span class="booking-label">Médicaments pris quotidiennement <b aria-hidden="true">*</b></span>
+              <textarea name="dailyMedications" rows="3" required class="booking-input resize-y" placeholder="Indiquez vos traitements ou écrivez « Aucun »."></textarea>
+            </label>
+            <label class="grid gap-2 text-sm font-semibold text-ink/85">
+              <span class="booking-label">Votre demande <b aria-hidden="true">*</b></span>
               <textarea name="message" rows="5" required class="booking-input resize-y" placeholder="Expliquez votre demande ou la zone concernée."></textarea>
             </label>
             <div class="booking-photo-area">
               <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                <span class="booking-label">Photos à joindre <b aria-hidden="true">*</b></span>
-                <span class="text-sm text-ink/65">De 1 à 5 photos</span>
+                <span class="booking-label">Photos à joindre <span class="font-normal text-ink/60">(facultatif)</span></span>
+                <span class="text-sm text-ink/65">Jusqu’à 5 photos</span>
               </div>
               <label for="booking-photos" class="booking-upload mt-3">
-                <span class="font-semibold text-ink">Ajoutez les photos utiles à votre demande</span>
-                <span class="mt-1 block max-w-xl text-sm leading-relaxed text-ink/70">JPG, PNG ou WebP, 3 Mo maximum par photo. Elles ne sont ni publiées ni partagées.</span>
+                <span class="font-semibold text-ink">Les photos restent strictement accessibles à l’équipe du cabinet.</span>
+                <span class="mt-1 block max-w-xl text-sm leading-relaxed text-ink/70">JPG, PNG ou WebP, 3 Mo maximum par photo.</span>
                 <span class="mt-4 inline-flex rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper transition">Sélectionner les photos</span>
               </label>
               <input id="booking-photos" name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple class="sr-only" />
@@ -98,11 +152,11 @@ const processSteps = [
           </fieldset>
           <label class="flex items-start gap-3 text-sm leading-relaxed text-ink/75">
             <input name="consent" type="checkbox" required class="mt-1 h-4 w-4 rounded border-ink/30 accent-copper-deep" />
-            <span>J’accepte que le cabinet traite mes informations et les photos jointes afin de répondre à ma demande, conformément à l’<a href="/consentement" class="font-semibold underline decoration-ink/35 underline-offset-4 hover:decoration-ink">information sur le consentement</a>. <b aria-hidden="true" class="text-copper-deep">*</b></span>
+            <span>J’accepte que le cabinet traite mes informations et les éventuelles photos jointes afin de répondre à ma demande, conformément à l’<a href="/consentement" class="font-semibold underline decoration-ink/35 underline-offset-4 hover:decoration-ink">information sur le consentement</a>. <b aria-hidden="true" class="text-copper-deep">*</b></span>
           </label>
           <input name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true" />
           <div class="flex flex-col gap-4 border-t border-ink/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
-            <p id="booking-status" class="text-sm leading-relaxed text-ink/70" role="status" aria-live="polite">Tous les champs, y compris les photos, sont obligatoires.</p>
+            <p id="booking-status" class="text-sm leading-relaxed text-ink/70" role="status" aria-live="polite">Les champs marqués d’un astérisque sont obligatoires. Les photos sont facultatives.</p>
             <button type="submit" class="btn btn-pill btn-lg btn-accent">Envoyer la demande</button>
           </div>
         </form>
@@ -116,35 +170,49 @@ const processSteps = [
           </div>
         </div>
       </section>
-    </div>
   </section>
 
-  <section class="mx-auto max-w-6xl px-4 pb-20 pt-14 sm:pt-20">
-    <section id="consultation" class="rounded-3xl border border-ink/10 bg-mist/60 px-6 py-14 sm:px-10">
-      <div class="flex items-start justify-between gap-4">
-        <div class="max-w-2xl">
-          <h2 class="font-display text-4xl tracking-tight sm:text-5xl">Votre parcours de consultation</h2>
-          <p class="mt-4 text-base leading-relaxed text-ink/70">
+  <section class="pb-20 pt-10 sm:pt-14">
+    <section id="consultation" aria-labelledby="consultation-title" class="relative isolate overflow-hidden bg-ink text-paper">
+      <img
+        src="/images/parcours-consultation.webp"
+        width="2055"
+        height="765"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        class="pointer-events-none absolute inset-0 -z-20 h-full w-full object-cover object-[62%_center]"
+      />
+      <div class="pointer-events-none absolute inset-0 -z-10 bg-ink/55"></div>
+      <div class="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-r from-ink/80 via-ink/55 to-ink/40"></div>
+
+      <div class="mx-auto max-w-6xl px-6 py-14 sm:px-10">
+        <div class="max-w-3xl">
+          <h2 id="consultation-title" class="font-display text-4xl tracking-tight text-paper sm:text-5xl">Votre parcours de consultation</h2>
+          <p class="mt-4 text-base leading-relaxed text-paper/80">
             Chaque prise en charge suit une démarche médicale claire : écoute, évaluation, proposition et suivi.
           </p>
         </div>
-      </div>
 
-      <div class="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        {processSteps.map((step) => (
-          <article class="relative rounded-2xl border border-ink/10 bg-paper p-6 shadow-soft">
-            <div class="absolute -top-6 left-4 font-display text-6xl text-ink/10">{step.index}</div>
-            <h3 class="relative font-display text-2xl tracking-tight">{step.title}</h3>
-            <p class="relative mt-3 text-sm leading-relaxed text-ink/70">{step.text}</p>
-          </article>
-        ))}
+        <ol class="mt-12 grid list-none gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          {processSteps.map((step) => (
+            <li>
+              <article class="relative isolate h-full overflow-hidden rounded-2xl border border-paper/30 bg-ink/45 p-6 text-paper shadow-[0_16px_40px_rgba(0,0,0,0.16)] backdrop-blur-sm">
+                <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-paper/10 via-paper/5 to-transparent"></div>
+                <span aria-hidden="true" class="font-display text-xl tracking-[0.12em] text-paper/70">{step.index}</span>
+                <h3 class="mt-3 font-display text-2xl tracking-tight text-paper">{step.title}</h3>
+                <p class="mt-3 text-sm leading-relaxed text-paper/90">{step.text}</p>
+              </article>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
 
-    <section class="mt-20 grid gap-0 overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft lg:grid-cols-[1.15fr_0.85fr]">
+    <section class="mx-4 mt-20 grid max-w-6xl gap-0 overflow-hidden rounded-3xl border border-ink/10 bg-paper shadow-soft lg:mx-auto lg:grid-cols-[1.15fr_0.85fr]">
       <div class="h-[26rem] min-h-[22rem] bg-mist">
         <iframe
-          src={mapsEmbed}
+          src={site.links.mapsEmbed}
           title="Localisation de la clinique"
           loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
@@ -162,7 +230,7 @@ const processSteps = [
             <div>{line}</div>
           ))}
         </div>
-        <a href={mapsHref} target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 border-b border-ink pb-1 text-xs font-semibold uppercase tracking-[0.2em] text-ink/80 hover:text-ink">
+        <a href={site.links.maps} target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 border-b border-ink pb-1 text-xs font-semibold uppercase tracking-[0.2em] text-ink/80 hover:text-ink">
           Ouvrir l'itinéraire
           <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" aria-hidden="true">
             <path d="M8 16 16 8M9 8h7v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -234,7 +302,7 @@ const processSteps = [
     if (!button) return;
     selectedPhotos.splice(Number(button.dataset.photoIndex), 1);
     renderPhotos();
-    if (!selectedPhotos.length) setStatus('Ajoutez au moins une photo pour envoyer votre demande.', true);
+    if (!selectedPhotos.length) setStatus('Aucune photo sélectionnée. Vous pouvez envoyer votre demande sans photo.');
   });
 
   renderPhotos();
@@ -242,12 +310,6 @@ const processSteps = [
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!form.reportValidity()) return;
-    if (!selectedPhotos.length) {
-      setStatus('Ajoutez au moins une photo pour envoyer votre demande.', true);
-      photoInput?.focus();
-      return;
-    }
-
     const data = new FormData(form);
     submitButton!.disabled = true;
     setStatus('Enregistrement de votre demande…');
@@ -258,6 +320,10 @@ const processSteps = [
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           fullName: data.get('fullName'), email: data.get('email'), phone: data.get('phone'), message: data.get('message'),
+          age: data.get('age'), weightKg: data.get('weightKg'), heightCm: data.get('heightCm'),
+          desiredDate: data.get('desiredDate'), medicalHistory: data.get('medicalHistory'),
+          dailyMedications: data.get('dailyMedications'), smokingStatus: data.get('smokingStatus'),
+          interventionCategory: data.get('interventionCategory'),
           consent: data.get('consent') === 'on', website: data.get('website'),
           photos: selectedPhotos.map(({ name, type, size }) => ({ name, type, size })),
         }),

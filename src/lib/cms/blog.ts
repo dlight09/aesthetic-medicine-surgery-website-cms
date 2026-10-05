@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from './supabase';
+import { getSupabaseAdmin, getSupabasePublicRead } from './supabase';
 import type { BlogBlock } from './blogBlocks';
 
 export type BlogStatus = 'brouillon' | 'publie';
@@ -38,7 +38,7 @@ export async function getCmsBlogPostBySlug(slug: string) {
 }
 
 export async function listPublicBlogPosts() {
-  const supabase = getSupabaseAdmin();
+  const supabase = getSupabasePublicRead();
   const { data, error } = await supabase
     .from(tableName)
     .select('*')
@@ -50,7 +50,7 @@ export async function listPublicBlogPosts() {
 }
 
 export async function getPublicBlogPostBySlug(params: { slug: string; includeDraft?: boolean }) {
-  const supabase = getSupabaseAdmin();
+  const supabase = getSupabasePublicRead();
   let query = supabase.from(tableName).select('*').eq('slug', params.slug);
   if (!params.includeDraft) query = query.eq('status', 'publie');
   const { data, error } = await query.maybeSingle();
@@ -131,6 +131,28 @@ export async function listLinkedInterventionSlugsForBlog(blog_slug: string) {
 
 export async function listLinkedBlogSlugsForIntervention(intervention_slug: string) {
   const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from(linkTable)
+    .select('blog_slug, position')
+    .eq('intervention_slug', intervention_slug)
+    .order('position', { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((x: any) => String(x.blog_slug));
+}
+
+export async function listPublicLinkedInterventionSlugsForBlog(blog_slug: string) {
+  const supabase = getSupabasePublicRead();
+  const { data, error } = await supabase
+    .from(linkTable)
+    .select('intervention_slug, position')
+    .eq('blog_slug', blog_slug)
+    .order('position', { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((x: any) => String(x.intervention_slug));
+}
+
+export async function listPublicLinkedBlogSlugsForIntervention(intervention_slug: string) {
+  const supabase = getSupabasePublicRead();
   const { data, error } = await supabase
     .from(linkTable)
     .select('blog_slug, position')

@@ -9,7 +9,10 @@ export const POST: APIRoute = async (context) => {
 
   const body = await context.request.json().catch(() => null);
   const fileName = typeof body?.fileName === 'string' ? body.fileName : '';
-  const kind = body?.kind === 'before' || body?.kind === 'after' ? body.kind : '';
+  const kind =
+    body?.kind === 'before' || body?.kind === 'after' || body?.kind === 'comparison'
+      ? body.kind
+      : '';
   const contentType = typeof body?.contentType === 'string' ? body.contentType : '';
   const allowedTypes = new Map([
     ['image/jpeg', 'jpg'],

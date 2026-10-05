@@ -6,13 +6,11 @@ import { listPublicAvantApresCases, type AvantApresCaseView } from '@/lib/cms/av
 import { getPublicInterventionBySlug } from '@/lib/cms/interventions';
 import { renderMarkdown } from '@/lib/markdown';
 import InterventionBlocks from '@/components/InterventionBlocks.astro';
-import PremiumInterventionPage from '@/components/interventions/PremiumInterventionPage.astro';
 import SeoInterventionPage from '@/components/interventions/SeoInterventionPage.astro';
-import { listLinkedBlogSlugsForIntervention, listPublicBlogPosts } from '@/lib/cms/blog';
+import { listPublicLinkedBlogSlugsForIntervention, listPublicBlogPosts } from '@/lib/cms/blog';
 import { getCollection } from 'astro:content';
 import { interventionCategoryKeys, type InterventionCategoryKey } from '@/lib/interventions';
 import { interventionCategoryMeta } from '@/lib/interventions';
-import { premiumInterventionPages } from '@/lib/interventions/premiumPages';
 import { seoInterventionPages } from '@/lib/interventions/seoPages';
 import { coerceSeoTemplateV2Data } from '@/lib/cms/interventionSeoTemplate';
 import { isCmsAuthed } from '@/lib/cms/auth';
@@ -38,15 +36,12 @@ try {
   dbItem = null;
 }
 
-// Fallback to repo content collection if Supabase is not configured or item not found.
+// Repository content is canonical for document-backed short-form pages.
 const contentEntries = await getCollection('interventions');
-const entry =
-  !dbItem
-    ? contentEntries.find((e) => {
-        const leaf = e.slug.split('/').filter(Boolean).slice(-1)[0] ?? e.slug;
-        return e.data.category === category && leaf === slug;
-      })
-    : null;
+const entry = contentEntries.find((e) => {
+  const leaf = e.slug.split('/').filter(Boolean).slice(-1)[0] ?? e.slug;
+  return e.data.category === category && leaf === slug;
+});
 
 const seoPageDataRaw =
   (dbItem?.template_kind === 'seo_v1' || dbItem?.template_kind === 'seo_v2') && dbItem.seo_page_data
@@ -65,16 +60,19 @@ if (!dbItem && !entry && !seoPageData) {
   return Astro.redirect(`/interventions/${category}`);
 }
 
-const title = dbItem?.seo_title || dbItem?.title || entry?.data.title || seoPageData?.h1;
-const description = dbItem?.seo_description || dbItem?.description || entry?.data.description || seoPageData?.intro;
-const pageTitle = dbItem?.title || entry?.data.title || seoPageData?.h1;
+const title = seoPageData
+  ? dbItem?.seo_title || dbItem?.title || seoPageData.h1
+  : entry?.data.title || dbItem?.seo_title || dbItem?.title;
+const description = seoPageData
+  ? dbItem?.seo_description || dbItem?.description || seoPageData.intro
+  : entry?.data.description || dbItem?.seo_description || dbItem?.description;
+const pageTitle = seoPageData?.h1 || entry?.data.title || dbItem?.title;
 const categoryThumb = interventionCategories.find((c) => c.key === category)?.thumbnailSrc;
 
 const hasBlocks = Array.isArray(dbItem?.content_blocks) && (dbItem?.content_blocks?.length ?? 0) > 0;
 const contentHtml = dbItem && !hasBlocks ? renderMarkdown(dbItem.body_md) : null;
 const rendered = entry ? await entry.render() : null;
 const Content = rendered?.Content;
-const premiumPageData = category === 'medecine-esthetique' ? premiumInterventionPages[slug] : null;
 type AvantApresCaseWithIntervention = AvantApresCaseView & {
   intervention_category?: string | null;
   intervention_slug?: string | null;
@@ -83,10 +81,10 @@ type AvantApresCaseWithIntervention = AvantApresCaseView & {
 };
 let relatedCases: AvantApresCaseWithIntervention[] = [];
 try {
-  relatedCases = (await listPublicAvantApresCases()) as AvantApresCaseWithIntervention[];
-  relatedCases = relatedCases.filter(
-    (item) => item.intervention_category === category && item.intervention_slug === slug,
-  );
+  relatedCases = (await listPublicAvantApresCases({
+    interventionCategory: category,
+    interventionSlug: slug,
+  })) as AvantApresCaseWithIntervention[];
   relatedCases = relatedCases
     .sort((a, b) => (a.case_number ?? 999) - (b.case_number ?? 999))
     .slice(0, 4);
@@ -97,7 +95,7 @@ try {
 let relatedArticles: { title: string; description: string; href: string }[] = [];
 if (dbItem) {
   try {
-    const slugs = await listLinkedBlogSlugsForIntervention(dbItem.slug);
+    const slugs = await listPublicLinkedBlogSlugsForIntervention(dbItem.slug);
     if (slugs.length) {
       const posts = await listPublicBlogPosts();
       const map = new Map(posts.map((p) => [p.slug, p]));
@@ -115,29 +113,6 @@ if (dbItem) {
 <BaseLayout title={title} description={description} noindex={dbItem?.status === 'brouillon' && cmsAuthed}>
   {seoPageData ? (
     <SeoInterventionPage data={seoPageData} />
-  ) : premiumPageData ? (
-    <PremiumInterventionPage
-      categoryLabel={premiumPageData.categoryLabel}
-      titleStart={premiumPageData.titleStart}
-      titleEmphasis={premiumPageData.titleEmphasis}
-      heroDescription={premiumPageData.heroDescription}
-      heroImageSrc={premiumPageData.heroImageSrc}
-      heroImageAlt={premiumPageData.heroImageAlt}
-      quickFacts={premiumPageData.quickFacts}
-      objectiveParagraphs={premiumPageData.objectiveParagraphs}
-      forWho={premiumPageData.forWho}
-      processParagraphs={premiumPageData.processParagraphs}
-      contraindicationIntro={premiumPageData.contraindicationIntro}
-      contraindications={premiumPageData.contraindications}
-      risksText={premiumPageData.risksText}
-      faq={premiumPageData.faq}
-      ctaTitle={premiumPageData.ctaTitle}
-      ctaEmphasis={premiumPageData.ctaEmphasis}
-      ctaBody={premiumPageData.ctaBody}
-      phoneDisplay={site.contact.phoneDisplay}
-      telHref={site.links.tel}
-      whatsappHref={site.links.whatsapp}
-    />
   ) : (
   <section class="mx-auto max-w-3xl px-4 py-14">
     <a href={`/interventions/${category}`} class="text-sm font-semibold text-ink/70 hover:text-ink">
@@ -169,13 +144,17 @@ if (dbItem) {
       <div class="mt-4 text-xs text-ink/65">Réponse selon disponibilités.</div>
     </div>
 
-    {dbItem && hasBlocks ? (
+    {Content ? (
+      <article class="prose-med mt-10 max-w-none">
+        <Content />
+      </article>
+    ) : dbItem && hasBlocks ? (
       <div class="mt-10">
         <InterventionBlocks blocks={dbItem.content_blocks ?? []} />
       </div>
     ) : (
       <article class="prose-med mt-10 max-w-none">
-        {contentHtml ? <Fragment set:html={contentHtml} /> : Content ? <Content /> : null}
+        {contentHtml ? <Fragment set:html={contentHtml} /> : null}
       </article>
     )}
 

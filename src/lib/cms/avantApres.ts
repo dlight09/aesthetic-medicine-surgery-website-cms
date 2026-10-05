@@ -1,4 +1,4 @@
-import { getAvantApresBucket, getSupabaseAdmin } from './supabase';
+import { getAvantApresBucket, getSupabaseAdmin, getSupabasePublicRead } from './supabase';
 
 export type AvantApresStatus = 'brouillon' | 'publie';
 
@@ -95,6 +95,7 @@ const signedUrlTtl = 600;
 type CaseInput = Omit<AvantApresCase, 'id' | 'created_at' | 'updated_at'>;
 
 type CreateOrUpdatePayload = Partial<CaseInput> & {
+  replace_cover?: boolean;
   patient_context?: Partial<
     Omit<AvantApresPatientContext, 'case_id' | 'created_at' | 'updated_at'>
   > | null;
@@ -118,8 +119,9 @@ function isMissingTableError(error: unknown, table: string) {
   return e.code === 'PGRST205' && typeof e.message === 'string' && e.message.includes(table);
 }
 
-async function signedUrl(path: string) {
-  const supabase = getSupabaseAdmin();
+type SupabaseClient = ReturnType<typeof getSupabaseAdmin>;
+
+async function signedUrl(path: string, supabase: SupabaseClient = getSupabaseAdmin()) {
   const bucket = getAvantApresBucket();
   try {
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, signedUrlTtl);
@@ -130,10 +132,13 @@ async function signedUrl(path: string) {
   }
 }
 
-async function mediaSetWithUrls(item: AvantApresCaseMediaSet): Promise<AvantApresCaseMediaSetView> {
+async function mediaSetWithUrls(
+  item: AvantApresCaseMediaSet,
+  supabase: SupabaseClient = getSupabaseAdmin(),
+): Promise<AvantApresCaseMediaSetView> {
   const [beforeUrl, afterUrl] = await Promise.all([
-    signedUrl(item.before_path),
-    signedUrl(item.after_path),
+    signedUrl(item.before_path, supabase),
+    signedUrl(item.after_path, supabase),
   ]);
   return { ...item, beforeUrl, afterUrl };
 }
@@ -265,7 +270,7 @@ async function removeMediaPaths(paths: Iterable<string>) {
   await getSupabaseAdmin().storage.from(getAvantApresBucket()).remove(items);
 }
 
-async function loadRelations(caseIds: string[]) {
+async function loadRelations(caseIds: string[], supabase: SupabaseClient = getSupabaseAdmin()) {
   if (!caseIds.length) {
     return {
       patientContextByCase: new Map<string, AvantApresPatientContext>(),
@@ -275,7 +280,6 @@ async function loadRelations(caseIds: string[]) {
     };
   }
 
-  const supabase = getSupabaseAdmin();
   const [patientContextRes, proceduresRes, mediaSetsRes, tagsRes] = await Promise.all([
     supabase.from(patientContextTable).select('*').in('case_id', caseIds),
     supabase
@@ -291,10 +295,7 @@ async function loadRelations(caseIds: string[]) {
     supabase.from(tagsTable).select('case_id, tag_key').in('case_id', caseIds),
   ]);
 
-  if (
-    patientContextRes.error &&
-    !isMissingTableError(patientContextRes.error, patientContextTable)
-  ) {
+  if (patientContextRes.error && !isMissingTableError(patientContextRes.error, patientContextTable)) {
     throw patientContextRes.error;
   }
   if (proceduresRes.error && !isMissingTableError(proceduresRes.error, proceduresTable)) {
@@ -342,6 +343,7 @@ async function loadRelations(caseIds: string[]) {
 async function buildCaseView(
   item: AvantApresCase,
   relations: Awaited<ReturnType<typeof loadRelations>>,
+  supabase: SupabaseClient = getSupabaseAdmin(),
 ) {
   const mediaSets = relations.mediaSetsByCase.get(item.id) ?? [];
   const coverSet = mediaSets.find((set) => set.is_cover) ?? mediaSets[0] ?? null;
@@ -349,9 +351,9 @@ async function buildCaseView(
   const coverAfterPath = coverSet?.after_path ?? item.after_path;
 
   const [beforeUrl, afterUrl, mediaSetViews] = await Promise.all([
-    coverBeforePath ? signedUrl(coverBeforePath) : Promise.resolve(''),
-    coverAfterPath ? signedUrl(coverAfterPath) : Promise.resolve(''),
-    Promise.all(mediaSets.map((set) => mediaSetWithUrls(set))),
+    coverBeforePath ? signedUrl(coverBeforePath, supabase) : Promise.resolve(''),
+    coverAfterPath ? signedUrl(coverAfterPath, supabase) : Promise.resolve(''),
+    Promise.all(mediaSets.map((set) => mediaSetWithUrls(set, supabase))),
   ]);
 
   return {
@@ -365,7 +367,10 @@ async function buildCaseView(
   } as AvantApresCaseView;
 }
 
-async function loadGalleryRelations(caseIds: string[]) {
+async function loadGalleryRelations(
+  caseIds: string[],
+  supabase: SupabaseClient = getSupabaseAdmin(),
+) {
   if (!caseIds.length) {
     return {
       patientContextByCase: new Map<string, AvantApresPatientContext>(),
@@ -373,7 +378,6 @@ async function loadGalleryRelations(caseIds: string[]) {
     };
   }
 
-  const supabase = getSupabaseAdmin();
   const [patientContextRes, coverMediaRes] = await Promise.all([
     supabase.from(patientContextTable).select('*').in('case_id', caseIds),
     supabase
@@ -383,7 +387,10 @@ async function loadGalleryRelations(caseIds: string[]) {
       .eq('is_cover', true)
       .order('set_order', { ascending: true }),
   ]);
-  if (patientContextRes.error && !isMissingTableError(patientContextRes.error, patientContextTable)) {
+  if (
+    patientContextRes.error &&
+    !isMissingTableError(patientContextRes.error, patientContextTable)
+  ) {
     throw patientContextRes.error;
   }
   if (coverMediaRes.error && !isMissingTableError(coverMediaRes.error, mediaSetsTable)) {
@@ -405,13 +412,14 @@ async function loadGalleryRelations(caseIds: string[]) {
 async function buildGalleryCaseView(
   item: AvantApresCase,
   relations: Awaited<ReturnType<typeof loadGalleryRelations>>,
+  supabase: SupabaseClient = getSupabaseAdmin(),
 ) {
   const coverSet = relations.coverMediaByCase.get(item.id) ?? null;
   const beforePath = coverSet?.before_path ?? item.before_path;
   const afterPath = coverSet?.after_path ?? item.after_path;
-  const beforeUrl = beforePath ? await signedUrl(beforePath) : '';
+  const beforeUrl = beforePath ? await signedUrl(beforePath, supabase) : '';
   const afterUrl =
-    afterPath === beforePath ? beforeUrl : afterPath ? await signedUrl(afterPath) : '';
+    afterPath === beforePath ? beforeUrl : afterPath ? await signedUrl(afterPath, supabase) : '';
   const mediaSets = coverSet
     ? [{ ...coverSet, beforeUrl, afterUrl }]
     : [];
@@ -465,7 +473,7 @@ export async function listPublicAvantApresCasesPage({
   limit,
 }: PublicAvantApresCasesPageOptions = {}) {
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = getSupabasePublicRead();
     let query = supabase
       .from(tableName)
       .select('*', { count: 'exact' })
@@ -484,9 +492,9 @@ export async function listPublicAvantApresCasesPage({
     if (error) throw error;
 
     const cases = (data ?? []).map((row) => asCase(row as Record<string, unknown>));
-    const relations = await loadGalleryRelations(cases.map((item) => item.id));
+    const relations = await loadGalleryRelations(cases.map((item) => item.id), supabase);
     return {
-      items: await Promise.all(cases.map((item) => buildGalleryCaseView(item, relations))),
+      items: await Promise.all(cases.map((item) => buildGalleryCaseView(item, relations, supabase))),
       total: count ?? 0,
     };
   } catch {
@@ -501,7 +509,7 @@ export async function listPublicAvantApresCases(options?: PublicAvantApresCasesP
 
 export async function listPublicAvantApresCaseReferences() {
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = getSupabasePublicRead();
     const { data, error } = await supabase
       .from(tableName)
       .select('intervention_category, intervention_slug, case_number')
@@ -521,7 +529,7 @@ export async function listPublicAvantApresCaseReferences() {
 
 export async function getPublicAvantApresCase(id: string) {
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = getSupabasePublicRead();
     const { data, error } = await supabase
       .from(tableName)
       .select('*')
@@ -534,8 +542,8 @@ export async function getPublicAvantApresCase(id: string) {
     if (!data) return null;
 
     const item = asCase(data as Record<string, unknown>);
-    const relations = await loadRelations([id]);
-    return await buildCaseView(item, relations);
+    const relations = await loadRelations([id], supabase);
+    return await buildCaseView(item, relations, supabase);
   } catch {
     return null;
   }
@@ -565,7 +573,7 @@ export async function createAvantApresCase(payload: CreateOrUpdatePayload) {
   const slug = typeof payload.intervention_slug === 'string' ? payload.intervention_slug : '';
   if (!category || !slug) throw new Error('An intervention is required');
 
-  const casePayload = {
+  const casePayload: Record<string, unknown> = {
     title: String(payload.title ?? '').trim(),
     description: typeof payload.description === 'string' ? payload.description : null,
     intervention_category: category,
@@ -573,17 +581,22 @@ export async function createAvantApresCase(payload: CreateOrUpdatePayload) {
     status: payload.status === 'publie' ? 'publie' : 'brouillon',
     consent: Boolean(payload.consent),
     consent_date: typeof payload.consent_date === 'string' ? payload.consent_date : null,
-    internal_ref: typeof payload.internal_ref === 'string' ? payload.internal_ref : null,
     before_path: beforePath,
     after_path: afterPath,
-    family_key: typeof payload.family_key === 'string' ? payload.family_key : null,
-    summary: typeof payload.summary === 'string' ? payload.summary : null,
-    clinical_context:
-      typeof payload.clinical_context === 'string' ? payload.clinical_context : null,
-    result_overview: typeof payload.result_overview === 'string' ? payload.result_overview : null,
-    featured: Boolean(payload.featured),
     updated_at: now,
   };
+  const optionalBaseFields = [
+    'internal_ref',
+    'family_key',
+    'summary',
+    'clinical_context',
+    'result_overview',
+    'featured',
+  ] as const;
+  optionalBaseFields.forEach((field) => {
+    const value = payload[field];
+    if (typeof value === 'string' || typeof value === 'boolean') casePayload[field] = value;
+  });
 
   let data: { id: string } | null = null;
   let lastError: unknown = null;
@@ -788,23 +801,53 @@ export async function updateAvantApresCase(id: string, payload: CreateOrUpdatePa
 
   if ('media_sets' in payload) {
     const mediaSets = normalizeMediaSets(payload.media_sets);
-    const { error: clearMediaError } = await supabase
-      .from(mediaSetsTable)
-      .delete()
-      .eq('case_id', id);
-    if (clearMediaError) throw clearMediaError;
-    if (mediaSets.length) {
-      const { error: mediaError } = await supabase
-        .from(mediaSetsTable)
-        .insert(mediaSets.map((item) => ({ case_id: id, ...item, updated_at: now })));
-      if (mediaError) throw mediaError;
+    if (payload.replace_cover) {
+      const cover = mediaSets.find((item) => item.is_cover) ?? mediaSets[0];
+      if (!cover) throw new Error('A replacement cover is required');
 
-      if (!('before_path' in payload) && !('after_path' in payload)) {
-        const cover = mediaSets.find((item) => item.is_cover) ?? mediaSets[0];
-        await supabase
-          .from(tableName)
-          .update({ before_path: cover.before_path, after_path: cover.after_path, updated_at: now })
-          .eq('id', id);
+      const currentCover =
+        current.media_sets.find((item) => item.is_cover) ?? current.media_sets[0];
+      if (currentCover) {
+        const { error: mediaError } = await supabase
+          .from(mediaSetsTable)
+          .update({ ...cover, is_cover: true, updated_at: now })
+          .eq('id', currentCover.id);
+        if (mediaError) throw mediaError;
+      } else {
+        const { error: mediaError } = await supabase
+          .from(mediaSetsTable)
+          .insert({ case_id: id, ...cover, is_cover: true, updated_at: now });
+        if (mediaError) throw mediaError;
+      }
+
+      const { error: caseMediaError } = await supabase
+        .from(tableName)
+        .update({ before_path: cover.before_path, after_path: cover.after_path, updated_at: now })
+        .eq('id', id);
+      if (caseMediaError) throw caseMediaError;
+    } else {
+      const { error: clearMediaError } = await supabase
+        .from(mediaSetsTable)
+        .delete()
+        .eq('case_id', id);
+      if (clearMediaError) throw clearMediaError;
+      if (mediaSets.length) {
+        const { error: mediaError } = await supabase
+          .from(mediaSetsTable)
+          .insert(mediaSets.map((item) => ({ case_id: id, ...item, updated_at: now })));
+        if (mediaError) throw mediaError;
+
+        if (!('before_path' in payload) && !('after_path' in payload)) {
+          const cover = mediaSets.find((item) => item.is_cover) ?? mediaSets[0];
+          await supabase
+            .from(tableName)
+            .update({
+              before_path: cover.before_path,
+              after_path: cover.after_path,
+              updated_at: now,
+            })
+            .eq('id', id);
+        }
       }
     }
   }

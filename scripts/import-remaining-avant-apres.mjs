@@ -22,6 +22,13 @@ const sampleSources = new Set([
   'lip lift/cas 1',
   'Protheses mammaires/cas 1',
 ]);
+const rejectedSources = new Set([
+  'blepharoplastie/cas 1',
+  'Mommy makeover/cas 2',
+  'Mommy makeover/cas 5',
+  'Mommy makeover/cas 6',
+  'abdominoplastie/cas 7',
+]);
 
 const sourceMappings = new Map([
   ['abdominoplastie', { category: 'silhouette', slug: 'abdominoplastie' }],
@@ -170,7 +177,7 @@ const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!url || !key) throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.');
 const supabase = createClient(url, key, { auth: { persistSession: false } });
-const allCases = await loadCases();
+const allCases = (await loadCases()).filter((item) => !rejectedSources.has(item.source));
 const importableCases = allCases.filter((item) => !sampleSources.has(item.source) && item.images.length);
 const videoOnlyCases = allCases.filter((item) => !item.images.length && item.videos.length);
 const unmappedCases = importableCases.filter((item) => !item.mapping);

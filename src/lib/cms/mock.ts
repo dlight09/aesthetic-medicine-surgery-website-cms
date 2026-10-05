@@ -80,8 +80,8 @@ export const cmsAvantApres = [
     consent: true,
     status: 'Publie',
     updatedAt: '08/02/2026',
-    beforeThumb: '/images/placeholders/clinic.jpeg',
-    afterThumb: '/images/placeholders/skin.jpg',
+    beforeThumb: '/images/placeholders/clinic.webp',
+    afterThumb: '/images/interventions/paupieres.webp',
   },
   {
     id: 'aa-199',
@@ -90,7 +90,7 @@ export const cmsAvantApres = [
     consent: true,
     status: 'Brouillon',
     updatedAt: '07/02/2026',
-    beforeThumb: '/images/placeholders/surgery.jpg',
-    afterThumb: '/images/placeholders/clinic.jpeg',
+    beforeThumb: '/images/interventions/rajeunissement-du-visage.webp',
+    afterThumb: '/images/placeholders/clinic.webp',
   },
 ];

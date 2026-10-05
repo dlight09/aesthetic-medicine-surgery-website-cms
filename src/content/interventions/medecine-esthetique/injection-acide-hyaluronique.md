@@ -1,65 +1,45 @@
 ---
-title: "Injection d'acide hyaluronique"
-description: 'Volumes et contours du visage : indication, déroulé, suites, limites et informations utiles avant consultation.'
+title: "Injection d'acide hyaluronique — Comblage & volumes Tunis"
+description: >-
+  L'acide hyaluronique est la molécule star de la médecine esthétique. Naturellement présente dans la peau, elle retient l'eau, maintient l'hydratation et donne volume et élasticité aux tissus. Sa production diminue avec l'âge — d'où les rides, les creux et la perte de volume. Les injections d'acide hyaluronique permettent de restaurer ces volumes, de combler les rides statiques et de remodeler les contours du visage, avec un résultat naturel, immédiat et réversible.
 category: medecine-esthetique
 order: 2
 ---
 
 ## En bref
 
-- Objectif : restaurer ou ajuster certains volumes et contours de façon mesurée.
-- Indication : décidée après analyse anatomique et objectifs réalistes.
-- Durée de séance : variable selon zones et plan de traitement.
-- Suites habituelles : œdème modéré, rougeur, ecchymose possible.
-- Résultat : progressif, avec variabilité interindividuelle.
+- Durée : 20–30 min
+- Anesthésie : Crème anesthésiante
+- Hospitalisation : Ambulatoire
+- Durée effet : 9–18 mois
 
-## Objectif
+## 01  INDICATIONS & ZONES TRAITÉES
 
-L'acide hyaluronique peut aider à corriger certains déficits de volume, améliorer des plis ou harmoniser des contours. L'approche cherche un résultat naturel, en respectant les proportions du visage.
+- Sillons nasogéniens (plis du nez à la bouche) — comblage de rides statiques
+- Plis d'amertume (coins de la bouche vers le menton)
+- Augmentation du volume des lèvres — résultat naturel et proportionné
+- Restauration du volume des pommettes
+- Traitement des cernes creux et de la vallée des larmes
+- Rhinoplastie médicale — correction non chirurgicale du nez
+- Jawline contouring — redéfinition de l'ovale du visage
+- Tempes creuses — restauration du volume temporal
 
-## Pour qui ?
+L'acide hyaluronique est réversible : en cas de résultat insatisfaisant ou de complication, le produit peut être dissous en quelques heures par injection d'hyaluronidase. Cette sécurité est un avantage considérable par rapport aux autres fillers permanents.
 
-L'indication dépend de l'anatomie, de la qualité cutanée, des antécédents et des attentes. Une consultation permet de vérifier le bénéfice attendu et les limites du geste.
+## 02  DIFFÉRENTS TYPES D'ACIDE HYALURONIQUE
 
-## Contre-indications et précautions
+Il n'existe pas un seul acide hyaluronique mais une gamme de produits à réticulation variable : les produits peu réticulés (fluides) sont utilisés pour hydrater et combler les rides fines ; les produits moyennement réticulés pour les sillons et les lèvres ; les produits fortement réticulés pour les volumes (pommettes, menton, jawline). Le choix du produit et de la technique d'injection (aiguille ou canule) est adapté à chaque zone et chaque indication.
 
-- Infection locale ou lésion inflammatoire sur la zone : geste reporté.
-- Grossesse/allaitement : indication évaluée au cas par cas.
-- Antécédents allergiques, maladies auto-immunes, traitements en cours : à signaler.
-- Certains antécédents de correction ou de chirurgie du visage peuvent modifier la stratégie.
+## 03  DÉROULEMENT & SUITES
 
-## Déroulé
+La séance dure 20 à 30 minutes. Crème anesthésiante ou anesthésie locale selon les zones. Les injections sont réalisées à l'aiguille fine ou à la canule selon la zone traitée. Le résultat est immédiat. Des ecchymoses légères sont possibles dans les zones sensibles (lèvres, cernes) — elles disparaissent en 3 à 7 jours. Aucune éviction sociale dans la grande majorité des cas.
 
-1. Évaluation clinique et définition des objectifs.
-2. Choix du produit, des points d'injection et des volumes.
-3. Injection progressive avec contrôle de la symétrie et des proportions.
+## 04  QUESTIONS FRÉQUENTES
 
-## Suites
+### Les lèvres à l'acide hyaluronique donnent-elles un résultat naturel ?
 
-Un œdème modéré, une sensibilité ou des ecchymoses peuvent survenir les premiers jours. Les suites varient selon les zones traitées et la réponse individuelle.
+Oui, à condition que le volume injecté soit proportionné à la morphologie du visage et que la technique soit respectueuse de l'anatomie. L'objectif est de sublimer — pas de transformer. Je travaille toujours selon le principe de la retouche invisible : le résultat ne doit pas se voir, il doit simplement s'apprécier.
 
-## Risques / effets indésirables possibles
+### Combien de temps dure l'effet ?
 
-Comme tout acte médical, des effets secondaires transitoires sont possibles. Des complications plus rares existent et sont expliquées en consultation avec les signes d'alerte à connaître.
-
-## Résultat et durée
-
-Le résultat n'est pas définitif et sa durée varie selon la zone, le produit utilisé, le métabolisme et le contexte clinique. Le suivi est ajusté individuellement.
-
-## Alternatives
-
-Selon le besoin, d'autres options peuvent être discutées : soins non injectables, autres techniques médicales, ou abstention thérapeutique lorsque l'indication n'est pas retenue.
-
-## Questions fréquentes
-
-### Est-ce reversible ?
-
-Selon l'indication et le produit, des options peuvent exister. Cette question est évaluée au cas par cas pendant la consultation.
-
-### Le résultat est-il immédiat ?
-
-Une partie du résultat peut être visible rapidement, mais l'aspect final se stabilise après les suites initiales.
-
-### Y a-t-il un arrêt social ?
-
-Souvent non, mais cela dépend des zones traitées et de votre sensibilité individuelle.
+Entre 9 et 18 mois selon la zone traitée, le type de produit et le métabolisme individuel. Les zones très mobiles (lèvres, sillons) se résorbent plus vite que les zones statiques (pommettes, tempes). Un traitement d'entretien annuel permet de maintenir le résultat.

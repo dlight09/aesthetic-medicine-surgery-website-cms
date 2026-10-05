@@ -18,14 +18,4 @@ const interventions = defineCollection({
   })
 });
 
-const blog = defineCollection({
-  type: 'content',
-  schema: z.object({
-    title: z.string(),
-    description: z.string(),
-    date: z.date(),
-    draft: z.boolean().optional().default(false)
-  })
-});
-
-export const collections = { interventions, blog };
+export const collections = { interventions };

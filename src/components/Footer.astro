@@ -7,16 +7,12 @@ const quickLinks = [
   { label: 'Interventions', href: '/interventions' },
   { label: 'Avant/Après', href: '/avant-apres' },
   { label: 'Blog', href: '/blog' },
-  { label: 'Consentement', href: '/consentement' },
   { label: 'Rendez-vous', href: '/contact' },
 ];
 
-const addressQuery = [...site.contact.addressLines, site.contact.city, site.contact.country].join(', ');
-const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`;
-
 ---
 
-<footer class="overflow-hidden bg-ink text-paper">
+<footer class="overflow-hidden bg-ink pb-[calc(5rem+env(safe-area-inset-bottom))] text-paper lg:pb-0">
   <div class="mx-auto max-w-7xl px-4">
     <div class="grid border-b border-paper/12 lg:grid-cols-[1.55fr_0.8fr_0.8fr_0.85fr]">
       <div class="flex items-center py-10 lg:justify-center lg:border-r lg:border-paper/12 lg:pr-10">
@@ -61,7 +57,7 @@ const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURICom
             </svg>
             <span>{site.contact.email}</span>
           </a>
-          <a href={mapsHref} target="_blank" rel="noopener noreferrer" class="flex items-start gap-3 rounded-md leading-relaxed transition hover:text-paper focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/50 focus-visible:ring-offset-2 focus-visible:ring-offset-ink">
+          <a href={site.links.maps} target="_blank" rel="noopener noreferrer" class="flex items-start gap-3 rounded-md leading-relaxed transition hover:text-paper focus:outline-none focus-visible:ring-2 focus-visible:ring-copper/50 focus-visible:ring-offset-2 focus-visible:ring-offset-ink">
             <svg aria-hidden="true" viewBox="0 0 24 24" class="mt-0.5 size-4 shrink-0 text-copper" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 21s7-5.1 7-12a7 7 0 0 0-14 0c0 6.9 7 12 7 12Z" />
               <circle cx="12" cy="9" r="2.4" />
