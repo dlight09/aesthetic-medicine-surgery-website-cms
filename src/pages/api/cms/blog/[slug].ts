@@ -4,7 +4,6 @@ import { coerceBlogBlocks } from '@/lib/cms/blogBlocks';
 import {
   deleteBlogPostBySlug,
   getCmsBlogPostBySlug,
-  setBlogInterventionLinks,
   updateBlogPostBySlug,
 } from '@/lib/cms/blog';
 import type { BlogStatus } from '@/lib/cms/blog';
@@ -79,6 +78,11 @@ export const PUT: APIRoute = async (context) => {
         .map((s: any) => String(s ?? ''))
         .filter((s: string) => s.trim())
     : null;
+  const expectedUpdatedAt =
+    typeof (body as any).expected_updated_at === 'string'
+      ? (body as any).expected_updated_at
+      : '';
+  if (!expectedUpdatedAt) return new Response('Missing expected_updated_at', { status: 400 });
 
   if (payload.status === 'publie') {
     const current = await getCmsBlogPostBySlug(slug);
@@ -91,13 +95,12 @@ export const PUT: APIRoute = async (context) => {
     }
   }
 
-  const updated = await updateBlogPostBySlug(slug, payload);
-  if (linked_intervention_slugs) {
-    await setBlogInterventionLinks({
-      blog_slug: slug,
-      intervention_slugs: linked_intervention_slugs,
-    });
-  }
+  const updated = await updateBlogPostBySlug(
+    slug,
+    payload,
+    expectedUpdatedAt,
+    linked_intervention_slugs,
+  );
   return new Response(JSON.stringify(updated), {
     status: 200,
     headers: { 'content-type': 'application/json' },

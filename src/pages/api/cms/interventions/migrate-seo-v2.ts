@@ -23,12 +23,16 @@ export const POST: APIRoute = async (context) => {
       report.skipped.push(item.slug);
       continue;
     }
-    await updateInterventionBySlug(item.slug, {
-      template_kind: 'seo_v2',
-      seo_page_data: normalized,
-      hero_image_src: normalized.hero.imageSrc || item.hero_image_src,
-      hero_image_alt: normalized.hero.imageAlt || item.hero_image_alt,
-    });
+    await updateInterventionBySlug(
+      item.slug,
+      {
+        template_kind: 'seo_v2',
+        seo_page_data: normalized,
+        hero_image_src: normalized.hero.imageSrc || item.hero_image_src,
+        hero_image_alt: normalized.hero.imageAlt || item.hero_image_alt,
+      },
+      item.updated_at,
+    );
     report.migrated.push(item.slug);
   }
 

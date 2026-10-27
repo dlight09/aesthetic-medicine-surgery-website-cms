@@ -1,4 +1,5 @@
 import { getAvantApresBucket, getSupabaseAdmin, getSupabasePublicRead } from './supabase';
+import { getCmsActor } from './actor';
 
 export type AvantApresStatus = 'brouillon' | 'publie';
 
@@ -227,47 +228,6 @@ function normalizeProcedures(payload: CreateOrUpdatePayload['procedures']) {
   if (!items.length) return [];
   if (!items.some((item) => item.is_primary)) items[0].is_primary = true;
   return items;
-}
-
-async function nextCaseNumber(
-  category: string,
-  slug: string,
-  excludeId?: string,
-) {
-  const supabase = getSupabaseAdmin();
-  let query = supabase
-    .from(tableName)
-    .select('case_number')
-    .eq('intervention_category', category)
-    .eq('intervention_slug', slug);
-  if (excludeId) query = query.neq('id', excludeId);
-  const { data, error } = await query;
-  if (error) throw error;
-  const max = (data ?? []).reduce((highest, row) => {
-    const number = typeof row.case_number === 'number' ? row.case_number : 0;
-    return Math.max(highest, number);
-  }, 0);
-  return max + 1;
-}
-
-function isCaseNumberConflict(error: unknown) {
-  return Boolean(error && typeof error === 'object' && (error as { code?: string }).code === '23505');
-}
-
-function caseMediaPaths(item: AvantApresCaseView) {
-  return new Set(
-    [
-      item.before_path,
-      item.after_path,
-      ...item.media_sets.flatMap((set) => [set.before_path, set.after_path]),
-    ].filter(Boolean),
-  );
-}
-
-async function removeMediaPaths(paths: Iterable<string>) {
-  const items = Array.from(new Set(paths)).filter(Boolean);
-  if (!items.length) return;
-  await getSupabaseAdmin().storage.from(getAvantApresBucket()).remove(items);
 }
 
 async function loadRelations(caseIds: string[], supabase: SupabaseClient = getSupabaseAdmin()) {
@@ -551,332 +511,128 @@ export async function getPublicAvantApresCase(id: string) {
 
 export async function createAvantApresCase(payload: CreateOrUpdatePayload) {
   const supabase = getSupabaseAdmin();
-  const now = new Date().toISOString();
-
-  const mediaSets = normalizeMediaSets(payload.media_sets);
-  const procedures = normalizeProcedures(payload.procedures);
-  const tags = Array.from(
-    new Set((payload.tags ?? []).map((t) => String(t).trim()).filter(Boolean)),
-  );
-
-  const coverSet = mediaSets.find((set) => set.is_cover) ?? mediaSets[0] ?? null;
-  const beforePath =
-    typeof payload.before_path === 'string' && payload.before_path.trim()
-      ? payload.before_path.trim()
-      : (coverSet?.before_path ?? '');
-  const afterPath =
-    typeof payload.after_path === 'string' && payload.after_path.trim()
-      ? payload.after_path.trim()
-      : (coverSet?.after_path ?? '');
-
-  const category = typeof payload.intervention_category === 'string' ? payload.intervention_category : '';
-  const slug = typeof payload.intervention_slug === 'string' ? payload.intervention_slug : '';
-  if (!category || !slug) throw new Error('An intervention is required');
-
-  const casePayload: Record<string, unknown> = {
-    title: String(payload.title ?? '').trim(),
-    description: typeof payload.description === 'string' ? payload.description : null,
-    intervention_category: category,
-    intervention_slug: slug,
-    status: payload.status === 'publie' ? 'publie' : 'brouillon',
-    consent: Boolean(payload.consent),
-    consent_date: typeof payload.consent_date === 'string' ? payload.consent_date : null,
-    before_path: beforePath,
-    after_path: afterPath,
-    updated_at: now,
-  };
-  const optionalBaseFields = [
-    'internal_ref',
-    'family_key',
-    'summary',
-    'clinical_context',
-    'result_overview',
-    'featured',
-  ] as const;
-  optionalBaseFields.forEach((field) => {
-    const value = payload[field];
-    if (typeof value === 'string' || typeof value === 'boolean') casePayload[field] = value;
+  const actor = await getCmsActor(['admin', 'editor', 'reviewer']);
+  const rpcPayload = buildRpcPayload(payload);
+  const { data: caseId, error } = await supabase.rpc('save_avant_apres_case', {
+    p_actor_id: actor.id,
+    p_case_id: null,
+    p_expected_updated_at: null,
+    p_payload: rpcPayload,
   });
-
-  let data: { id: string } | null = null;
-  let lastError: unknown = null;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const caseNumber = await nextCaseNumber(category, slug);
-    const result = await supabase
-      .from(tableName)
-      .insert({ ...casePayload, case_number: caseNumber })
-      .select('id')
-      .single();
-    if (!result.error && result.data) {
-      data = result.data;
-      break;
-    }
-    lastError = result.error;
-    if (!isCaseNumberConflict(result.error)) throw result.error;
-  }
-  if (!data) throw lastError ?? new Error('Unable to assign case number');
-  const caseId = String(data.id);
-
-  const patientContext = payload.patient_context;
-  if (patientContext && typeof patientContext === 'object') {
-    const { error: ctxError } = await supabase.from(patientContextTable).upsert({
-      case_id: caseId,
-      patient_sex:
-        typeof patientContext.patient_sex === 'string' ? patientContext.patient_sex : null,
-      patient_age:
-        typeof patientContext.patient_age === 'number' ? patientContext.patient_age : null,
-      weight_kg: typeof patientContext.weight_kg === 'number' ? patientContext.weight_kg : null,
-      smoking_status:
-        patientContext.smoking_status === 'smoker' ||
-        patientContext.smoking_status === 'non_smoker' ||
-        patientContext.smoking_status === 'former' ||
-        patientContext.smoking_status === 'unknown'
-          ? patientContext.smoking_status
-          : null,
-      pregnancies_count:
-        typeof patientContext.pregnancies_count === 'number'
-          ? patientContext.pregnancies_count
-          : null,
-      post_bariatric:
-        typeof patientContext.post_bariatric === 'boolean' ? patientContext.post_bariatric : null,
-      revision_case:
-        typeof patientContext.revision_case === 'boolean' ? patientContext.revision_case : null,
-      prior_surgery:
-        typeof patientContext.prior_surgery === 'boolean' ? patientContext.prior_surgery : null,
-      history_notes:
-        typeof patientContext.history_notes === 'string' ? patientContext.history_notes : null,
-      updated_at: now,
-    });
-    if (ctxError) throw ctxError;
-  }
-
-  if (procedures.length) {
-    const { error: proceduresError } = await supabase.from(proceduresTable).insert(
-      procedures.map((item) => ({
-        case_id: caseId,
-        ...item,
-        updated_at: now,
-      })),
-    );
-    if (proceduresError) throw proceduresError;
-  }
-
-  if (mediaSets.length) {
-    const { error: mediaError } = await supabase.from(mediaSetsTable).insert(
-      mediaSets.map((item) => ({
-        case_id: caseId,
-        ...item,
-        updated_at: now,
-      })),
-    );
-    if (mediaError) throw mediaError;
-  }
-
-  if (tags.length) {
-    const { error: tagsError } = await supabase
-      .from(tagsTable)
-      .insert(tags.map((tag_key) => ({ case_id: caseId, tag_key })));
-    if (tagsError) throw tagsError;
-  }
-
-  const created = await getCmsAvantApresCase(caseId);
+  if (error) throw error;
+  const created = await getCmsAvantApresCase(String(caseId));
   if (!created) throw new Error('Unable to load created case');
   return created;
 }
 
 export async function updateAvantApresCase(id: string, payload: CreateOrUpdatePayload) {
   const supabase = getSupabaseAdmin();
-  const now = new Date().toISOString();
   const current = await getCmsAvantApresCase(id);
   if (!current) throw new Error('Case not found');
-  const oldMediaPaths = caseMediaPaths(current);
-
-  const patch: Record<string, unknown> = { updated_at: now };
-  const baseFields = [
-    'title',
-    'description',
-    'intervention_category',
-    'intervention_slug',
-    'case_number',
-    'status',
-    'consent',
-    'consent_date',
-    'internal_ref',
-    'before_path',
-    'after_path',
-    'family_key',
-    'summary',
-    'clinical_context',
-    'result_overview',
-    'featured',
-  ] as const;
-
-  baseFields.forEach((field) => {
-    if (field in payload) {
-      patch[field] = (payload as Record<string, unknown>)[field];
-    }
+  const actor = await getCmsActor(['admin', 'editor', 'reviewer']);
+  const rpcPayload = buildRpcPayload(payload, current);
+  await registerMissingLegacyAssets(id, rpcPayload.media_sets);
+  const { error } = await supabase.rpc('save_avant_apres_case', {
+    p_actor_id: actor.id,
+    p_case_id: id,
+    p_expected_updated_at: current.updated_at,
+    p_payload: rpcPayload,
   });
-
-  const nextCategory =
-    typeof payload.intervention_category === 'string'
-      ? payload.intervention_category
-      : current.intervention_category;
-  const nextSlug =
-    typeof payload.intervention_slug === 'string' ? payload.intervention_slug : current.intervention_slug;
-  const interventionChanged =
-    nextCategory !== current.intervention_category || nextSlug !== current.intervention_slug;
-  if (interventionChanged) {
-    if (!nextCategory || !nextSlug) throw new Error('An intervention is required');
-    patch.case_number = await nextCaseNumber(nextCategory, nextSlug, id);
-  }
-
-  let updateError: unknown = null;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const { error } = await supabase.from(tableName).update(patch).eq('id', id);
-    if (!error) {
-      updateError = null;
-      break;
-    }
-    updateError = error;
-    if (!interventionChanged || !isCaseNumberConflict(error) || !nextCategory || !nextSlug) throw error;
-    patch.case_number = await nextCaseNumber(nextCategory, nextSlug, id);
-  }
-  if (updateError) throw updateError;
-
-  if ('patient_context' in payload) {
-    const patientContext = payload.patient_context;
-    if (!patientContext) {
-      const { error: delCtxError } = await supabase
-        .from(patientContextTable)
-        .delete()
-        .eq('case_id', id);
-      if (delCtxError) throw delCtxError;
-    } else {
-      const { error: ctxError } = await supabase.from(patientContextTable).upsert({
-        case_id: id,
-        patient_sex:
-          typeof patientContext.patient_sex === 'string' ? patientContext.patient_sex : null,
-        patient_age:
-          typeof patientContext.patient_age === 'number' ? patientContext.patient_age : null,
-        weight_kg: typeof patientContext.weight_kg === 'number' ? patientContext.weight_kg : null,
-        smoking_status:
-          patientContext.smoking_status === 'smoker' ||
-          patientContext.smoking_status === 'non_smoker' ||
-          patientContext.smoking_status === 'former' ||
-          patientContext.smoking_status === 'unknown'
-            ? patientContext.smoking_status
-            : null,
-        pregnancies_count:
-          typeof patientContext.pregnancies_count === 'number'
-            ? patientContext.pregnancies_count
-            : null,
-        post_bariatric:
-          typeof patientContext.post_bariatric === 'boolean' ? patientContext.post_bariatric : null,
-        revision_case:
-          typeof patientContext.revision_case === 'boolean' ? patientContext.revision_case : null,
-        prior_surgery:
-          typeof patientContext.prior_surgery === 'boolean' ? patientContext.prior_surgery : null,
-        history_notes:
-          typeof patientContext.history_notes === 'string' ? patientContext.history_notes : null,
-        updated_at: now,
-      });
-      if (ctxError) throw ctxError;
-    }
-  }
-
-  if ('procedures' in payload) {
-    const procedures = normalizeProcedures(payload.procedures);
-    const { error: clearProceduresError } = await supabase
-      .from(proceduresTable)
-      .delete()
-      .eq('case_id', id);
-    if (clearProceduresError) throw clearProceduresError;
-    if (procedures.length) {
-      const { error: proceduresError } = await supabase
-        .from(proceduresTable)
-        .insert(procedures.map((item) => ({ case_id: id, ...item, updated_at: now })));
-      if (proceduresError) throw proceduresError;
-    }
-  }
-
-  if ('media_sets' in payload) {
-    const mediaSets = normalizeMediaSets(payload.media_sets);
-    if (payload.replace_cover) {
-      const cover = mediaSets.find((item) => item.is_cover) ?? mediaSets[0];
-      if (!cover) throw new Error('A replacement cover is required');
-
-      const currentCover =
-        current.media_sets.find((item) => item.is_cover) ?? current.media_sets[0];
-      if (currentCover) {
-        const { error: mediaError } = await supabase
-          .from(mediaSetsTable)
-          .update({ ...cover, is_cover: true, updated_at: now })
-          .eq('id', currentCover.id);
-        if (mediaError) throw mediaError;
-      } else {
-        const { error: mediaError } = await supabase
-          .from(mediaSetsTable)
-          .insert({ case_id: id, ...cover, is_cover: true, updated_at: now });
-        if (mediaError) throw mediaError;
-      }
-
-      const { error: caseMediaError } = await supabase
-        .from(tableName)
-        .update({ before_path: cover.before_path, after_path: cover.after_path, updated_at: now })
-        .eq('id', id);
-      if (caseMediaError) throw caseMediaError;
-    } else {
-      const { error: clearMediaError } = await supabase
-        .from(mediaSetsTable)
-        .delete()
-        .eq('case_id', id);
-      if (clearMediaError) throw clearMediaError;
-      if (mediaSets.length) {
-        const { error: mediaError } = await supabase
-          .from(mediaSetsTable)
-          .insert(mediaSets.map((item) => ({ case_id: id, ...item, updated_at: now })));
-        if (mediaError) throw mediaError;
-
-        if (!('before_path' in payload) && !('after_path' in payload)) {
-          const cover = mediaSets.find((item) => item.is_cover) ?? mediaSets[0];
-          await supabase
-            .from(tableName)
-            .update({
-              before_path: cover.before_path,
-              after_path: cover.after_path,
-              updated_at: now,
-            })
-            .eq('id', id);
-        }
-      }
-    }
-  }
-
-  if ('tags' in payload) {
-    const tags = Array.from(
-      new Set((payload.tags ?? []).map((t) => String(t).trim()).filter(Boolean)),
-    );
-    const { error: clearTagsError } = await supabase.from(tagsTable).delete().eq('case_id', id);
-    if (clearTagsError) throw clearTagsError;
-    if (tags.length) {
-      const { error: tagsError } = await supabase
-        .from(tagsTable)
-        .insert(tags.map((tag_key) => ({ case_id: id, tag_key })));
-      if (tagsError) throw tagsError;
-    }
-  }
-
+  if (error) throw error;
   const updated = await getCmsAvantApresCase(id);
   if (!updated) throw new Error('Unable to load updated case');
-  const currentMediaPaths = caseMediaPaths(updated);
-  await removeMediaPaths([...oldMediaPaths].filter((path) => !currentMediaPaths.has(path)));
   return updated;
 }
 
 export async function deleteAvantApresCase(id: string) {
   const supabase = getSupabaseAdmin();
+  const actor = await getCmsActor(['admin', 'reviewer']);
   const item = await getCmsAvantApresCase(id);
-  const { error } = await supabase.from(tableName).delete().eq('id', id);
+  if (!item) return;
+  const { error } = await supabase.rpc('delete_avant_apres_case', {
+    p_actor_id: actor.id,
+    p_case_id: id,
+    p_expected_updated_at: item.updated_at,
+  });
   if (error) throw error;
-  if (item) await removeMediaPaths(caseMediaPaths(item));
+}
+
+function buildRpcPayload(payload: CreateOrUpdatePayload, current?: AvantApresCaseView) {
+  const value = <K extends keyof CreateOrUpdatePayload>(key: K) =>
+    key in payload ? payload[key] : current?.[key as keyof AvantApresCaseView];
+
+  let mediaSets = normalizeMediaSets(
+    (payload.media_sets ?? current?.media_sets) as CreateOrUpdatePayload['media_sets'],
+  );
+  if (current && payload.replace_cover && payload.media_sets) {
+    const replacement = normalizeMediaSets(payload.media_sets)[0];
+    if (!replacement) throw new Error('A replacement cover is required');
+    const currentSets = normalizeMediaSets(
+      current.media_sets as CreateOrUpdatePayload['media_sets'],
+    );
+    const coverIndex = currentSets.findIndex((item) => item.is_cover);
+    if (coverIndex >= 0) currentSets[coverIndex] = { ...replacement, is_cover: true };
+    else currentSets.unshift({ ...replacement, is_cover: true });
+    mediaSets = currentSets;
+  }
+
+  const cover = mediaSets.find((item) => item.is_cover) ?? mediaSets[0];
+  return {
+    title: String(value('title') ?? '').trim(),
+    description: value('description') ?? null,
+    intervention_category: value('intervention_category') ?? null,
+    intervention_slug: value('intervention_slug') ?? null,
+    status: value('status') === 'publie' ? 'publie' : 'brouillon',
+    consent: Boolean(value('consent')),
+    consent_date: value('consent_date') ?? null,
+    internal_ref: value('internal_ref') ?? null,
+    before_path: value('before_path') || cover?.before_path || '',
+    after_path: value('after_path') || cover?.after_path || '',
+    family_key: value('family_key') ?? null,
+    summary: value('summary') ?? null,
+    clinical_context: value('clinical_context') ?? null,
+    result_overview: value('result_overview') ?? null,
+    featured: Boolean(value('featured')),
+    patient_context: value('patient_context') ?? null,
+    procedures: normalizeProcedures(
+      (payload.procedures ?? current?.procedures) as CreateOrUpdatePayload['procedures'],
+    ),
+    media_sets: mediaSets,
+    tags: Array.from(
+      new Set(((payload.tags ?? current?.tags) ?? []).map((tag) => String(tag).trim()).filter(Boolean)),
+    ),
+  };
+}
+
+async function registerMissingLegacyAssets(
+  caseId: string,
+  mediaSets: ReturnType<typeof normalizeMediaSets>,
+) {
+  const paths = Array.from(
+    new Set(mediaSets.flatMap((item) => [item.before_path, item.after_path]).filter(Boolean)),
+  );
+  if (!paths.length) return;
+
+  const supabase = getSupabaseAdmin();
+  const bucket = getAvantApresBucket();
+  const { data, error } = await supabase
+    .from('avant_apres_media_assets')
+    .select('path')
+    .eq('bucket', bucket)
+    .in('path', paths);
+  if (error) throw error;
+
+  const existing = new Set((data ?? []).map((item) => String(item.path)));
+  const missing = paths.filter((path) => !existing.has(path));
+  if (!missing.length) return;
+  const { error: insertError } = await supabase.from('avant_apres_media_assets').insert(
+    missing.map((path) => ({
+      bucket,
+      path,
+      owner_case_id: caseId,
+      status: 'attached',
+      attached_at: new Date().toISOString(),
+    })),
+  );
+  if (insertError) throw insertError;
 }

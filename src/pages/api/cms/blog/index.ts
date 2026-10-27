@@ -1,10 +1,12 @@
 import type { APIRoute } from 'astro';
 import { requireCmsAuth } from '@/lib/cms/auth';
 import { coerceBlogBlocks, defaultBlogBlocks } from '@/lib/cms/blogBlocks';
-import { createBlogPost, listCmsBlogPosts, setBlogInterventionLinks } from '@/lib/cms/blog';
+import { createBlogPost, listCmsBlogPosts } from '@/lib/cms/blog';
 
 function slugify(input: string) {
   return (input ?? '')
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
     .toLowerCase()
     .trim()
     .replace(/[’']/g, '')
@@ -75,21 +77,19 @@ export const POST: APIRoute = async (context) => {
   }
 
   try {
-    const created = await createBlogPost({
-      slug,
-      title: title || '(Sans titre)',
-      description: description || '',
-      status,
-      published_at: published_at ?? (status === 'publie' ? new Date().toISOString() : null),
-      seo_title,
-      seo_description,
-      content_blocks,
-    });
-
-    await setBlogInterventionLinks({
-      blog_slug: created.slug,
-      intervention_slugs: linked_intervention_slugs,
-    });
+    const created = await createBlogPost(
+      {
+        slug,
+        title: title || '(Sans titre)',
+        description: description || '',
+        status,
+        published_at: published_at ?? (status === 'publie' ? new Date().toISOString() : null),
+        seo_title,
+        seo_description,
+        content_blocks,
+      },
+      linked_intervention_slugs,
+    );
 
     return new Response(JSON.stringify(created), {
       status: 201,
@@ -97,7 +97,7 @@ export const POST: APIRoute = async (context) => {
     });
   } catch (err: any) {
     const msg = String(err?.message ?? '');
-    if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
+    if (/slug.conflict|duplicate|unique/i.test(msg)) {
       return new Response('Slug already exists', { status: 409 });
     }
     throw err;

@@ -25,17 +25,27 @@ const sectionLabels = [
       <input type="hidden" name="template_kind" value="seo_v2" />
       <input type="hidden" name="content_blocks" value="[]" />
       <input type="hidden" name="body_md" value="" />
-      <input type="hidden" name="category" value={interventionCategories[0]?.key ?? 'visage'} />
       <input type="hidden" name="seo_title" value="" />
       <input type="hidden" name="seo_description" value="" />
       <input type="hidden" name="status" value="brouillon" />
       <input type="hidden" name="description" value="" />
-      <input type="hidden" name="slug" value="" />
 
       <details id="sec-general" data-accordion open class="rounded-2xl border border-ink/10 bg-paper">
         <summary class="cursor-pointer px-4 py-3 font-semibold">General</summary>
         <div class="grid gap-3 border-t border-ink/10 p-4">
           <label class="grid gap-2 text-sm"><span>Titre</span><input class="cms-input" name="title" /></label>
+          <label class="grid gap-2 text-sm">
+            <span>Catégorie</span>
+            <select class="cms-select" name="category" required>
+              {interventionCategories.map((category) => (
+                <option value={category.key}>{category.title}</option>
+              ))}
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm">
+            <span>Slug (optionnel)</span>
+            <input class="cms-input" name="slug" placeholder="généré depuis le titre" />
+          </label>
           <label class="grid gap-2 text-sm"><span>Introduction</span><textarea rows={5} class="cms-textarea" name="seo_intro"></textarea></label>
         </div>
       </details>

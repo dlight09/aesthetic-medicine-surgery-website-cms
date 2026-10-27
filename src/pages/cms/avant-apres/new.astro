@@ -94,6 +94,10 @@ const interventionsByCategory = interventionCategories.map((category) => ({
         <input type="checkbox" class="h-4 w-4" name="consent" form="aa-form" />
         <span>Consentement obtenu</span>
       </label>
+      <label class="mt-4 grid gap-2 text-sm">
+        <span class="font-semibold text-ink/80">Date du consentement</span>
+        <input type="date" class="cms-input" name="consent_date" form="aa-form" />
+      </label>
 
       <div class="mt-6 space-y-3">
         <button type="submit" value="draft" form="aa-form" data-submit class="btn btn-pill btn-md btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60">
@@ -173,7 +177,7 @@ const interventionsByCategory = interventionCategories.map((category) => ({
           const response = await fetch('/api/cms/avant-apres/upload-url', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileName: file.name, kind: 'comparison', contentType: file.type }),
+            body: JSON.stringify({ fileName: file.name, kind: 'comparison', contentType: file.type, byteSize: file.size }),
           });
           if (!response.ok) throw new Error('upload-url');
           const data = await response.json();
@@ -220,8 +224,9 @@ const interventionsByCategory = interventionCategories.map((category) => ({
         return;
       }
       const consent = formData.get('consent') === 'on';
-      if (intent === 'publish' && !consent) {
-        if (error) error.textContent = 'Le consentement est requis pour publier.';
+      const consentDate = String(formData.get('consent_date') ?? '').trim();
+      if (intent === 'publish' && (!consent || !consentDate)) {
+        if (error) error.textContent = 'Le consentement et sa date sont requis pour publier.';
         return;
       }
 
@@ -232,6 +237,7 @@ const interventionsByCategory = interventionCategories.map((category) => ({
         intervention_category: interventionCategory,
         intervention_slug: interventionSlug,
         consent,
+        consent_date: consentDate || null,
         before_path: comparisonPath,
         after_path: comparisonPath,
         status: intent === 'publish' ? 'publie' : 'brouillon',

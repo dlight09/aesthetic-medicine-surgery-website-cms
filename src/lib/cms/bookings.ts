@@ -1,4 +1,5 @@
 import { getBookingMediaBucket, getSupabaseAdmin } from '@/lib/cms/supabase';
+import { getCmsActor } from '@/lib/cms/actor';
 
 export type BookingStatus = 'nouveau' | 'contacte' | 'planifie' | 'cloture';
 
@@ -22,12 +23,13 @@ export type BookingRequest = {
   consent_at: string;
   status: BookingStatus;
   created_at: string;
+  updated_at: string;
 };
 
 export async function listBookingRequests() {
   const { data, error } = await getSupabaseAdmin()
     .from('booking_requests')
-    .select('id, full_name, email, phone, message, age, weight_kg, height_cm, has_medical_history, medical_history, previous_surgeries, daily_medications, smoking_status, intervention_category, desired_date, photo_paths, consent_at, status, created_at')
+    .select('id, full_name, email, phone, message, age, weight_kg, height_cm, has_medical_history, medical_history, previous_surgeries, daily_medications, smoking_status, intervention_category, desired_date, photo_paths, consent_at, status, created_at, updated_at')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -37,7 +39,7 @@ export async function listBookingRequests() {
 export async function getBookingRequest(id: string) {
   const { data, error } = await getSupabaseAdmin()
     .from('booking_requests')
-    .select('id, full_name, email, phone, message, age, weight_kg, height_cm, has_medical_history, medical_history, previous_surgeries, daily_medications, smoking_status, intervention_category, desired_date, photo_paths, consent_at, status, created_at')
+    .select('id, full_name, email, phone, message, age, weight_kg, height_cm, has_medical_history, medical_history, previous_surgeries, daily_medications, smoking_status, intervention_category, desired_date, photo_paths, consent_at, status, created_at, updated_at')
     .eq('id', id)
     .maybeSingle();
 
@@ -54,4 +56,20 @@ export async function getBookingPhotoUrls(paths: string[]) {
 
   if (error) throw error;
   return (data ?? []).map((item) => item.signedUrl).filter(Boolean);
+}
+
+export async function updateBookingStatus(
+  id: string,
+  status: BookingStatus,
+  expectedUpdatedAt: string,
+) {
+  const actor = await getCmsActor(['admin', 'intake']);
+  const { data, error } = await getSupabaseAdmin().rpc('cms_update_booking_status', {
+    p_actor_id: actor.id,
+    p_booking_id: id,
+    p_status: status,
+    p_expected_updated_at: expectedUpdatedAt,
+  });
+  if (error) throw error;
+  return data as { status: BookingStatus; updated_at: string };
 }

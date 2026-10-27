@@ -1,4 +1,5 @@
 import { getSupabaseAdmin, getSupabasePublicRead } from './supabase';
+import { getCmsActor } from './actor';
 import type { BlogBlock } from './blogBlocks';
 
 export type BlogStatus = 'brouillon' | 'publie';
@@ -60,14 +61,19 @@ export async function getPublicBlogPostBySlug(params: { slug: string; includeDra
 
 export async function createBlogPost(
   payload: Omit<CmsBlogPost, 'id' | 'created_at' | 'updated_at'>,
+  linkedInterventionSlugs: string[],
 ) {
   const supabase = getSupabaseAdmin();
-  const now = new Date().toISOString();
-  const { data, error } = await supabase
-    .from(tableName)
-    .insert({ ...payload, updated_at: now })
-    .select('*')
-    .single();
+  const actor = await getCmsActor(['admin', 'editor', 'reviewer']);
+  const auditedPayload =
+    payload.status === 'publie'
+      ? { ...payload, clinical_safety_reviewed_by_actor_id: actor.id }
+      : payload;
+  const { data, error } = await supabase.rpc('cms_create_blog_post', {
+    p_actor_id: actor.id,
+    p_post: auditedPayload,
+    p_linked_intervention_slugs: linkedInterventionSlugs,
+  });
   if (error) throw error;
   return data as CmsBlogPost;
 }
@@ -75,47 +81,34 @@ export async function createBlogPost(
 export async function updateBlogPostBySlug(
   slug: string,
   payload: Partial<Omit<CmsBlogPost, 'id' | 'slug' | 'created_at' | 'updated_at'>>,
+  expectedUpdatedAt: string,
+  linkedInterventionSlugs: string[] | null,
 ) {
   const supabase = getSupabaseAdmin();
-  const now = new Date().toISOString();
-  const { data, error } = await supabase
-    .from(tableName)
-    .update({ ...payload, updated_at: now })
-    .eq('slug', slug)
-    .select('*')
-    .single();
+  const actor = await getCmsActor(['admin', 'editor', 'reviewer']);
+  const auditedPayload =
+    payload.status === 'publie'
+      ? { ...payload, clinical_safety_reviewed_by_actor_id: actor.id }
+      : payload;
+  const { data, error } = await supabase.rpc('cms_update_blog_post', {
+    p_actor_id: actor.id,
+    p_slug: slug,
+    p_expected_updated_at: expectedUpdatedAt,
+    p_patch: auditedPayload,
+    p_linked_intervention_slugs: linkedInterventionSlugs,
+  });
   if (error) throw error;
   return data as CmsBlogPost;
 }
 
 export async function deleteBlogPostBySlug(slug: string) {
   const supabase = getSupabaseAdmin();
-  const { error } = await supabase.from(tableName).delete().eq('slug', slug);
+  const actor = await getCmsActor(['admin', 'reviewer']);
+  const { error } = await supabase.rpc('cms_delete_blog_post', {
+    p_actor_id: actor.id,
+    p_slug: slug,
+  });
   if (error) throw error;
-}
-
-export async function setBlogInterventionLinks(params: {
-  blog_slug: string;
-  intervention_slugs: string[];
-}) {
-  const supabase = getSupabaseAdmin();
-  const blog_slug = params.blog_slug;
-  const slugs = Array.from(
-    new Set(params.intervention_slugs.map((s) => String(s).trim()).filter(Boolean)),
-  );
-
-  const del = await supabase.from(linkTable).delete().eq('blog_slug', blog_slug);
-  if (del.error) throw del.error;
-  if (!slugs.length) return;
-
-  const rows = slugs.map((intervention_slug, idx) => ({
-    blog_slug,
-    intervention_slug,
-    position: idx,
-    context: 'both',
-  }));
-  const ins = await supabase.from(linkTable).insert(rows);
-  if (ins.error) throw ins.error;
 }
 
 export async function listLinkedInterventionSlugsForBlog(blog_slug: string) {

@@ -105,10 +105,54 @@ const interventionLabel = booking.intervention_category
 
       <div class="mt-6">
         <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Statut</div>
-         <div class="mt-2 rounded-xl border border-ink/10 bg-mist px-3 py-2 text-sm font-semibold capitalize text-ink/80">{booking.status}</div>
+         <select
+           id="booking-status"
+           class="cms-select mt-2 w-full"
+           data-id={booking.id}
+           data-updated-at={booking.updated_at}
+         >
+           <option value="nouveau" selected={booking.status === 'nouveau'}>Nouveau</option>
+           <option value="contacte" selected={booking.status === 'contacte'}>Contacté</option>
+           <option value="planifie" selected={booking.status === 'planifie'}>Planifié</option>
+           <option value="cloture" selected={booking.status === 'cloture'}>Clôturé</option>
+         </select>
+         <div id="booking-status-message" class="mt-2 text-xs text-ink/60"></div>
       </div>
 
        {photoUrls.length > 0 && <div class="mt-6 text-xs text-ink/60">Les photos jointes sont accessibles uniquement dans cet espace administrateur.</div>}
     </aside>
   </div>
 </CmsLayout>
+
+<script>
+  const select = document.querySelector('#booking-status');
+  const message = document.querySelector('#booking-status-message');
+  if (select instanceof HTMLSelectElement) {
+    select.addEventListener('change', async () => {
+      const previous = select.dataset.previous ?? select.value;
+      select.disabled = true;
+      if (message) message.textContent = 'Enregistrement...';
+      try {
+        const response = await fetch(`/api/cms/bookings/${encodeURIComponent(select.dataset.id ?? '')}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: select.value,
+            expected_updated_at: select.dataset.updatedAt,
+          }),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        const updated = await response.json();
+        select.dataset.updatedAt = updated.updated_at;
+        select.dataset.previous = updated.status;
+        if (message) message.textContent = 'Statut mis à jour.';
+      } catch {
+        select.value = previous;
+        if (message) message.textContent = 'La mise à jour a échoué. Rechargez la page.';
+      } finally {
+        select.disabled = false;
+      }
+    });
+    select.dataset.previous = select.value;
+  }
+</script>

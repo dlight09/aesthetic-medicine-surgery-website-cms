@@ -10,6 +10,7 @@ interface ImportMetaEnv {
   readonly BLOG_PREVIEW_SERIES_2?: string;
   readonly VERCEL_ENV?: string;
   readonly CMS_PASSWORD: string;
+  readonly CMS_ACTOR_ID: string;
 }
 
 interface ImportMeta {

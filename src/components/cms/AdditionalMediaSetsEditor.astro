@@ -81,7 +81,7 @@ const editorId = `additional-media-${crypto.randomUUID()}`;
         const response = await fetch('/api/cms/avant-apres/upload-url', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fileName: file.name, kind, contentType: file.type }),
+          body: JSON.stringify({ fileName: file.name, kind, contentType: file.type, byteSize: file.size }),
         });
         if (!response.ok) throw new Error('upload-url');
         const data = await response.json();

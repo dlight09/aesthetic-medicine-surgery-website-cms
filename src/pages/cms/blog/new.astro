@@ -464,7 +464,7 @@ const byCategory = (interventionCategoryKeys as readonly InterventionCategoryKey
                 const res = await fetch('/api/cms/media/upload-url', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ fileName: file.name })
+                  body: JSON.stringify({ fileName: file.name, contentType: file.type, byteSize: file.size, purpose: 'blog' })
                 });
                 if (!res.ok) throw new Error('upload-url');
                 const { signedUrl, publicUrl } = await res.json();

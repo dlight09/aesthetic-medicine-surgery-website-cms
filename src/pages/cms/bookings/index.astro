@@ -36,14 +36,15 @@ const formatDate = (value: string) => new Intl.DateTimeFormat('fr-TN', { dateSty
     </div>
 
     <div class="flex flex-wrap items-center gap-3">
-      <select class="cms-select rounded-full">
-        <option>Statut: tous</option>
-        <option>Nouveau</option>
-        <option>Contacté</option>
-        <option>Planifié</option>
-        <option>Clôturé</option>
+      <select id="booking-status-filter" class="cms-select rounded-full">
+        <option value="">Statut: tous</option>
+        <option value="nouveau">Nouveau</option>
+        <option value="contacte">Contacté</option>
+        <option value="planifie">Planifié</option>
+        <option value="cloture">Clôturé</option>
       </select>
       <input
+        id="booking-search"
         type="search"
         placeholder="Rechercher par nom, categorie, date..."
         class="cms-input min-w-[220px] rounded-full"
@@ -59,7 +60,13 @@ const formatDate = (value: string) => new Intl.DateTimeFormat('fr-TN', { dateSty
         </div>
         <div class="divide-y divide-ink/5">
           {bookings.map((b) => (
-          <a href={`/cms/bookings/${b.id}`} class="cms-row grid grid-cols-[1.2fr_1fr_0.8fr_0.8fr] gap-4 px-6 py-4 text-sm">
+          <a
+            href={`/cms/bookings/${b.id}`}
+            class="cms-row grid grid-cols-[1.2fr_1fr_0.8fr_0.8fr] gap-4 px-6 py-4 text-sm"
+            data-booking-row
+            data-status={b.status}
+            data-search={`${b.full_name} ${b.phone} ${b.email} ${b.intervention_category ?? ''} ${b.message}`.toLowerCase()}
+          >
             <div>
               <div class="font-semibold text-ink/90">{b.full_name}</div>
               <div class="text-xs text-ink/60">{b.phone}</div>
@@ -73,8 +80,35 @@ const formatDate = (value: string) => new Intl.DateTimeFormat('fr-TN', { dateSty
             </div>
           </a>
         ))}
-        {bookings.length === 0 && <div class="px-6 py-10 text-sm text-ink/65">Aucune demande reçue pour le moment.</div>}
+        <div id="booking-empty" class:list={['px-6 py-10 text-sm text-ink/65', bookings.length ? 'hidden' : '']}>
+          Aucune demande correspondante.
+        </div>
       </div>
     </div>
   </div>
 </CmsLayout>
+
+<script>
+  const search = document.querySelector('#booking-search');
+  const status = document.querySelector('#booking-status-filter');
+  const rows = Array.from(document.querySelectorAll('[data-booking-row]'));
+  const empty = document.querySelector('#booking-empty');
+
+  const applyFilters = () => {
+    const query = search instanceof HTMLInputElement ? search.value.trim().toLowerCase() : '';
+    const selectedStatus = status instanceof HTMLSelectElement ? status.value : '';
+    let visible = 0;
+    rows.forEach((row) => {
+      if (!(row instanceof HTMLElement)) return;
+      const matches =
+        (!query || (row.dataset.search ?? '').includes(query)) &&
+        (!selectedStatus || row.dataset.status === selectedStatus);
+      row.classList.toggle('hidden', !matches);
+      if (matches) visible += 1;
+    });
+    empty?.classList.toggle('hidden', visible > 0);
+  };
+
+  search?.addEventListener('input', applyFilters);
+  status?.addEventListener('change', applyFilters);
+</script>

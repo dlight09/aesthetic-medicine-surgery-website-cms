@@ -1,5 +1,5 @@
 import type { APIContext } from 'astro';
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
 const sessionName = 'cms_auth';
 const sessionMaxAgeSeconds = 60 * 60 * 24 * 7;
@@ -19,6 +19,14 @@ export function createCmsSession() {
     token: `${expiresAt}.${signSession(expiresAt, secret)}`,
     maxAge: sessionMaxAgeSeconds,
   };
+}
+
+export function verifyCmsPassword(provided: string) {
+  const password = import.meta.env.CMS_PASSWORD;
+  if (!password || !provided) return false;
+  const actual = createHash('sha256').update(provided).digest();
+  const expected = createHash('sha256').update(password).digest();
+  return timingSafeEqual(actual, expected);
 }
 
 export function isCmsAuthed(context: CookieContext) {

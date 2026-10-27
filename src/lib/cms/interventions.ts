@@ -3,6 +3,7 @@ import type { SeoInterventionPageData } from '@/lib/interventions/seoPages';
 import { getSupabaseAdmin, getSupabasePublicRead } from './supabase';
 import type { InterventionContentBlock } from './interventionBlocks';
 import type { InterventionTemplateKind } from './interventionSeoTemplate';
+import { getCmsActor } from './actor';
 
 export type InterventionStatus = 'brouillon' | 'publie';
 
@@ -74,12 +75,17 @@ export async function createIntervention(
   payload: Omit<CmsIntervention, 'id' | 'created_at' | 'updated_at'>,
 ) {
   const supabase = getSupabaseAdmin();
-  const now = new Date().toISOString();
-  const { data, error } = await supabase
-    .from(tableName)
-    .insert({ ...payload, updated_at: now })
-    .select('*')
-    .single();
+  const actor = await getCmsActor(['admin', 'editor', 'reviewer']);
+  const auditedPayload =
+    payload.status === 'publie'
+      ? { ...payload, clinical_safety_reviewed_by_actor_id: actor.id }
+      : payload;
+  const { data, error } = await supabase.rpc('cms_save_intervention', {
+    p_actor_id: actor.id,
+    p_slug: payload.slug,
+    p_expected_updated_at: null,
+    p_payload: auditedPayload,
+  });
   if (error) throw error;
   return data as CmsIntervention;
 }
@@ -87,21 +93,30 @@ export async function createIntervention(
 export async function updateInterventionBySlug(
   slug: string,
   payload: Partial<Omit<CmsIntervention, 'id' | 'slug' | 'created_at' | 'updated_at'>>,
+  expectedUpdatedAt: string,
 ) {
   const supabase = getSupabaseAdmin();
-  const now = new Date().toISOString();
-  const { data, error } = await supabase
-    .from(tableName)
-    .update({ ...payload, updated_at: now })
-    .eq('slug', slug)
-    .select('*')
-    .single();
+  const actor = await getCmsActor(['admin', 'editor', 'reviewer']);
+  const auditedPayload =
+    payload.status === 'publie'
+      ? { ...payload, clinical_safety_reviewed_by_actor_id: actor.id }
+      : payload;
+  const { data, error } = await supabase.rpc('cms_save_intervention', {
+    p_actor_id: actor.id,
+    p_slug: slug,
+    p_expected_updated_at: expectedUpdatedAt,
+    p_payload: auditedPayload,
+  });
   if (error) throw error;
   return data as CmsIntervention;
 }
 
 export async function deleteInterventionBySlug(slug: string) {
   const supabase = getSupabaseAdmin();
-  const { error } = await supabase.from(tableName).delete().eq('slug', slug);
+  const actor = await getCmsActor(['admin', 'reviewer']);
+  const { error } = await supabase.rpc('cms_delete_intervention', {
+    p_actor_id: actor.id,
+    p_slug: slug,
+  });
   if (error) throw error;
 }

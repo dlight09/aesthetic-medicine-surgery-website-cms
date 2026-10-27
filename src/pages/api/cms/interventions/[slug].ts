@@ -89,6 +89,9 @@ export const PUT: APIRoute = async (context) => {
           })
         : undefined,
   };
+  const expectedUpdatedAt =
+    typeof body.expected_updated_at === 'string' ? body.expected_updated_at : '';
+  if (!expectedUpdatedAt) return new Response('Missing expected_updated_at', { status: 400 });
 
   // If publishing, validate required fields using current + payload.
   const nextStatus = payload.status;
@@ -120,7 +123,7 @@ export const PUT: APIRoute = async (context) => {
     }
   }
 
-  const updated = await updateInterventionBySlug(slug, payload);
+  const updated = await updateInterventionBySlug(slug, payload, expectedUpdatedAt);
   return new Response(JSON.stringify(updated), {
     status: 200,
     headers: { 'content-type': 'application/json' },

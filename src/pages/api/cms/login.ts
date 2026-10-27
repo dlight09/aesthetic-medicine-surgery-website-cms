@@ -1,13 +1,19 @@
 import type { APIRoute } from 'astro';
-import { createCmsSession } from '@/lib/cms/auth';
+import { createCmsSession, verifyCmsPassword } from '@/lib/cms/auth';
+import { getCmsActor } from '@/lib/cms/actor';
 
 export const POST: APIRoute = async (context) => {
-  const password = import.meta.env.CMS_PASSWORD;
   const body = await context.request.json().catch(() => ({}));
   const provided = typeof body?.password === 'string' ? body.password : '';
 
-  if (!password || provided !== password) {
+  if (!verifyCmsPassword(provided)) {
     return new Response('Unauthorized', { status: 401 });
+  }
+
+  try {
+    await getCmsActor();
+  } catch {
+    return new Response('CMS actor configuration is unavailable', { status: 503 });
   }
 
   const secure = context.url.protocol === 'https:';

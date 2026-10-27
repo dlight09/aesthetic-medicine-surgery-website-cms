@@ -84,7 +84,7 @@ export const POST: APIRoute = async (context) => {
       continue;
     }
 
-    await updateInterventionBySlug(slug, payload);
+    await updateInterventionBySlug(slug, payload, existing.updated_at);
     report.updated.push(slug);
   }
 

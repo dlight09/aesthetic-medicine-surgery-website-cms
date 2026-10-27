@@ -44,7 +44,7 @@ const dateValue = (() => {
       <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Blog</div>
       <h1 class="mt-2 font-display text-3xl tracking-tight">{post.title}</h1>
 
-      <form id="blog-form" class="mt-8 grid gap-5" data-slug={post.slug}>
+      <form id="blog-form" class="mt-8 grid gap-5" data-slug={post.slug} data-updated-at={post.updated_at}>
         <label class="grid gap-2 text-sm">
           <span class="font-semibold text-ink/80">Titre</span>
           <input class="cms-input" name="title" value={post.title} />
@@ -504,7 +504,7 @@ const dateValue = (() => {
                 const res = await fetch('/api/cms/media/upload-url', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ fileName: file.name })
+                  body: JSON.stringify({ fileName: file.name, contentType: file.type, byteSize: file.size, purpose: 'blog' })
                 });
                 if (!res.ok) throw new Error('upload-url');
                 const { signedUrl, publicUrl } = await res.json();
@@ -659,7 +659,8 @@ const dateValue = (() => {
             return [];
           }
         })(),
-        status: intent === 'publish' ? 'publie' : String(formData.get('status') ?? 'brouillon')
+        status: intent === 'publish' ? 'publie' : String(formData.get('status') ?? 'brouillon'),
+        expected_updated_at: form.dataset.updatedAt
       };
 
       try {
@@ -673,6 +674,8 @@ const dateValue = (() => {
           const text = await res.text().catch(() => '');
           throw new Error(text || 'save');
         }
+        const saved = await res.json();
+        form.dataset.updatedAt = saved.updated_at;
         if (statusEl) statusEl.textContent = 'Enregistré.';
       } catch {
         if (errorEl) errorEl.textContent = 'Erreur de sauvegarde.';

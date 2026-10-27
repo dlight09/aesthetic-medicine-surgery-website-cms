@@ -15,11 +15,19 @@ export const POST: APIRoute = async (context) => {
 
   const body = await context.request.json().catch(() => null);
   const fileName = typeof body?.fileName === 'string' ? body.fileName : '';
-  if (!fileName) return new Response('Invalid payload', { status: 400 });
+  const contentType = typeof body?.contentType === 'string' ? body.contentType : '';
+  const byteSize = typeof body?.byteSize === 'number' ? body.byteSize : 0;
+  const purpose = body?.purpose === 'blog' ? 'blog' : 'interventions';
+  const allowedTypes = new Map([
+    ['image/jpeg', 'jpg'],
+    ['image/png', 'png'],
+    ['image/webp', 'webp'],
+  ]);
+  if (!fileName || !allowedTypes.has(contentType) || byteSize <= 0 || byteSize > 10 * 1024 * 1024) {
+    return new Response('Invalid payload', { status: 400 });
+  }
 
-  const ext = fileName.split('.').pop()?.toLowerCase() ?? 'jpg';
-  const safeExt = ext.length > 0 && ext.length <= 6 ? ext : 'jpg';
-  const path = `interventions/${randomUUID()}.${safeExt}`;
+  const path = `${purpose}/${randomUUID()}.${allowedTypes.get(contentType)}`;
 
   const supabase = getSupabaseAdmin();
   const bucket = getCmsMediaBucket();
@@ -31,7 +39,6 @@ export const POST: APIRoute = async (context) => {
     return new Response('Upload URL error', { status: 500 });
   }
 
-  // Note: this URL only works if the bucket is public.
   const publicUrl = getPublicObjectUrl({
     supabaseUrl: import.meta.env.SUPABASE_URL,
     bucket,

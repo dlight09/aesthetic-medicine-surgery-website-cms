@@ -1,29 +1,52 @@
 ---
 import CmsLayout from '@/layouts/CmsLayout.astro';
-import { cmsBookings } from '@/lib/cms/mock';
 import { listCmsAvantApresCases } from '@/lib/cms/avantApres';
 import { listCmsBlogPosts } from '@/lib/cms/blog';
+import { listBookingRequests } from '@/lib/cms/bookings';
+import { listCmsInterventions } from '@/lib/cms/interventions';
 
-const latestBookings = cmsBookings.slice(0, 3);
-const latestAvantApres = await listCmsAvantApresCases().catch(() => []);
-const latestBlog = await listCmsBlogPosts().catch(() => []);
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+const results = await Promise.allSettled([
+  listBookingRequests(),
+  listCmsAvantApresCases(),
+  listCmsBlogPosts(),
+  listCmsInterventions(),
+]);
+const hasLoadError = results.some((result) => result.status === 'rejected');
+const bookings = results[0].status === 'fulfilled' ? results[0].value : [];
+const latestAvantApres = results[1].status === 'fulfilled' ? results[1].value : [];
+const latestBlog = results[2].status === 'fulfilled' ? results[2].value : [];
+const interventions = results[3].status === 'fulfilled' ? results[3].value : [];
+const latestBookings = bookings.slice(0, 3);
+const newBookingCount = bookings.filter((booking) => booking.status === 'nouveau').length;
+const draftCount =
+  latestAvantApres.filter((item) => item.status === 'brouillon').length +
+  latestBlog.filter((item) => item.status === 'brouillon').length +
+  interventions.filter((item) => item.status === 'brouillon').length;
 const latestContent = [
-  { type: 'Avant/Après', title: latestAvantApres[0]?.title, href: `/cms/avant-apres/${latestAvantApres[0]?.id}` },
-  { type: 'Blog', title: latestBlog[0]?.title, href: `/cms/blog/${latestBlog[0]?.slug}` }
-].filter((x) => x.title);
+  { type: 'Avant/Après', title: latestAvantApres[0]?.title, href: `/cms/avant-apres/${latestAvantApres[0]?.id}`, updatedAt: latestAvantApres[0]?.updated_at },
+  { type: 'Blog', title: latestBlog[0]?.title, href: `/cms/blog/${latestBlog[0]?.slug}`, updatedAt: latestBlog[0]?.updated_at },
+  { type: 'Intervention', title: interventions[0]?.title, href: `/cms/interventions/${interventions[0]?.slug}`, updatedAt: interventions[0]?.updated_at },
+].filter((item) => item.title).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
 ---
 
 <CmsLayout title="Tableau de bord">
   <div class="space-y-8">
+    {hasLoadError ? (
+      <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        Certaines données n’ont pas pu être chargées. Réessayez dans quelques instants.
+      </div>
+    ) : null}
     <section class="grid gap-4 sm:grid-cols-3">
       <div class="cms-card-elevated p-6">
         <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Nouvelles demandes</div>
-        <div class="mt-3 font-display text-3xl">3</div>
-        <div class="mt-2 text-sm text-ink/60">A traiter aujourd’hui</div>
+        <div class="mt-3 font-display text-3xl">{newBookingCount}</div>
+        <div class="mt-2 text-sm text-ink/60">À traiter</div>
       </div>
       <div class="cms-card-elevated p-6">
         <div class="text-xs font-semibold uppercase tracking-wide text-ink/50">Brouillons</div>
-        <div class="mt-3 font-display text-3xl">2</div>
+        <div class="mt-3 font-display text-3xl">{draftCount}</div>
         <div class="mt-2 text-sm text-ink/60">Avant publication</div>
       </div>
       <div class="cms-card-elevated p-6">
@@ -46,10 +69,10 @@ const latestContent = [
           {latestBookings.map((b) => (
             <a href={`/cms/bookings/${b.id}`} class="cms-row flex items-center justify-between rounded-2xl border border-ink/10 bg-mist px-4 py-3 text-sm">
               <div>
-                <div class="font-semibold text-ink/90">{b.patientName}</div>
-                <div class="text-ink/60">{b.category} • {b.channel}</div>
+                <div class="font-semibold text-ink/90">{b.full_name}</div>
+                <div class="text-ink/60">{b.intervention_category ?? 'Non précisé'} • {b.phone}</div>
               </div>
-              <div class="text-ink/60">{b.desiredDate}</div>
+              <div class="text-ink/60">{b.desired_date ?? 'À convenir'}</div>
             </a>
           ))}
         </div>

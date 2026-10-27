@@ -14,13 +14,14 @@ export const POST: APIRoute = async (context) => {
       ? body.kind
       : '';
   const contentType = typeof body?.contentType === 'string' ? body.contentType : '';
+  const byteSize = typeof body?.byteSize === 'number' ? body.byteSize : 0;
   const allowedTypes = new Map([
     ['image/jpeg', 'jpg'],
     ['image/png', 'png'],
     ['image/webp', 'webp'],
   ]);
 
-  if (!fileName || !kind || !allowedTypes.has(contentType)) {
+  if (!fileName || !kind || !allowedTypes.has(contentType) || byteSize <= 0 || byteSize > 10 * 1024 * 1024) {
     return new Response('Invalid payload', { status: 400 });
   }
 
@@ -36,7 +37,23 @@ export const POST: APIRoute = async (context) => {
     return new Response('Upload URL error', { status: 500 });
   }
 
-  return new Response(JSON.stringify({ path, signedUrl: data.signedUrl }), {
+  const { data: asset, error: assetError } = await supabase
+    .from('avant_apres_media_assets')
+    .insert({
+      bucket,
+      path,
+      content_type: contentType,
+      original_filename: fileName,
+      byte_size: byteSize,
+      status: 'pending',
+    })
+    .select('id')
+    .single();
+  if (assetError || !asset) {
+    return new Response('Media registration error', { status: 500 });
+  }
+
+  return new Response(JSON.stringify({ path, assetId: asset.id, signedUrl: data.signedUrl }), {
     status: 200,
     headers: { 'content-type': 'application/json' },
   });

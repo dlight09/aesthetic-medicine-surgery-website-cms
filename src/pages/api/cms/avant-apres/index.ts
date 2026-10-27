@@ -66,7 +66,7 @@ export const POST: APIRoute = async (context) => {
     case_number: null,
     status: status as 'brouillon' | 'publie',
     consent,
-    consent_date: null,
+    consent_date: parseOptionalString(body.consent_date),
     internal_ref: parseOptionalString(body.internal_ref),
     before_path,
     after_path,
